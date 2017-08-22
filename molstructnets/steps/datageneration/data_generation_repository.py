@@ -1,4 +1,5 @@
 from steps import repository
+from steps.datageneration.randomsmiles import random_smiles
 
 
 class DataGenerationRepository(repository.Repository):
@@ -13,3 +14,4 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
+instance.add_implementation(random_smiles.RandomSmiles)

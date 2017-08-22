@@ -48,13 +48,12 @@ class Experiment:
         if len(self._dict['steps']) > 0:
             for step in self._dict['steps']:
                 type_name = steps_repository.instance.get_step_name(step['type'])
-                id_name = step['id']
-                # TODO uncomment once we have implementations
-                # id_name = steps_repository.instance.get_step_implementation(step['type'], step['id']).get_name()
+                implementation = steps_repository.instance.get_step_implementation(step['type'], step['id'])
+                id_name = implementation.get_name()
                 string += type_name + ': ' + id_name + '\n'
                 if 'parameters' in step:
-                    for parameter in sorted(step['parameters']):
-                        # TODO pretty names for parameters
-                        string += '  ' + parameter + ': ' + str(step['parameters'][parameter]) + '\n'
+                    for parameter in implementation.get_parameters():
+                        if parameter['id'] in step['parameters']:
+                            string += '  ' + parameter['name'] + ': ' + str(step['parameters'][parameter['id']]) + '\n'
         string = string[:-1]
         return string

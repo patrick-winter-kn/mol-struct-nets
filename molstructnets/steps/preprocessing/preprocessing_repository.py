@@ -1,4 +1,6 @@
 from steps import repository
+from steps.preprocessing.smilesmatrix import smiles_matrix
+from steps.preprocessing.image import image
 
 
 class DataGenerationRepository(repository.Repository):
@@ -13,3 +15,5 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
+instance.add_implementation(smiles_matrix.SmilesMatrix)
+instance.add_implementation(image.Image)

@@ -18,7 +18,7 @@ def list_selections(options):
 args = get_arguments()
 path = input('Root folder: ')
 name = input('Experiment name: ')
-new_experiment = experiment.Experiment(file_util.resolve_subpath(file_structure.get_experiement_folder(path),
+new_experiment = experiment.Experiment(file_util.resolve_subpath(file_structure.get_experiment_folder({'root': path}),
                                                                  name+'.json'))
 steps = ['Done'] + steps_repository.instance.get_step_names()
 selected_step = None
@@ -49,6 +49,7 @@ while selected_step != 0:
                 step['parameters'][parameter['id']] = value
             # TODO parameter explanation
             # TODO check if parameter can be optional
+            # TODO special case for bool
         new_experiment.add_step(step)
 print(str(new_experiment))
 new_experiment.save()

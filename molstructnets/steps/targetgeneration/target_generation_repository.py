@@ -1,4 +1,5 @@
 from steps import repository
+from steps.targetgeneration.substructure import substructure
 
 
 class DataGenerationRepository(repository.Repository):
@@ -13,3 +14,4 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
+instance.add_implementation(substructure.Substructure)
