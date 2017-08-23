@@ -1,5 +1,6 @@
 from steps import repository
 from steps.networkcreation.smilesmatrix import smiles_matrix
+from steps.networkcreation.image import image
 
 
 class DataGenerationRepository(repository.Repository):
@@ -15,3 +16,4 @@ class DataGenerationRepository(repository.Repository):
 
 instance = DataGenerationRepository()
 instance.add_implementation(smiles_matrix.SmilesMatrix)
+instance.add_implementation(image.Image)

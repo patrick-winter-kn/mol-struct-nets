@@ -1,4 +1,6 @@
 from steps import repository
+from steps.prediction.matrix import matrix
+from steps.prediction.image import image
 
 
 class DataGenerationRepository(repository.Repository):
@@ -13,3 +15,5 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
+instance.add_implementation(matrix.Matrix)
+instance.add_implementation(image.Image)

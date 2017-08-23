@@ -14,7 +14,8 @@ class Substructure:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'substructure', 'name':'Substructure', 'type':str})
+        parameters.append({'id':'substructures', 'name':'Substructures (separated by ;)', 'type':str})
+        parameters.append({'id':'logic', 'name':'Logic expression (e.g. a&(b|c))', 'type':str, 'default':None})
         return parameters
 
     @staticmethod

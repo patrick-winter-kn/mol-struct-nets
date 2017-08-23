@@ -1,12 +1,12 @@
-class SmilesMatrix:
+class Image:
 
     @staticmethod
     def get_id():
-        return 'smiles_matrix'
+        return 'image'
 
     @staticmethod
     def get_name():
-        return 'SMILES Matrix'
+        return 'Image'
 
     @staticmethod
     def get_parameters():
@@ -16,8 +16,8 @@ class SmilesMatrix:
     @staticmethod
     def check_prerequisites(global_parameters, parameters):
         dimensions = global_parameters['input_dimensions']
-        if len(dimensions) != 2:
-            raise ValueError('Preprocessed dimensions are not 1D')
+        if len(dimensions) != 3:
+            raise ValueError('Preprocessed dimensions are not 2D')
 
     @staticmethod
     def execute():

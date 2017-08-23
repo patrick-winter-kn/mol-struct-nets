@@ -30,3 +30,7 @@ def make_folders(file_path):
     folder_path = path.dirname(resolve_path(file_path))
     if not path.exists(folder_path):
         os.makedirs(folder_path)
+
+
+def list_files(folder_path):
+    return os.listdir(folder_path)
