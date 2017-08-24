@@ -34,3 +34,7 @@ def make_folders(file_path):
 
 def list_files(folder_path):
     return os.listdir(folder_path)
+
+
+def get_parent(file_path):
+    return path.dirname(resolve_path(file_path))
