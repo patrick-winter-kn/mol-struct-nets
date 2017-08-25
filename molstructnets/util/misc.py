@@ -1,4 +1,5 @@
 import hashlib
+import math
 
 
 def hash_parameters(parameters):
@@ -18,3 +19,14 @@ def in_range(value, min_=None, max_=None):
     if max_ is not None and value > max_:
         return False
     return True
+
+
+def chunk(number, number_chunks):
+    chunks = []
+    chunk_size = math.ceil(number / number_chunks)
+    for i in range(number_chunks):
+        start = chunk_size * i
+        end = min(start + chunk_size, number) - 1
+        size = end - start + 1
+        chunks.append({'size': size, 'start': start, 'end': end})
+    return chunks

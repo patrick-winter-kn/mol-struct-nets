@@ -32,7 +32,7 @@ for i in range(nr_steps):
     step_config = experiment_.get_step(i)
     type_name = steps_repository.instance.get_step_name(step_config['type'])
     step = steps_repository.instance.get_step_implementation(step_config['type'], step_config['id'])
-    print('Starting step ' + type_name + ': ' + step.get_name())
+    print('Starting step: ' + type_name + ': ' + step.get_name())
     parameters = {}
     implementation_parameters = step.get_parameters()
     for parameter in implementation_parameters:
@@ -43,7 +43,7 @@ for i in range(nr_steps):
             parameters[parameter] = step_config['parameters'][parameter]
     step.check_prerequisites(global_parameters, parameters)
     step.execute(global_parameters, parameters)
-    print('Finished step ' + type_name + ': ' + step.get_name())
+    print('Finished step: ' + type_name + ': ' + step.get_name())
     backend.clear_session()
 print('Finished execution of experiment successfully')
 gc.collect()

@@ -1,5 +1,7 @@
 import os
 from os import path
+import tempfile
+import shutil
 
 
 def get_filename(file_path, with_extension=True):
@@ -38,3 +40,14 @@ def list_files(folder_path):
 
 def get_parent(file_path):
     return path.dirname(resolve_path(file_path))
+
+
+def get_temporary_file_path(prefix=None):
+    path = tempfile.mkstemp(prefix=prefix)[1]
+    os.remove(path)
+    return path
+
+
+def move_file(source, destination):
+    make_folders(destination)
+    shutil.move(source, destination)
