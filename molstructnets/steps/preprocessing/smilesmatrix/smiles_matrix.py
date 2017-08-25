@@ -14,8 +14,10 @@ class SmilesMatrix:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'max_length', 'name': 'Maximum length (default: automatic)', 'type': int, 'default': None})
-        parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str, 'default': None})
+        parameters.append({'id': 'max_length', 'name': 'Maximum length (default: automatic)', 'type': int,
+                           'default': None})
+        parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,
+                           'default': None})
         return parameters
 
     @staticmethod
@@ -29,6 +31,6 @@ class SmilesMatrix:
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

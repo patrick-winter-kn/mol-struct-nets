@@ -20,6 +20,6 @@ class SmilesMatrix:
             raise ValueError('Preprocessed dimensions are not 1D')
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

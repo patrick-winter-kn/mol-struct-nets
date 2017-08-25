@@ -14,9 +14,9 @@ class Image:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'epochs', 'name':'Epochs', 'type':int})
-        parameters.append({'id':'batch_size', 'name':'Batch size', 'type':int, 'default':1})
-        parameters.append({'id':'validation', 'name':'Validation', 'type':bool, 'default':False})
+        parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int})
+        parameters.append({'id': 'batch_size', 'name': 'Batch size', 'type': int, 'default': 1})
+        parameters.append({'id': 'validation', 'name': 'Validation', 'type': bool, 'default': False})
         return parameters
 
     @staticmethod
@@ -26,6 +26,6 @@ class Image:
         data_validation.validate_preprocessed_images(global_parameters)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

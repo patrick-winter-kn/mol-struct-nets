@@ -14,7 +14,7 @@ class Matrix:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'batch_size', 'name':'Batch size', 'type':int, 'default':50})
+        parameters.append({'id': 'batch_size', 'name': 'Batch size', 'type': int, 'default': 50})
         return parameters
 
     @staticmethod
@@ -25,6 +25,6 @@ class Matrix:
         data_validation.validate_network(global_parameters)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

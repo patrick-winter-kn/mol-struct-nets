@@ -1,6 +1,7 @@
 from steps import repository
 from steps.partition.stratifiedsampling import stratified_sampling
 
+
 class DataGenerationRepository(repository.Repository):
 
     @staticmethod

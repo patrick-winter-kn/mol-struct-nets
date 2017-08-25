@@ -14,7 +14,8 @@ class EnrichmentPlot:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'enrichment_factors', 'name':'Enrichment Factors (in %, default: 5,10)', 'type':str, 'default':'5,10'})
+        parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors (in %, default: 5,10)', 'type': str,
+                           'default': '5,10'})
         return parameters
 
     @staticmethod
@@ -24,6 +25,6 @@ class EnrichmentPlot:
         data_validation.validate_prediction(global_parameters)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

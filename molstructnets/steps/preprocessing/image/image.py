@@ -28,6 +28,6 @@ class Image:
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

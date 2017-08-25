@@ -14,9 +14,11 @@ class SmilesAttention:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'top_n', 'name':'Top n (default: all)', 'type':int, 'default':None})
-        parameters.append({'id':'actives', 'name':'Active class (otherwise inactive, default: True)', 'type':bool, 'default':True})
-        parameters.append({'id':'correct_predictions', 'name':'Only correct predictions (default: False)', 'type':bool, 'default':False})
+        parameters.append({'id': 'top_n', 'name': 'Top n (default: all)', 'type': int, 'default': None})
+        parameters.append({'id': 'actives', 'name': 'Active class (otherwise inactive, default: True)', 'type': bool,
+                           'default': True})
+        parameters.append({'id': 'correct_predictions', 'name': 'Only correct predictions (default: False)',
+                           'type': bool, 'default': False})
         return parameters
 
     @staticmethod
@@ -27,6 +29,6 @@ class SmilesAttention:
         data_validation.validate_network(global_parameters)
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

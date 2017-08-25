@@ -12,9 +12,9 @@ def copy_dict_from_keys(dict_, keys):
     return new_dict
 
 
-def in_range(value, min=None, max=None):
-    if min is not None and value < min:
+def in_range(value, min_=None, max_=None):
+    if min_ is not None and value < min_:
         return False
-    if max is not None and value > max:
+    if max_ is not None and value > max_:
         return False
     return True

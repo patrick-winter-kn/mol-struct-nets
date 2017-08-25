@@ -11,8 +11,8 @@ class RandomSmiles:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id':'n', 'name':'Number of molecules', 'type':int})
-        parameters.append({'id':'max_length', 'name':'Maximum length', 'type':int})
+        parameters.append({'id': 'n', 'name': 'Number of molecules', 'type': int})
+        parameters.append({'id': 'max_length', 'name': 'Maximum length', 'type': int})
         return parameters
 
     @staticmethod
@@ -20,6 +20,6 @@ class RandomSmiles:
         pass
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

@@ -20,6 +20,6 @@ class Image:
             raise ValueError('Preprocessed dimensions are not 2D')
 
     @staticmethod
-    def execute():
+    def execute(global_parameters, parameters):
         # TODO
         pass

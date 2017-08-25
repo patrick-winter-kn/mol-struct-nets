@@ -44,7 +44,7 @@ class Experiment:
     def __str__(self):
         string = ''
         string += self._file_path + '\n'
-        string +='===== ' + self.get_name() + ' =====\n'
+        string += '===== ' + self.get_name() + ' =====\n'
         if len(self._dict['steps']) > 0:
             for step in self._dict['steps']:
                 type_name = steps_repository.instance.get_step_name(step['type'])
