@@ -1,12 +1,9 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+from util import initialization
 from keras import backend
 import gc
 import time
 import argparse
 from experiments import experiment
-import random
-import sys
 from util import file_structure
 from steps import steps_repository
 
@@ -23,10 +20,7 @@ def get_arguments():
 args = get_arguments()
 experiment_ = experiment.Experiment(args.experiment)
 global_parameters = {}
-seed = experiment_.get_seed()
-if seed is None:
-    seed = random.randint(0, sys.maxsize)
-global_parameters['seed'] = seed
+global_parameters['seed'] = initialization.seed
 global_parameters['root'] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters['experiment'] = experiment_.get_name()
 global_parameters['data_set'] = args.data_set
