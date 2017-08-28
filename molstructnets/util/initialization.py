@@ -5,7 +5,7 @@ import numpy
 import json
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['PYTHONHASHSEED'] = '0'
-seed = random.randint(0, sys.maxsize)
+seed = random.randint(0, numpy.iinfo(numpy.uint32).max)
 experiment_path = os.path.abspath(sys.argv[1])
 if os.path.exists(experiment_path):
     dict_ = json.load(open(experiment_path))
