@@ -11,13 +11,13 @@ def read_bool(text, optional=False, description=None):
     while True:
         value = input(text)
         value = value.lower()
-        if value is '' and optional:
+        if value == '' and optional:
             return None
         elif value in ['y', 'yes', 'true']:
             return True
-        elif value in ['n', 'no', 'False']:
+        elif value in ['n', 'no', 'false']:
             return False
-        elif value is '?':
+        elif value == '?':
             print(description)
         else:
             print('Input is invalid. Must be ' + optional_text + 'one of (y|n).')
@@ -46,9 +46,9 @@ def read_number(number_name, number_type, text, optional=False, description=None
         range_text = ' (' + str(min_) + '<=x<=' + str(max_) + ')'
     while True:
         value = input(text)
-        if value is '' and optional:
+        if value == '' and optional:
             return None
-        elif value is '?':
+        elif value == '?':
             print(description)
         else:
             try:
@@ -72,11 +72,11 @@ def read_string(text, optional=False, description=None, regex=None):
         regex = re.compile(regex)
     while True:
         value = input(text)
-        if value is '' and optional:
+        if value == '' and optional:
             return None
-        elif value is '?':
+        elif value == '?':
             print(description)
-        elif value is not '' and (regex is None or regex.match(value)):
+        elif value != '' and (regex is None or regex.match(value)):
             return value
         else:
             print('Input is invalid. Must be ' + optional_text + 'string' + regex_text + '.')

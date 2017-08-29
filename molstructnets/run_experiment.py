@@ -32,6 +32,7 @@ for i in range(nr_steps):
     step_config = experiment_.get_step(i)
     type_name = steps_repository.instance.get_step_name(step_config['type'])
     step = steps_repository.instance.get_step_implementation(step_config['type'], step_config['id'])
+    print('=' * 100)
     print('Starting step: ' + type_name + ': ' + step.get_name())
     parameters = {}
     implementation_parameters = step.get_parameters()

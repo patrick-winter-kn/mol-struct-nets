@@ -19,9 +19,7 @@ def resolve_path(file_path):
     return path.abspath(file_path)
 
 
-def resolve_subpath(folder_path, child_paths):
-    if not isinstance(child_paths, list):
-        child_paths = [child_paths]
+def resolve_subpath(folder_path, *child_paths):
     full_path = resolve_path(folder_path)
     for child_path in child_paths:
         full_path += path.sep + child_path
