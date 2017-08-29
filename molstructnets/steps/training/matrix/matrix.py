@@ -28,4 +28,4 @@ class Matrix:
     @staticmethod
     def execute(global_parameters, parameters):
         # TODO
-        pass
+        raise NotImplementedError('This method has not yet been implemented')

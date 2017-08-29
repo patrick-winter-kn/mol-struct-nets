@@ -1,6 +1,33 @@
 from util import file_util
 
 
+class DataSet:
+
+    smiles = 'smiles'
+
+
+class Target:
+
+    classes = 'classes'
+
+
+class Partitions:
+
+    train = 'train'
+    test = 'test'
+
+
+class Preprocessed:
+
+    preprocessed = 'preprocessed'
+
+
+class Predictions:
+
+    train = 'train'
+    test = 'test'
+
+
 def get_experiment_folder(global_parameters):
     return file_util.resolve_subpath(global_parameters['root'], 'experiments')
 

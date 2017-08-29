@@ -37,7 +37,8 @@ class RandomSmiles:
         else:
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
-            smiles_data = data_h5.create_dataset('smiles', (parameters['n'],), 'S' + str(parameters['max_length']))
+            smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (parameters['n'],),
+                                                 'S' + str(parameters['max_length']))
             chunks = misc.chunk(parameters['n'], number_threads)
             checker = duplicate_checker.DuplicateChecker()
             with multithread_progress.MultithreadProgress(parameters['n']) as progress:

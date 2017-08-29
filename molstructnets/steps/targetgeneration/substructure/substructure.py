@@ -42,10 +42,10 @@ class Substructure:
             for string in parameters['substructures'].split(';'):
                 substructures.append(Chem.MolFromSmiles(string, sanitize=False))
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
-            smiles_data = data_h5['smiles']
+            smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_target_path = file_util.get_temporary_file_path('substructure_target_data')
             target_h5 = h5py.File(temp_target_path, 'w')
-            classes = target_h5.create_dataset('classes', (smiles_data.shape[0], 2))
+            classes = target_h5.create_dataset(file_structure.Target.classes, (smiles_data.shape[0], 2))
             logic = parameters['logic']
             if logic is None:
                 logic = 'a'

@@ -46,7 +46,7 @@ class StratifiedSampling:
         else:
             random_ = random.Random(global_parameters['seed'])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-            classes = target_h5['classes']
+            classes = target_h5[file_structure.Target.classes]
             temp_partition_path = file_util.get_temporary_file_path('stratified_sampling')
             partition_h5 = h5py.File(temp_partition_path, 'w')
             active_indices = []
@@ -71,8 +71,8 @@ class StratifiedSampling:
                 for i in range(number_training_inactive):
                     del inactive_indices[random_.randint(0, len(inactive_indices) - 1)]
                     progress.increment()
-            partition_train = partition_h5.create_dataset('train', (number_training,), dtype='I')
-            partition_test = partition_h5.create_dataset('test', (len(classes) - number_training,), dtype='I')
+            partition_train = partition_h5.create_dataset(file_structure.Partitions.train, (number_training,), dtype='I')
+            partition_test = partition_h5.create_dataset(file_structure.Partitions.test, (len(classes) - number_training,), dtype='I')
             with multithread_progress.MultithreadProgress(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0
@@ -93,8 +93,8 @@ class StratifiedSampling:
                             partition_train_index += 1
                     progress.increment()
             if parameters['oversample']:
-                StratifiedSampling.oversample(partition_h5, 'train', classes)
-                partition_train = partition_h5['train']
+                StratifiedSampling.oversample(partition_h5, file_structure.Partitions.train, classes)
+                partition_train = partition_h5[file_structure.Partitions.train]
             if parameters['shuffle']:
                 StratifiedSampling.shuffle(partition_train, random_)
             target_h5.close()

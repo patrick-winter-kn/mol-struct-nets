@@ -46,6 +46,7 @@ for i in range(nr_steps):
     step.execute(global_parameters, parameters)
     print('Finished step: ' + type_name + ': ' + step.get_name())
     backend.clear_session()
+print('=' * 100)
 print('Finished execution of experiment successfully')
 gc.collect()
 time.sleep(1)
