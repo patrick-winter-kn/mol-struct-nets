@@ -41,6 +41,10 @@ class SmilesMatrix:
         global_parameters['preprocessed_data'] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
+            preprocessed_h5 = h5py.File(preprocessed_path, 'r')
+            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
+            global_parameters['input_dimensions'] = (preprocessed.shape[1], preprocessed.shape[2])
+            preprocessed_h5.close()
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
@@ -61,6 +65,7 @@ class SmilesMatrix:
             for i in range(len(characters)):
                 index_lookup[characters[i]] = i
                 index[i] = characters[i].encode('utf-8')
+            global_parameters['input_dimensions'] = (max_length.get_max(), len(index))
             preprocessed = preprocessed_h5.create_dataset(file_structure.Preprocessed.preprocessed, (len(smiles_data), max_length.get_max(), len(index)), dtype='I')
             print('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
