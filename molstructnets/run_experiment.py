@@ -4,7 +4,7 @@ import gc
 import time
 import argparse
 from experiments import experiment
-from util import file_structure
+from util import file_structure, logger
 from steps import steps_repository
 
 
@@ -32,8 +32,8 @@ for i in range(nr_steps):
     step_config = experiment_.get_step(i)
     type_name = steps_repository.instance.get_step_name(step_config['type'])
     step = steps_repository.instance.get_step_implementation(step_config['type'], step_config['id'])
-    print('=' * 100)
-    print('Starting step: ' + type_name + ': ' + step.get_name())
+    logger.log('=' * 100)
+    logger.log('Starting step: ' + type_name + ': ' + step.get_name())
     parameters = {}
     implementation_parameters = step.get_parameters()
     for parameter in implementation_parameters:
@@ -44,9 +44,9 @@ for i in range(nr_steps):
             parameters[parameter] = step_config['parameters'][parameter]
     step.check_prerequisites(global_parameters, parameters)
     step.execute(global_parameters, parameters)
-    print('Finished step: ' + type_name + ': ' + step.get_name())
+    logger.log('Finished step: ' + type_name + ': ' + step.get_name())
     backend.clear_session()
-print('=' * 100)
-print('Finished execution of experiment successfully')
+logger.log('=' * 100)
+logger.log('Finished execution of experiment successfully')
 gc.collect()
 time.sleep(1)

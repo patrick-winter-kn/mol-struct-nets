@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, misc, file_util, multithread_progress
+from util import data_validation, file_structure, misc, file_util, progressbar, logger
 import random
 import h5py
 import math
@@ -42,7 +42,7 @@ class StratifiedSampling:
     def execute(global_parameters, parameters):
         partition_path = StratifiedSampling.get_result_file(global_parameters, parameters)
         if file_util.file_exists(partition_path):
-            print('Skipping step: ' + partition_path + ' already exists')
+            logger.log('Skipping step: ' + partition_path + ' already exists')
         else:
             random_ = random.Random(global_parameters['seed'])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
@@ -51,29 +51,32 @@ class StratifiedSampling:
             partition_h5 = h5py.File(temp_partition_path, 'w')
             active_indices = []
             inactive_indices = []
-            print('Retrieving active and inactive data')
-            with multithread_progress.MultithreadProgress(len(classes)) as progress:
+            logger.log('Retrieving active and inactive data')
+            with progressbar.ProgressBar(len(classes)) as progress:
                 for i in range(len(classes)):
                     if classes[i,0] > 0.0:
                         active_indices.append(i)
                     else:
                         inactive_indices.append(i)
                     progress.increment()
-            print('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) + ' inactive data points')
+            logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
+                       ' inactive data points')
             number_training = round(len(classes) * parameters['train_percentage'] * 0.01)
             number_training_active = round(number_training * (len(active_indices) / len(classes)))
             number_training_inactive = number_training - number_training_active
-            print('Picking data points for training')
-            with multithread_progress.MultithreadProgress(number_training) as progress:
+            logger.log('Picking data points for training')
+            with progressbar.ProgressBar(number_training) as progress:
                 for i in range(number_training_active):
                     del active_indices[random_.randint(0, len(active_indices) - 1)]
                     progress.increment()
                 for i in range(number_training_inactive):
                     del inactive_indices[random_.randint(0, len(inactive_indices) - 1)]
                     progress.increment()
-            partition_train = partition_h5.create_dataset(file_structure.Partitions.train, (number_training,), dtype='I')
-            partition_test = partition_h5.create_dataset(file_structure.Partitions.test, (len(classes) - number_training,), dtype='I')
-            with multithread_progress.MultithreadProgress(len(classes)) as progress:
+            partition_train = partition_h5.create_dataset(file_structure.Partitions.train, (number_training,),
+                                                          dtype='I')
+            partition_test = partition_h5.create_dataset(file_structure.Partitions.test,
+                                                         (len(classes) - number_training,), dtype='I')
+            with progressbar.ProgressBar(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0
                 for i in range(len(classes)):
@@ -103,7 +106,7 @@ class StratifiedSampling:
 
     @staticmethod
     def oversample(partition_h5, data_set_name, classes):
-        print('Oversampling data')
+        logger.log('Oversampling data')
         ref = partition_h5[data_set_name]
         class_zero_count = 0
         class_one_count = 0
@@ -114,14 +117,15 @@ class StratifiedSampling:
             else:
                 class_one_count += 1
         difference = abs(class_zero_count - class_one_count)
-        oversampled = partition_h5.create_dataset(data_set_name + '-oversampled', (ref.shape[0] + difference, ), dtype='I')
+        oversampled = partition_h5.create_dataset(data_set_name + '-oversampled', (ref.shape[0] + difference, ),
+                                                  dtype='I')
         left_difference = difference
         if class_zero_count < class_one_count:
             copies_per_instance = int(math.ceil(class_one_count / class_zero_count))
         else:
             copies_per_instance = int(math.ceil(class_zero_count / class_one_count))
         target_i = 0
-        with multithread_progress.MultithreadProgress(oversampled.shape[0]) as progress:
+        with progressbar.ProgressBar(oversampled.shape[0]) as progress:
             for i in range(len(ref)):
                 value = classes[ref[i]]
                 minority = (class_zero_count < class_one_count and value[0] >= value[1]) or \
@@ -141,8 +145,8 @@ class StratifiedSampling:
     @staticmethod
     def shuffle(data_set, random_):
         n = len(data_set)
-        print('Shuffling data')
-        with multithread_progress.MultithreadProgress(n) as progress:
+        logger.log('Shuffling data')
+        with progressbar.ProgressBar(n) as progress:
             for i in range(n):
                 j = random_.randint(0, n-1)
                 tmp = data_set[j]

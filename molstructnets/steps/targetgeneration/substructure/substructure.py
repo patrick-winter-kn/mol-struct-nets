@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, file_util, misc, multithread_progress, thread_pool
+from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger
 from rdkit import Chem
 import h5py
 # TODO hash at the end of target data set
@@ -36,7 +36,7 @@ class Substructure:
     def execute(global_parameters, parameters):
         target_path = file_structure.get_target_file(global_parameters)
         if file_util.file_exists(target_path):
-            print('Skipping step: ' + target_path + ' already exists')
+            logger.log('Skipping step: ' + target_path + ' already exists')
         else:
             substructures = []
             for string in parameters['substructures'].split(';'):
@@ -52,7 +52,7 @@ class Substructure:
                 for i in range(1, len(substructures)):
                     logic += '&' + chr(ord('a')+i)
             chunks = misc.chunk(len(smiles_data), number_threads)
-            with multithread_progress.MultithreadProgress(len(smiles_data)) as progress:
+            with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
                         pool.submit(Substructure._generate_activities,

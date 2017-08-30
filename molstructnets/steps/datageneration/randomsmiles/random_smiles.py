@@ -1,4 +1,4 @@
-from util import file_structure, thread_pool, file_util, multithread_progress, misc, duplicate_checker
+from util import file_structure, thread_pool, file_util, progressbar, misc, duplicate_checker, logger
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
 # TODO hash at the end of data set name
@@ -33,7 +33,7 @@ class RandomSmiles:
     def execute(global_parameters, parameters):
         data_set_path = file_structure.get_data_set_file(global_parameters)
         if file_util.file_exists(data_set_path):
-            print('Skipping step: ' + data_set_path + ' already exists')
+            logger.log('Skipping step: ' + data_set_path + ' already exists')
         else:
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
@@ -41,7 +41,7 @@ class RandomSmiles:
                                                  'S' + str(parameters['max_length']))
             chunks = misc.chunk(parameters['n'], number_threads)
             checker = duplicate_checker.DuplicateChecker()
-            with multithread_progress.MultithreadProgress(parameters['n']) as progress:
+            with progressbar.ProgressBar(parameters['n']) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
                         generator = smiles_generator.SmilesGenerator(chunk['size'], parameters['max_length'],

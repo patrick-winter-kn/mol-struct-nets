@@ -3,6 +3,7 @@ import math
 
 
 def hash_parameters(parameters):
+    parameters = sorted(parameters.items())
     return hashlib.sha1(str(parameters).encode()).hexdigest()
 
 
