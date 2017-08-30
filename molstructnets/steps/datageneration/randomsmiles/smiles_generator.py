@@ -1,23 +1,24 @@
 import re
 import random
+from rdkit import Chem
 
 
-atoms = {'o': 0.13, 's': 0.03, 'n': 0.12, 'c': 0.72}
+atoms = {'O': 0.13, 'S': 0.03, 'N': 0.12, 'C': 0.72}
 branches = 0.19
 rings = 0.14
-atom_pattern = re.compile('[a-z]')
+atom_pattern = re.compile('[A-Z]')
 
 
 class SmilesGenerator:
 
-    def __init__(self, number, max_length, seed, offset=0, progress=None, duplicate_checker=None):
+    def __init__(self, number, max_length, seed, offset=0, progress=None, global_smiles_set=None):
         self.number = number
         self.max_length = max_length
         self.random = random.Random()
         self.random.seed(seed + offset)
         self.offset = offset
         self.progress = progress
-        self.duplicate_checker = duplicate_checker
+        self.global_smiles_set = global_smiles_set
 
     def is_branch(self, action, current_length, target_length):
         return action <= branches and current_length > 0 and current_length + 4 < target_length
@@ -61,9 +62,11 @@ class SmilesGenerator:
 
     def write_smiles(self, array):
         for i in range(self.offset, self.number + self.offset):
-            invalid = True
-            while invalid:
+            valid = False
+            while not valid:
                 smiles = self.generate_single_smiles(1, self.max_length, False, 1).encode()
-                invalid = self.duplicate_checker.is_duplicate(smiles)
-            array[i] = smiles
+                smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smiles, sanitize=False))
+                if len(smiles) <= self.max_length:
+                    valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
+            array[i] = smiles.encode('utf-8')
             self.progress.increment()

@@ -1,4 +1,4 @@
-from util import file_structure, thread_pool, file_util, progressbar, misc, duplicate_checker, logger
+from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
 # TODO hash at the end of data set name
@@ -40,13 +40,13 @@ class RandomSmiles:
             smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (parameters['n'],),
                                                  'S' + str(parameters['max_length']))
             chunks = misc.chunk(parameters['n'], number_threads)
-            checker = duplicate_checker.DuplicateChecker()
+            smiles_set = concurrent_set.ConcurrentSet()
             with progressbar.ProgressBar(parameters['n']) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
                         generator = smiles_generator.SmilesGenerator(chunk['size'], parameters['max_length'],
                                                                      global_parameters['seed'], chunk['start'],
-                                                                     progress, checker)
+                                                                     progress, smiles_set)
                         pool.submit(generator.write_smiles, smiles_data)
                     pool.wait()
             data_h5.close()

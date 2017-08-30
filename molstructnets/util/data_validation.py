@@ -5,27 +5,27 @@ from keras import models
 
 def validate_data_set(global_parameters):
     path = file_structure.get_data_set_file(global_parameters)
-    validate_hdf5_file(path, 'smiles')
+    validate_hdf5_file(path, file_structure.DataSet.smiles)
 
 
 def validate_target(global_parameters):
     path = file_structure.get_target_file(global_parameters)
-    validate_hdf5_file(path, 'classes')
+    validate_hdf5_file(path, file_structure.Target.classes)
 
 
 def validate_partition(global_parameters):
     path = global_parameters['partition_data']
-    validate_hdf5_file(path, 'train', 'test')
+    validate_hdf5_file(path, file_structure.Partitions.train, file_structure.Partitions.test)
 
 
 def validate_preprocessed(global_parameters):
     path = global_parameters['preprocessed_data']
-    validate_hdf5_file(path, 'preprocessed')
+    validate_hdf5_file(path, file_structure.Preprocessed.preprocessed)
 
 
 def validate_prediction(global_parameters):
     path = file_structure.get_prediction_file(global_parameters)
-    validate_hdf5_file(path, 'train', 'test')
+    validate_hdf5_file(path, file_structure.Predictions.train, file_structure.Predictions.test)
 
 
 def validate_network(global_parameters):

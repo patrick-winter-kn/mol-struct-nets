@@ -41,6 +41,7 @@ class StratifiedSampling:
     @staticmethod
     def execute(global_parameters, parameters):
         partition_path = StratifiedSampling.get_result_file(global_parameters, parameters)
+        global_parameters['partition_data'] = partition_path
         if file_util.file_exists(partition_path):
             logger.log('Skipping step: ' + partition_path + ' already exists')
         else:
