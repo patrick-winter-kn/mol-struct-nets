@@ -24,8 +24,7 @@ class Preprocessed:
 
 class Predictions:
 
-    train = 'train'
-    test = 'test'
+    prediction = 'prediction'
 
 
 def get_experiment_folder(global_parameters):
