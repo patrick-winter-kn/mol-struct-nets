@@ -26,8 +26,11 @@ def resolve_subpath(folder_path, *child_paths):
     return full_path
 
 
-def make_folders(file_path):
-    folder_path = path.dirname(resolve_path(file_path))
+def make_folders(file_path, including_this=False):
+    file_path = resolve_path(file_path)
+    if including_this:
+        file_path += path.sep
+    folder_path = path.dirname(file_path)
     if not path.exists(folder_path):
         os.makedirs(folder_path)
 
