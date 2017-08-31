@@ -24,6 +24,7 @@ class Image:
         data_validation.validate_target(global_parameters)
         data_validation.validate_partition(global_parameters)
         data_validation.validate_preprocessed_images(global_parameters)
+        data_validation.validate_network(global_parameters)
 
     @staticmethod
     def execute(global_parameters, parameters):

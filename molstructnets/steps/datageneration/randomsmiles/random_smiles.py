@@ -35,6 +35,7 @@ class RandomSmiles:
         if file_util.file_exists(data_set_path):
             logger.log('Skipping step: ' + data_set_path + ' already exists')
         else:
+            global_parameters['n'] = parameters['n']
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
             smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (parameters['n'],),

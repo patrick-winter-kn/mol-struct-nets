@@ -4,8 +4,9 @@ import gc
 import time
 import argparse
 from experiments import experiment
-from util import file_structure, logger
+from util import file_structure, logger, file_util
 from steps import steps_repository
+import h5py
 
 
 def get_arguments():
@@ -17,6 +18,17 @@ def get_arguments():
     return parser.parse_args()
 
 
+def get_n(global_parameters):
+    n = None
+    data_set_path = file_structure.get_data_set_file(global_parameters)
+    if file_util.file_exists(data_set_path):
+        data_h5 = h5py.File(data_set_path)
+        if file_structure.DataSet.smiles in data_h5.keys():
+            n = len(data_h5[file_structure.DataSet.smiles])
+        data_h5.close()
+    return n
+
+
 args = get_arguments()
 experiment_ = experiment.Experiment(args.experiment)
 global_parameters = {}
@@ -25,6 +37,9 @@ global_parameters['root'] = file_structure.get_root_from_experiment_file(args.ex
 global_parameters['experiment'] = experiment_.get_name()
 global_parameters['data_set'] = args.data_set
 global_parameters['target'] = args.target
+n = get_n(global_parameters)
+if n is not None:
+    global_parameters['n'] = n
 nr_steps = experiment_.number_steps()
 if args.step is not None:
     nr_steps = args.step + 1
