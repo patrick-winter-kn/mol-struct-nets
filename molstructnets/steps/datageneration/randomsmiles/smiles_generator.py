@@ -3,7 +3,8 @@ import random
 from rdkit import Chem
 
 
-atoms = {'O': 0.13, 'S': 0.03, 'N': 0.12, 'C': 0.72}
+atom_ps = {'O': 0.13, 'S': 0.03, 'N': 0.12, 'C': 0.72}
+atoms = sorted(atom_ps)
 branches = 0.19
 rings = 0.14
 atom_pattern = re.compile('[A-Z]')
@@ -15,7 +16,7 @@ class SmilesGenerator:
         self.number = number
         self.max_length = max_length
         self.random = random.Random()
-        self.random.seed(seed + offset)
+        self.seed = seed
         self.offset = offset
         self.progress = progress
         self.global_smiles_set = global_smiles_set
@@ -31,9 +32,9 @@ class SmilesGenerator:
 
 
     def pick_atom(self):
-        rest = random.uniform(0.0, 1.0)
+        rest = self.random.uniform(0.0, 1.0)
         for atom in atoms:
-            rest -= atoms[atom]
+            rest -= atom_ps[atom]
             if rest <= 0:
                 return atom
 
@@ -44,10 +45,10 @@ class SmilesGenerator:
 
 
     def generate_single_smiles(self, min_length, max_length, is_in_ring, ring_label):
-        length = random.randint(min_length,max_length)
+        length = self.random.randint(min_length,max_length)
         string = ''
         while len(string) < length:
-            action = random.uniform(0.0, 1.0)
+            action = self.random.uniform(0.0, 1.0)
             if self.is_branch(action, len(string), length) and self.is_atom(string[-1]):
                 string += '(' + self.generate_single_smiles(1, length - len(string) - 3, False, ring_label) + ')' + self.pick_atom()
             elif self.is_ring(action, len(string), length, len(str(ring_label))) and self.is_atom(string[-1]) and not is_in_ring:
@@ -62,6 +63,7 @@ class SmilesGenerator:
 
     def write_smiles(self, array):
         for i in range(self.offset, self.number + self.offset):
+            self.random.seed(self.seed + i)
             valid = False
             while not valid:
                 smiles = self.generate_single_smiles(1, self.max_length, False, 1).encode()
