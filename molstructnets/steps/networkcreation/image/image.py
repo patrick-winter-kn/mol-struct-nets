@@ -52,4 +52,5 @@ class Image:
             out = Dense(2, activation='softmax', name='output')(x)
             model = Model(inputs=img_input, outputs=out)
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            file_util.make_folders(network_path)
             model.save(network_path)

@@ -50,4 +50,5 @@ class SmilesMatrix:
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(l)
             model = Model(inputs=input_layer, outputs=output_layer)
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            file_util.make_folders(network_path)
             model.save(network_path)

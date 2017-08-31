@@ -29,11 +29,11 @@ class Matrix:
 
     @staticmethod
     def execute(global_parameters, parameters):
-        preprocessed_path = global_parameters['preprocessed_data']
-        if file_util.file_exists(preprocessed_path):
-            logger.log('Skipping step: ' + preprocessed_path + ' already exists')
+        prediction_path = file_structure.get_prediction_file(global_parameters)
+        if file_util.file_exists(prediction_path):
+            logger.log('Skipping step: ' + prediction_path + ' already exists')
         else:
-            preprocessed_h5 = h5py.File(preprocessed_path, 'r')
+            preprocessed_h5 = h5py.File(global_parameters['preprocessed_data'], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             prediction_path = file_structure.get_prediction_file(global_parameters)
             temp_prediction_path = file_util.get_temporary_file_path('matrix_prediction')
@@ -48,7 +48,7 @@ class Matrix:
                     end = min(len(preprocessed), (i + 1) * parameters['batch_size'])
                     results = model.predict(preprocessed[start:end])
                     predictions[start:end] = results[:]
-                    progress.update(end - start)
+                    progress.increment(end - start)
             preprocessed_h5.close()
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)

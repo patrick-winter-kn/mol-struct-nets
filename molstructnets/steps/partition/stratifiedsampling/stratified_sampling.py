@@ -77,6 +77,7 @@ class StratifiedSampling:
                                                           dtype='I')
             partition_test = partition_h5.create_dataset(file_structure.Partitions.test,
                                                          (len(classes) - number_training,), dtype='I')
+            logger.log('Writing partitions')
             with progressbar.ProgressBar(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0

@@ -56,4 +56,5 @@ class Vgg19:
             x = Dense(2, activation='softmax', name='predictions')(x)
             model = Model(inputs=img_input, outputs=x)
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            file_util.make_folders(network_path)
             model.save(network_path)
