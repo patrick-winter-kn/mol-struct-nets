@@ -62,3 +62,8 @@ def get_prediction_file(global_parameters):
 
 def get_root_from_experiment_file(experiment_file_path):
     return file_util.get_parent(file_util.get_parent(experiment_file_path))
+
+
+def get_evaluation_folder(global_parameters):
+    return file_util.resolve_subpath(global_parameters['root'], 'experiments', global_parameters['experiment'],
+                                     global_parameters['data_set'], global_parameters['target'], 'evaluation')
