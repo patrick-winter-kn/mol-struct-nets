@@ -63,7 +63,6 @@ class Substructure:
             target_h5.close()
             file_util.move_file(temp_target_path, target_path)
 
-
     @staticmethod
     def _generate_activities(smiles_data, substructures, logic, classes, offset, progress):
         for i in range(len(smiles_data)):

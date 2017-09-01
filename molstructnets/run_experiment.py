@@ -18,20 +18,20 @@ def get_arguments():
     return parser.parse_args()
 
 
-def get_n(global_parameters):
-    n = None
-    data_set_path = file_structure.get_data_set_file(global_parameters)
+def get_n(global_parameters_):
+    n_ = None
+    data_set_path = file_structure.get_data_set_file(global_parameters_)
     if file_util.file_exists(data_set_path):
         data_h5 = h5py.File(data_set_path)
         if file_structure.DataSet.smiles in data_h5.keys():
-            n = len(data_h5[file_structure.DataSet.smiles])
+            n_ = len(data_h5[file_structure.DataSet.smiles])
         data_h5.close()
-    return n
+    return n_
 
 
 args = get_arguments()
 experiment_ = experiment.Experiment(args.experiment)
-global_parameters = {}
+global_parameters = dict()
 global_parameters['seed'] = initialization.seed
 global_parameters['root'] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters['experiment'] = experiment_.get_name()

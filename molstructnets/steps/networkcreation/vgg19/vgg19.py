@@ -2,6 +2,7 @@ from util import file_structure, file_util, logger
 from keras.models import Model
 from keras.layers import Conv2D, MaxPooling2D, Input, Dense, Flatten
 
+
 class Vgg19:
 
     @staticmethod

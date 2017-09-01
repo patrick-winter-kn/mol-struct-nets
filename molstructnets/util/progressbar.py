@@ -20,9 +20,12 @@ class ProgressBar:
             self.progress.update(self.counter)
         self.lock.release()
 
+    def finish(self):
+        if self.progress is not None:
+            self.progress.finish()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.progress is not None:
-            self.progress.finish()
+        self.finish()

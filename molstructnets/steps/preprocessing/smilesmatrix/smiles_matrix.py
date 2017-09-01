@@ -1,4 +1,5 @@
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set, thread_pool
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
+    thread_pool
 import numpy
 import h5py
 
@@ -57,7 +58,8 @@ class SmilesMatrix:
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(SmilesMatrix.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1], characters, max_length, progress)
+                        pool.submit(SmilesMatrix.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1],
+                                    characters, max_length, progress)
                     pool.wait()
             characters = sorted(characters.get_set_copy())
             index = preprocessed_h5.create_dataset('index', (len(characters),), dtype='S1')
@@ -66,12 +68,16 @@ class SmilesMatrix:
                 index_lookup[characters[i]] = i
                 index[i] = characters[i].encode('utf-8')
             global_parameters['input_dimensions'] = (max_length.get_max(), len(index))
-            preprocessed = preprocessed_h5.create_dataset(file_structure.Preprocessed.preprocessed, (len(smiles_data), max_length.get_max(), len(index)), dtype='I')
+            preprocessed = preprocessed_h5.create_dataset(file_structure.Preprocessed.preprocessed,
+                                                          (len(smiles_data), max_length.get_max(), len(index)),
+                                                          dtype='I')
             print('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(SmilesMatrix.write_smiles_matrices, preprocessed, smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, max_length.get_max(), chunk['start'], progress)
+                        pool.submit(SmilesMatrix.write_smiles_matrices, preprocessed,
+                                    smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, max_length.get_max(),
+                                    chunk['start'], progress)
                     pool.wait()
             data_h5.close()
             preprocessed_h5.close()

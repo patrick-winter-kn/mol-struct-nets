@@ -44,9 +44,9 @@ def get_parent(file_path):
 
 
 def get_temporary_file_path(prefix=None):
-    path = tempfile.mkstemp(prefix=prefix)[1]
-    os.remove(path)
-    return path
+    file_path = tempfile.mkstemp(prefix=prefix)[1]
+    os.remove(file_path)
+    return file_path
 
 
 def move_file(source, destination):

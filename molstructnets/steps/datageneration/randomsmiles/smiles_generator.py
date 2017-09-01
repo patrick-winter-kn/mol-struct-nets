@@ -21,15 +21,16 @@ class SmilesGenerator:
         self.progress = progress
         self.global_smiles_set = global_smiles_set
 
-    def is_branch(self, action, current_length, target_length):
+    @staticmethod
+    def is_branch(action, current_length, target_length):
         return action <= branches and current_length > 0 and current_length + 4 < target_length
 
-
-    def is_ring(self, action, current_length, target_length, label_size):
+    @staticmethod
+    def is_ring(action, current_length, target_length, label_size):
         if label_size > 1:
             label_size += 1
-        return action > branches and action <= rings + branches and current_length > 0 and current_length + label_size * 2 + 2 < target_length
-
+        enough_space = current_length + label_size * 2 + 2 < target_length
+        return branches < action <= rings + branches and current_length > 0 and enough_space
 
     def pick_atom(self):
         rest = self.random.uniform(0.0, 1.0)
@@ -38,25 +39,27 @@ class SmilesGenerator:
             if rest <= 0:
                 return atom
 
-
-    def is_atom(self, char):
+    @staticmethod
+    def is_atom(char):
         global atom_pattern
         return atom_pattern.match(char)
 
-
     def generate_single_smiles(self, min_length, max_length, is_in_ring, ring_label):
-        length = self.random.randint(min_length,max_length)
+        length = self.random.randint(min_length, max_length)
         string = ''
         while len(string) < length:
             action = self.random.uniform(0.0, 1.0)
-            if self.is_branch(action, len(string), length) and self.is_atom(string[-1]):
-                string += '(' + self.generate_single_smiles(1, length - len(string) - 3, False, ring_label) + ')' + self.pick_atom()
-            elif self.is_ring(action, len(string), length, len(str(ring_label))) and self.is_atom(string[-1]) and not is_in_ring:
+            if SmilesGenerator.is_branch(action, len(string), length) and SmilesGenerator.is_atom(string[-1]):
+                string += '(' + self.generate_single_smiles(1, length - len(string) - 3, False, ring_label) + ')'\
+                          + self.pick_atom()
+            elif SmilesGenerator.is_ring(action, len(string), length, len(str(ring_label)))\
+                    and SmilesGenerator.is_atom(string[-1]) and not is_in_ring:
                 label = str(ring_label)
                 if ring_label > 9:
                     label = '%' + label
                 ring_label += 1
-                string += label + self.generate_single_smiles(2, length - len(string) - (len(label) * 2), True, ring_label) + label
+                string += label + self.generate_single_smiles(2, length - len(string) - (len(label) * 2),
+                                                              True, ring_label) + label
             else:
                 string += self.pick_atom()
         return string
@@ -64,6 +67,7 @@ class SmilesGenerator:
     def write_smiles(self, array):
         for i in range(self.offset, self.number + self.offset):
             self.random.seed(self.seed + i)
+            smiles = None
             valid = False
             while not valid:
                 smiles = self.generate_single_smiles(1, self.max_length, False, 1).encode()

@@ -1,7 +1,7 @@
-from util import data_validation, file_structure, reference_data_set, hdf5_util, logger
+from util import data_validation, file_structure, reference_data_set, hdf5_util, logger, callbacks
 import h5py
 from keras import models
-from keras.callbacks import ModelCheckpoint, Callback
+from keras.callbacks import ModelCheckpoint
 
 
 class Matrix:
@@ -45,23 +45,13 @@ class Matrix:
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             partition_h5 = h5py.File(global_parameters['partition_data'], 'r')
             train = partition_h5[file_structure.Partitions.train]
-            input = reference_data_set.ReferenceDataSet(train, preprocessed)
+            input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
             output = reference_data_set.ReferenceDataSet(train, classes)
             model = models.load_model(model_path)
             checkpoint = ModelCheckpoint(model_path)
-            customCheckpoint = CustomCheckpoint(model_path)
-            model.fit(input, output, epochs=parameters['epochs'], shuffle='batch', batch_size=parameters['batch_size'],
-                      callbacks=[checkpoint, customCheckpoint], initial_epoch=epoch)
+            custom_checkpoint = callbacks.CustomCheckpoint(model_path)
+            model.fit(input_, output, epochs=parameters['epochs'], shuffle='batch', batch_size=parameters['batch_size'],
+                      callbacks=[checkpoint, custom_checkpoint], initial_epoch=epoch)
             target_h5.close()
             preprocessed_h5.close()
             partition_h5.close()
-
-
-class CustomCheckpoint(Callback):
-
-    def __init__(self, file_path):
-        super().__init__()
-        self.file_path = file_path
-
-    def on_epoch_end(self, epoch, logs=None):
-        hdf5_util.set_property(self.file_path, 'epochs_trained', epoch + 1)

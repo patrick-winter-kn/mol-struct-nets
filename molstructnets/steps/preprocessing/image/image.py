@@ -36,6 +36,7 @@ class Image:
     def execute(global_parameters, parameters):
         global_parameters['input_dimensions'] = (parameters['size'], parameters['size'], 3)
         preprocess_path = Image.get_result_file(global_parameters, parameters)
+        global_parameters['preprocessed_data'] = preprocess_path
         file_util.make_folders(preprocess_path, True)
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
         smiles_data = data_h5[file_structure.DataSet.smiles]

@@ -25,7 +25,7 @@ def validate_preprocessed(global_parameters):
 
 def validate_prediction(global_parameters):
     path = file_structure.get_prediction_file(global_parameters)
-    validate_hdf5_file(path, file_structure.Predictions.train, file_structure.Predictions.test)
+    validate_hdf5_file(path, file_structure.Predictions.prediction)
 
 
 def validate_network(global_parameters):

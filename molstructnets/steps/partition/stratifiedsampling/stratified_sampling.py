@@ -55,7 +55,7 @@ class StratifiedSampling:
             logger.log('Retrieving active and inactive data')
             with progressbar.ProgressBar(len(classes)) as progress:
                 for i in range(len(classes)):
-                    if classes[i,0] > 0.0:
+                    if classes[i, 0] > 0.0:
                         active_indices.append(i)
                     else:
                         inactive_indices.append(i)
@@ -82,7 +82,7 @@ class StratifiedSampling:
                 partition_train_index = 0
                 partition_test_index = 0
                 for i in range(len(classes)):
-                    if classes[i,0] > 0.0:
+                    if classes[i, 0] > 0.0:
                         if i in active_indices:
                             partition_test[partition_test_index] = i
                             partition_test_index += 1

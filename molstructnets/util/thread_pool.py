@@ -12,8 +12,8 @@ class ThreadPool:
         self.number_threads = number_threads
         self.futures = []
 
-    def submit(self, function, *args, **kwargs):
-        self.futures.append(self.pool.submit(function, *args, **kwargs))
+    def submit(self, function_, *args, **kwargs):
+        self.futures.append(self.pool.submit(function_, *args, **kwargs))
 
     def wait(self):
         for i in range(len(self.futures)):
