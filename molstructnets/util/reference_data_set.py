@@ -24,6 +24,8 @@ class ReferenceDataSet(dataset.Dataset):
             return numpy.array([self.data[self.reference[i]] for i in range(start, stop, step)])
         elif isinstance(item, list):
             return numpy.array([self.data[self.reference[i]] for i in item])
+        elif isinstance(item, tuple):
+            return self.data[self.reference[item[0]], item[1]]
         else:
             return self.data[self.reference[item]]
 

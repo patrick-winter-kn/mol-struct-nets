@@ -46,17 +46,10 @@ class EnrichmentPlot:
             test = partition_h5[file_structure.Partitions.test]
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
-
-            # TODO reference_data_set does not seem to play well with enrichment_plotter
-            #ground_truth = reference_data_set.ReferenceDataSet(test, classes)
-            ground_truth = classes
-            
+            ground_truth = reference_data_set.ReferenceDataSet(test, classes)
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-
-            #predictions = reference_data_set.ReferenceDataSet(test,
-            #                                                  prediction_h5[file_structure.Predictions.prediction])
-            predictions = prediction_h5[file_structure.Predictions.prediction]
-
+            predictions = reference_data_set.ReferenceDataSet(test,
+                                                              prediction_h5[file_structure.Predictions.prediction])
             enrichment_plotter.plot([predictions], [parameters['method_name']], ground_truth, enrichment_factors,
                                     enrichment_plot_path)
             partition_h5.close()
