@@ -41,7 +41,7 @@ class Matrix:
             predictions = prediction_h5.create_dataset(file_structure.Predictions.prediction, (len(preprocessed), 2))
             model_path = file_structure.get_network_file(global_parameters)
             model = models.load_model(model_path)
-            logger.log('Predicting training data')
+            logger.log('Predicting data')
             with progressbar.ProgressBar(len(preprocessed)) as progress:
                 for i in range(int(math.ceil(len(preprocessed) / parameters['batch_size']))):
                     start = i * parameters['batch_size']
