@@ -19,7 +19,8 @@ class Image:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'size', 'name': 'Size in pixels (n×n)', 'type': int})
+        parameters.append({'id': 'size', 'name': 'Size in pixels (n×n)', 'type': int,
+                           'description': 'Number of horizontal / vertical pixels.'})
         return parameters
 
     @staticmethod

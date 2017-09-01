@@ -16,9 +16,10 @@ class EnrichmentPlot:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'method_name', 'name': 'Method name', 'type': str})
+        parameters.append({'id': 'method_name', 'name': 'Method name', 'type': str,
+                           'description': 'Name of the evaluated method that will be shown in the plot.'})
         parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors (in %, default: 5,10)', 'type': str,
-                           'default': '5,10'})
+                           'default': '5,10', 'description': 'List of enrichment factors in percent.'})
         return parameters
 
     @staticmethod

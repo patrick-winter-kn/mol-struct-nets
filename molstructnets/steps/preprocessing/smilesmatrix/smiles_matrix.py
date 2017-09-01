@@ -21,9 +21,12 @@ class SmilesMatrix:
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'max_length', 'name': 'Maximum length (default: automatic)', 'type': int,
-                           'default': None})
+                           'default': None,
+                           'description': 'Maximum number of characters of input SMILES string. If the limit is'
+                                          ' exceeded the string will be shortened to fit into the matrix.'})
         parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,
-                           'default': None})
+                           'default': None, 'description': 'Characters in the given string will be added to the index'
+                                                           ' in addition to characters found in the data set.'})
         return parameters
 
     @staticmethod
@@ -38,6 +41,7 @@ class SmilesMatrix:
 
     @staticmethod
     def execute(global_parameters, parameters):
+        # TODO implement characters parameter
         preprocessed_path = SmilesMatrix.get_result_file(global_parameters, parameters)
         global_parameters['preprocessed_data'] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
