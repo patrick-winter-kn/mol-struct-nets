@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, misc, file_util, progressbar, logger
+from util import data_validation, file_structure, misc, file_util, progressbar, logger, constants
 import random
 import h5py
 import math
@@ -27,25 +27,25 @@ class StratifiedSampling:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_target(global_parameters)
 
     @staticmethod
-    def get_result_file(global_parameters, parameters):
+    def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, ['seed'])
-        hash_parameters.update(misc.copy_dict_from_keys(parameters, ['train_percentage', 'oversample', 'shuffle']))
+        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['train_percentage', 'oversample', 'shuffle']))
         file_name = 'stratified_sampling_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_partition_folder(global_parameters), file_name)
 
     @staticmethod
-    def execute(global_parameters, parameters):
-        partition_path = StratifiedSampling.get_result_file(global_parameters, parameters)
-        global_parameters['partition_data'] = partition_path
+    def execute(global_parameters, local_parameters):
+        partition_path = StratifiedSampling.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.partition_data] = partition_path
         if file_util.file_exists(partition_path):
             logger.log('Skipping step: ' + partition_path + ' already exists')
         else:
-            random_ = random.Random(global_parameters['seed'])
+            random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
             temp_partition_path = file_util.get_temporary_file_path('stratified_sampling')
@@ -62,7 +62,7 @@ class StratifiedSampling:
                     progress.increment()
             logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
                        ' inactive data points')
-            number_training = round(len(classes) * parameters['train_percentage'] * 0.01)
+            number_training = round(len(classes) * local_parameters['train_percentage'] * 0.01)
             number_training_active = round(number_training * (len(active_indices) / len(classes)))
             number_training_inactive = number_training - number_training_active
             logger.log('Picking data points for training')
@@ -97,10 +97,10 @@ class StratifiedSampling:
                             partition_train[partition_train_index] = i
                             partition_train_index += 1
                     progress.increment()
-            if parameters['oversample']:
+            if local_parameters['oversample']:
                 StratifiedSampling.oversample(partition_h5, file_structure.Partitions.train, classes)
                 partition_train = partition_h5[file_structure.Partitions.train]
-            if parameters['shuffle']:
+            if local_parameters['shuffle']:
                 StratifiedSampling.shuffle(partition_train, random_)
             target_h5.close()
             partition_h5.close()

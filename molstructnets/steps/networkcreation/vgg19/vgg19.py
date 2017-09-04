@@ -1,4 +1,4 @@
-from util import file_structure, file_util, logger
+from util import file_structure, file_util, logger, constants
 from keras.models import Model
 from keras.layers import Conv2D, MaxPooling2D, Input, Dense, Flatten
 
@@ -19,18 +19,18 @@ class Vgg19:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
-        dimensions = global_parameters['input_dimensions']
+    def check_prerequisites(global_parameters, local_parameters):
+        dimensions = global_parameters[constants.GlobalParameters.input_dimensions]
         if len(dimensions) != 3:
             raise ValueError('Preprocessed dimensions are not 2D')
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         network_path = file_structure.get_network_file(global_parameters)
         if file_util.file_exists(network_path):
             logger.log('Skipping step: ' + network_path + ' already exists')
         else:
-            img_input = Input(shape=global_parameters['input_dimensions'])
+            img_input = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions])
             x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')(img_input)
             x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2')(x)
             x = MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')(x)

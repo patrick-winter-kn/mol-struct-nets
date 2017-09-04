@@ -1,5 +1,5 @@
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
-    thread_pool
+    thread_pool, constants
 import numpy
 import h5py
 
@@ -30,25 +30,26 @@ class SmilesMatrix:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
 
     @staticmethod
-    def get_result_file(global_parameters, parameters):
-        hash_parameters = misc.copy_dict_from_keys(parameters, ['max_length', 'characters'])
+    def get_result_file(global_parameters, local_parameters):
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters'])
         file_name = 'smiles_matrix_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         # TODO implement characters parameter
-        preprocessed_path = SmilesMatrix.get_result_file(global_parameters, parameters)
-        global_parameters['preprocessed_data'] = preprocessed_path
+        preprocessed_path = SmilesMatrix.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            global_parameters['input_dimensions'] = (preprocessed.shape[1], preprocessed.shape[2])
+            global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1],
+                                                                              preprocessed.shape[2])
             preprocessed_h5.close()
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
@@ -71,7 +72,7 @@ class SmilesMatrix:
             for i in range(len(characters)):
                 index_lookup[characters[i]] = i
                 index[i] = characters[i].encode('utf-8')
-            global_parameters['input_dimensions'] = (max_length.get_max(), len(index))
+            global_parameters[constants.GlobalParameters.input_dimensions] = (max_length.get_max(), len(index))
             preprocessed = preprocessed_h5.create_dataset(file_structure.Preprocessed.preprocessed,
                                                           (len(smiles_data), max_length.get_max(), len(index)),
                                                           dtype='I')

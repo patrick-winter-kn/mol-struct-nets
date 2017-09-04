@@ -1,4 +1,4 @@
-from util import file_structure, file_util, logger
+from util import file_structure, file_util, logger, constants
 from keras.models import Model
 from keras.layers import Dropout, Conv2D, MaxPooling2D, Input, Dense, Flatten
 
@@ -19,18 +19,18 @@ class Image:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
-        dimensions = global_parameters['input_dimensions']
+    def check_prerequisites(global_parameters, local_parameters):
+        dimensions = global_parameters[constants.GlobalParameters.input_dimensions]
         if len(dimensions) != 3:
             raise ValueError('Preprocessed dimensions are not 2D')
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         network_path = file_structure.get_network_file(global_parameters)
         if file_util.file_exists(network_path):
             logger.log('Skipping step: ' + network_path + ' already exists')
         else:
-            img_input = Input(global_parameters['input_dimensions'], name='input')
+            img_input = Input(global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             x = Dropout(0.3, name='input_drop')(img_input)
             x = Conv2D(64, 3, activation='relu', padding='same', name='conv_1')(x)
             x = MaxPooling2D((2, 2), strides=(2, 2), name='pool_1')(x)

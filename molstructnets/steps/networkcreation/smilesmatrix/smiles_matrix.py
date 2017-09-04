@@ -1,4 +1,4 @@
-from util import file_structure, file_util, logger
+from util import file_structure, file_util, logger, constants
 from keras.models import Model
 from keras.layers import Input
 from keras.layers.core import Dense, Flatten, Dropout
@@ -22,19 +22,19 @@ class SmilesMatrix:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
-        dimensions = global_parameters['input_dimensions']
+    def check_prerequisites(global_parameters, local_parameters):
+        dimensions = global_parameters[constants.GlobalParameters.input_dimensions]
         if len(dimensions) != 2:
             raise ValueError('Preprocessed dimensions are not 1D')
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         network_path = file_structure.get_network_file(global_parameters)
         if file_util.file_exists(network_path):
             logger.log('Skipping step: ' + network_path + ' already exists')
         else:
             initializer = initializers.he_uniform()
-            input_layer = Input(shape=global_parameters['input_dimensions'], name='input')
+            input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             l = Dropout(0.3, name='dropout_input')(input_layer)
             l = Convolution1D(4, 4, activation='relu', name='convolution_1', kernel_initializer=initializer)(l)
             l = Dropout(0.75, name='dropout_convolution_1')(l)

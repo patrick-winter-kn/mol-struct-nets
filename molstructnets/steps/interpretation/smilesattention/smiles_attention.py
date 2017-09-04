@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, file_util, progressbar, misc
+from util import data_validation, file_structure, file_util, progressbar, misc, constants
 from keras import models, activations
 import h5py
 from vis.utils import utils
@@ -34,14 +34,14 @@ class SmilesAttention:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_target(global_parameters)
         data_validation.validate_partition(global_parameters)
         data_validation.validate_preprocessed(global_parameters)
         data_validation.validate_network(global_parameters)
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         model = models.load_model(file_structure.get_network_file(global_parameters))
         out_layer_index = len(model.layers)-1
         model.layers[out_layer_index].activation = activations.linear
@@ -52,19 +52,19 @@ class SmilesAttention:
         classes = target_h5[file_structure.Target.classes]
         prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
         predictions = prediction_h5[file_structure.Predictions.prediction]
-        partition_h5 = h5py.File(global_parameters['partition_data'], 'r')
-        if parameters['test_data']:
+        partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+        if local_parameters['test_data']:
             references = partition_h5[file_structure.Partitions.test]
         else:
             references = partition_h5[file_structure.Partitions.train]
-        preprocessed_h5 = h5py.File(global_parameters['preprocessed_data'], 'r')
+        preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
         preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
         indices = predictions[:, 0].argsort()[::-1]
-        if parameters['top_n'] is None:
+        if local_parameters['top_n'] is None:
             count = len(indices)
         else:
-            count = min(parameters['top_n'], len(indices))
-        if parameters['actives']:
+            count = min(local_parameters['top_n'], len(indices))
+        if local_parameters['actives']:
             class_index = 0
         else:
             class_index = 1
@@ -80,7 +80,7 @@ class SmilesAttention:
                         index = None
                     else:
                         index = indices[j]
-                    if parameters['correct_predictions']:
+                    if local_parameters['correct_predictions']:
                         if misc.is_active(classes[index]) is not misc.is_active(predictions[index]):
                             index = -1
                     j += 1

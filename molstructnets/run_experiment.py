@@ -4,7 +4,7 @@ import gc
 import time
 import argparse
 from experiments import experiment
-from util import file_structure, logger, file_util
+from util import file_structure, logger, file_util, constants
 from steps import steps_repository
 import h5py
 
@@ -32,14 +32,14 @@ def get_n(global_parameters_):
 args = get_arguments()
 experiment_ = experiment.Experiment(args.experiment)
 global_parameters = dict()
-global_parameters['seed'] = initialization.seed
-global_parameters['root'] = file_structure.get_root_from_experiment_file(args.experiment)
-global_parameters['experiment'] = experiment_.get_name()
-global_parameters['data_set'] = args.data_set
-global_parameters['target'] = args.target
+global_parameters[constants.GlobalParameters.seed] = initialization.seed
+global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
+global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
+global_parameters[constants.GlobalParameters.data_set] = args.data_set
+global_parameters[constants.GlobalParameters.target] = args.target
 n = get_n(global_parameters)
 if n is not None:
-    global_parameters['n'] = n
+    global_parameters[constants.GlobalParameters.n] = n
 nr_steps = experiment_.number_steps()
 if args.step is not None:
     nr_steps = args.step + 1

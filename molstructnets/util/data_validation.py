@@ -1,4 +1,4 @@
-from util import file_util, file_structure
+from util import file_util, file_structure, constants
 import h5py
 from keras import models
 
@@ -14,12 +14,12 @@ def validate_target(global_parameters):
 
 
 def validate_partition(global_parameters):
-    path = global_parameters['partition_data']
+    path = global_parameters[constants.GlobalParameters.partition_data]
     validate_hdf5_file(path, file_structure.Partitions.train, file_structure.Partitions.test)
 
 
 def validate_preprocessed(global_parameters):
-    path = global_parameters['preprocessed_data']
+    path = global_parameters[constants.GlobalParameters.preprocessed_data]
     validate_hdf5_file(path, file_structure.Preprocessed.preprocessed)
 
 
@@ -37,11 +37,11 @@ def validate_network(global_parameters):
 
 
 def validate_preprocessed_images(global_parameters):
-    path = global_parameters['preprocessed_data']
+    path = global_parameters[constants.GlobalParameters.preprocessed_data]
     if not file_util.file_exists(path):
         raise ValueError('Folder ' + path + ' with preprocessed data does not exist')
     nr_files = len(file_util.list_files(path))
-    n = global_parameters['n']
+    n = global_parameters[constants.GlobalParameters.n]
     if nr_files < n:
         raise ValueError('Folder ' + path + ' with preprocessed data contains less files than expected ('
                          + str(nr_files) + '<' + str(n) + ')')

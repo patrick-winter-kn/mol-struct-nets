@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, logger, file_util, progressbar, images
+from util import data_validation, file_structure, logger, file_util, progressbar, images, constants
 import h5py
 from keras import models
 import math
@@ -23,32 +23,33 @@ class Image:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_target(global_parameters)
         data_validation.validate_partition(global_parameters)
         data_validation.validate_preprocessed_images(global_parameters)
         data_validation.validate_network(global_parameters)
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         prediction_path = file_structure.get_prediction_file(global_parameters)
         if file_util.file_exists(prediction_path):
             logger.log('Skipping step: ' + prediction_path + ' already exists')
         else:
             model_path = file_structure.get_network_file(global_parameters)
             model = models.load_model(model_path)
-            n = global_parameters['n']
+            n = global_parameters[constants.GlobalParameters.n]
             temp_prediction_path = file_util.get_temporary_file_path('image_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             predictions = prediction_h5.create_dataset(file_structure.Predictions.prediction, (n, 2))
             logger.log('Predicting data')
             with progressbar.ProgressBar(n) as progress:
-                for i in range(int(math.ceil(n / parameters['batch_size']))):
-                    start = i * parameters['batch_size']
-                    end = min(n, (i + 1) * parameters['batch_size'])
-                    img_array = images.load_images(global_parameters['preprocessed_data'],
-                                                   global_parameters['input_dimensions'][0],
-                                                   global_parameters['input_dimensions'][1], start, end)
+                for i in range(int(math.ceil(n / local_parameters['batch_size']))):
+                    start = i * local_parameters['batch_size']
+                    end = min(n, (i + 1) * local_parameters['batch_size'])
+                    img_array = images.load_images(global_parameters[constants.GlobalParameters.preprocessed_data],
+                                                   global_parameters[constants.GlobalParameters.input_dimensions][0],
+                                                   global_parameters[constants.GlobalParameters.input_dimensions][1],
+                                                   start, end)
                     results = model.predict(img_array)
                     predictions[start:end] = results[:]
                     progress.increment(len(img_array))

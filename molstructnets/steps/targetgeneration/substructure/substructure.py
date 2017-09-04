@@ -29,24 +29,24 @@ class Substructure:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         target_path = file_structure.get_target_file(global_parameters)
         if file_util.file_exists(target_path):
             logger.log('Skipping step: ' + target_path + ' already exists')
         else:
             substructures = []
-            for string in parameters['substructures'].split(';'):
+            for string in local_parameters['substructures'].split(';'):
                 substructures.append(Chem.MolFromSmiles(string, sanitize=False))
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_target_path = file_util.get_temporary_file_path('substructure_target_data')
             target_h5 = h5py.File(temp_target_path, 'w')
             classes = target_h5.create_dataset(file_structure.Target.classes, (smiles_data.shape[0], 2))
-            logic = parameters['logic']
+            logic = local_parameters['logic']
             if logic is None:
                 logic = 'a'
                 for i in range(1, len(substructures)):

@@ -1,4 +1,4 @@
-from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger
+from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger, constants
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
 # TODO hash at the end of data set name
@@ -26,28 +26,29 @@ class RandomSmiles:
         return parameters
 
     @staticmethod
-    def check_prerequisites(global_parameters, parameters):
+    def check_prerequisites(global_parameters, local_parameters):
         pass
 
     @staticmethod
-    def execute(global_parameters, parameters):
+    def execute(global_parameters, local_parameters):
         data_set_path = file_structure.get_data_set_file(global_parameters)
         if file_util.file_exists(data_set_path):
             logger.log('Skipping step: ' + data_set_path + ' already exists')
         else:
-            global_parameters['n'] = parameters['n']
+            global_parameters[constants.GlobalParameters.n] = local_parameters['n']
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
-            smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (parameters['n'],),
-                                                 'S' + str(parameters['max_length']))
-            chunks = misc.chunk(parameters['n'], number_threads)
+            smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (local_parameters['n'],),
+                                                 'S' + str(local_parameters['max_length']))
+            chunks = misc.chunk(local_parameters['n'], number_threads)
             smiles_set = concurrent_set.ConcurrentSet()
-            with progressbar.ProgressBar(parameters['n']) as progress:
+            with progressbar.ProgressBar(local_parameters['n']) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        generator = smiles_generator.SmilesGenerator(chunk['size'], parameters['max_length'],
-                                                                     global_parameters['seed'], chunk['start'],
-                                                                     progress, smiles_set)
+                        generator = smiles_generator\
+                            .SmilesGenerator(chunk['size'], local_parameters['max_length'],
+                                             global_parameters[constants.GlobalParameters.seed], chunk['start'],
+                                             progress, smiles_set)
                         pool.submit(generator.write_smiles, smiles_data)
                     pool.wait()
             data_h5.close()
