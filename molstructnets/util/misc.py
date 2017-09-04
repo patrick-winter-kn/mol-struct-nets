@@ -31,3 +31,7 @@ def chunk(number, number_chunks):
         size = end - start + 1
         chunks.append({'size': size, 'start': start, 'end': end})
     return chunks
+
+
+def is_active(probabilities):
+    return probabilities[0] > probabilities[1]

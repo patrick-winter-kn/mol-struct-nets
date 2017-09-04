@@ -67,3 +67,8 @@ def get_root_from_experiment_file(experiment_file_path):
 def get_evaluation_folder(global_parameters):
     return file_util.resolve_subpath(global_parameters['root'], 'experiments', global_parameters['experiment'],
                                      global_parameters['data_set'], global_parameters['target'], 'evaluation')
+
+
+def get_interpretation_folder(global_parameters):
+    return file_util.resolve_subpath(global_parameters['root'], 'experiments', global_parameters['experiment'],
+                                     global_parameters['data_set'], global_parameters['target'], 'interpretation')
