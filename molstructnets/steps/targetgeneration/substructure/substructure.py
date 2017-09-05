@@ -1,7 +1,6 @@
-from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger
+from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger, constants
 from rdkit import Chem
 import h5py
-# TODO hash at the end of target data set
 
 
 number_threads = 1
@@ -26,6 +25,8 @@ class Substructure:
                            'description': 'If this logic expression is true, the molecule will be active. a will be'
                                           ' true if the first substructure was found in the molecule. Default behaviour'
                                           ' is a&b&c&... .'})
+        parameters.append({'id': 'name', 'name': 'Target name (default: None)', 'type': str, 'default': None,
+                           'description': 'Prefix to the filename of the generated target data set.'})
         return parameters
 
     @staticmethod
@@ -33,8 +34,17 @@ class Substructure:
         data_validation.validate_data_set(global_parameters)
 
     @staticmethod
+    def get_result_file(global_parameters, local_parameters):
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['substructures', 'logic'])
+        file_name = misc.hash_parameters(hash_parameters) + '.h5'
+        if local_parameters['name'] is not None:
+            file_name = local_parameters['name'] + '_' + file_name
+        return file_util.resolve_subpath(file_structure.get_target_folder(global_parameters), file_name)
+
+    @staticmethod
     def execute(global_parameters, local_parameters):
-        target_path = file_structure.get_target_file(global_parameters)
+        target_path = Substructure.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.target] = file_util.get_filename(target_path, False)
         if file_util.file_exists(target_path):
             logger.log('Skipping step: ' + target_path + ' already exists')
         else:

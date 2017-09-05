@@ -41,7 +41,6 @@ class SmilesMatrix:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        # TODO implement characters parameter
         preprocessed_path = SmilesMatrix.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
@@ -58,7 +57,12 @@ class SmilesMatrix:
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
             characters = concurrent_set.ConcurrentSet()
+            if local_parameters['characters'] is not None:
+                for character in local_parameters['characters']:
+                    characters.add(character)
             max_length = concurrent_max.ConcurrentMax()
+            if local_parameters['max_length'] is not None:
+                max_length.add_value(local_parameters['max_length'])
             print('Analyzing SMILES')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:

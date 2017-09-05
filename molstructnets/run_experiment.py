@@ -7,13 +7,14 @@ from experiments import experiment
 from util import file_structure, logger, file_util, constants
 from steps import steps_repository
 import h5py
+import re
 
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Runs an existing experiment')
     parser.add_argument('experiment', type=str, help='Path to the experiment file')
-    parser.add_argument('data_set', type=str, help='Data set name')
-    parser.add_argument('target', type=str, help='Target name')
+    parser.add_argument('--data_set', type=str, default=None, help='Data set name')
+    parser.add_argument('--target', type=str, default=None, help='Target name')
     parser.add_argument('--step', type=int, default=None, help='Run the experiment up to the given step')
     return parser.parse_args()
 
@@ -29,14 +30,44 @@ def get_n(global_parameters_):
     return n_
 
 
+def find_file(global_parameters_, folder_path, name):
+    prefix = file_util.resolve_subpath(folder_path, name)
+    if file_util.file_exists(prefix + '.h5'):
+        return name
+    files = file_util.list_files(folder_path)
+    pattern = re.compile(re.escape(prefix) + '.*')
+    for file in files.copy():
+        if file_util.is_folder(file):
+            files.remove(file)
+        if not pattern.match(file):
+            files.remove(file)
+    if len(files) == 0:
+        raise IOError('No file with prefix ' + name + ' found in ' + folder_path)
+    elif len(files) > 1:
+        raise IOError('Multiple files with prefix ' + name + ' found in ' + folder_path)
+    return file_util.get_filename(files[0], False)
+
+
+def find_data_set(global_parameters_, name):
+    data_set_folder = file_structure.get_data_set_folder(global_parameters_)
+    return find_file(global_parameters_, data_set_folder, name)
+
+
+def find_target(global_parameters_, name):
+    target_folder = file_structure.get_target_folder(global_parameters_)
+    return find_file(global_parameters_, target_folder, name)
+
+
 args = get_arguments()
 experiment_ = experiment.Experiment(args.experiment)
 global_parameters = dict()
 global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
-global_parameters[constants.GlobalParameters.data_set] = args.data_set
-global_parameters[constants.GlobalParameters.target] = args.target
+if args.data_set is not None:
+    global_parameters[constants.GlobalParameters.data_set] = find_data_set(global_parameters, args.data_set)
+if args.target is not None:
+    global_parameters[constants.GlobalParameters.target] = find_target(global_parameters, args.target)
 n = get_n(global_parameters)
 if n is not None:
     global_parameters[constants.GlobalParameters.n] = n

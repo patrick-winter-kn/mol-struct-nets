@@ -1,7 +1,6 @@
 from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger, constants
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
-# TODO hash at the end of data set name
 
 number_threads = 1
 
@@ -30,8 +29,16 @@ class RandomSmiles:
         pass
 
     @staticmethod
+    def get_result_file(global_parameters, local_parameters):
+        hash_parameters = misc.copy_dict_from_keys(global_parameters, ['seed'])
+        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['n', 'max_length']))
+        file_name = str(local_parameters['n']) + 'x' + str(local_parameters['max_length']) + '_' + misc.hash_parameters(hash_parameters) + '.h5'
+        return file_util.resolve_subpath(file_structure.get_data_set_folder(global_parameters), file_name)
+
+    @staticmethod
     def execute(global_parameters, local_parameters):
-        data_set_path = file_structure.get_data_set_file(global_parameters)
+        data_set_path = RandomSmiles.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.data_set] = file_util.get_filename(data_set_path, False)
         if file_util.file_exists(data_set_path):
             logger.log('Skipping step: ' + data_set_path + ' already exists')
         else:

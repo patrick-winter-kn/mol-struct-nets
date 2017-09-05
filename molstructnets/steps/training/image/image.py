@@ -1,6 +1,6 @@
 from util import data_validation, file_structure, hdf5_util, logger, reference_data_set, callbacks, images, constants
 from keras import models
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TensorBoard
 import h5py
 
 
@@ -35,7 +35,7 @@ class Image:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        # TODO more callbacks?
+        # TODO validation
         model_path = file_structure.get_network_file(global_parameters)
         epoch = hdf5_util.get_property(model_path, 'epochs_trained')
         if epoch is None:
@@ -55,9 +55,11 @@ class Image:
             output = reference_data_set.ReferenceDataSet(train, classes)
             model = models.load_model(model_path)
             checkpoint = ModelCheckpoint(model_path)
+            tensorboard = TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1, write_graph=True,
+                                      write_images=False, embeddings_freq=1)
             custom_checkpoint = callbacks.CustomCheckpoint(model_path)
             model.fit(img_array, output, epochs=local_parameters['epochs'], shuffle='batch',
-                      batch_size=local_parameters['batch_size'], callbacks=[checkpoint, custom_checkpoint],
+                      batch_size=local_parameters['batch_size'], callbacks=[checkpoint, custom_checkpoint, tensorboard],
                       initial_epoch=epoch)
             target_h5.close()
             partition_h5.close()

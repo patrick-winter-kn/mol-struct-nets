@@ -52,3 +52,7 @@ def get_temporary_file_path(prefix=None):
 def move_file(source, destination):
     make_folders(destination)
     shutil.move(source, destination)
+
+
+def is_folder(file_path):
+    return path.isdir(file_path)
