@@ -1,4 +1,5 @@
-from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger, constants
+from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger, constants,\
+    hdf5_util
 from rdkit import Chem
 import h5py
 
@@ -71,6 +72,8 @@ class Substructure:
                     pool.wait()
             data_h5.close()
             target_h5.close()
+            hdf5_util.set_property(temp_target_path, 'substructures', local_parameters['substructures'])
+            hdf5_util.set_property(temp_target_path, 'logic', logic)
             file_util.move_file(temp_target_path, target_path)
 
     @staticmethod

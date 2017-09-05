@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, misc, file_util, progressbar, logger, constants
+from util import data_validation, file_structure, misc, file_util, progressbar, logger, constants, hdf5_util
 import random
 import h5py
 import math
@@ -104,6 +104,9 @@ class StratifiedSampling:
                 StratifiedSampling.shuffle(partition_train, random_)
             target_h5.close()
             partition_h5.close()
+            hdf5_util.set_property(temp_partition_path, 'train_percentage', local_parameters['train_percentage'])
+            hdf5_util.set_property(temp_partition_path, 'oversample', local_parameters['oversample'])
+            hdf5_util.set_property(temp_partition_path, 'shuffle', local_parameters['shuffle'])
             file_util.move_file(temp_partition_path, partition_path)
 
     @staticmethod
