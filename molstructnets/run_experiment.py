@@ -8,6 +8,7 @@ from util import file_structure, logger, file_util, constants
 from steps import steps_repository
 import h5py
 import re
+import datetime
 
 
 def get_arguments():
@@ -21,12 +22,13 @@ def get_arguments():
 
 def get_n(global_parameters_):
     n_ = None
-    data_set_path = file_structure.get_data_set_file(global_parameters_)
-    if file_util.file_exists(data_set_path):
-        data_h5 = h5py.File(data_set_path)
-        if file_structure.DataSet.smiles in data_h5.keys():
-            n_ = len(data_h5[file_structure.DataSet.smiles])
-        data_h5.close()
+    if constants.GlobalParameters.data_set in global_parameters_:
+        data_set_path = file_structure.get_data_set_file(global_parameters_)
+        if file_util.file_exists(data_set_path):
+            data_h5 = h5py.File(data_set_path)
+            if file_structure.DataSet.smiles in data_h5.keys():
+                n_ = len(data_h5[file_structure.DataSet.smiles])
+            data_h5.close()
     return n_
 
 
@@ -59,6 +61,8 @@ def find_target(global_parameters_, name):
 
 
 args = get_arguments()
+start_time = datetime.datetime.now()
+logger.log('Starting experiment at ' + str(start_time))
 experiment_ = experiment.Experiment(args.experiment)
 global_parameters = dict()
 global_parameters[constants.GlobalParameters.seed] = initialization.seed
@@ -93,6 +97,8 @@ for i in range(nr_steps):
     logger.log('Finished step: ' + type_name + ': ' + step.get_name())
     backend.clear_session()
 logger.log('=' * 100)
-logger.log('Finished execution of experiment successfully')
+end_time = datetime.datetime.now()
+logger.log('Finished execution of experiment successfully at ' + str(end_time))
+logger.log('Duration of experiment: ' + str(end_time - start_time))
 gc.collect()
 time.sleep(1)
