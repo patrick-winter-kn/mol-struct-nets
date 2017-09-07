@@ -86,11 +86,12 @@ class SmilesAttention:
                     j += 1
                 if index is not None:
                     output_path = file_util.resolve_subpath(output_dir_path, str(index) + '.svg')
-                    smiles_string = smiles[index].decode('utf-8')
-                    smiles_matrix = preprocessed[index]
-                    heatmap = visualization.visualize_saliency(model, out_layer_index, filter_indices=[class_index],
-                                                               seed_input=smiles_matrix)
-                    smiles_renderer.render(smiles_string, output_path, 5, heatmap)
+                    if not file_util.file_exists(output_path):
+                        smiles_string = smiles[index].decode('utf-8')
+                        smiles_matrix = preprocessed[index]
+                        heatmap = visualization.visualize_saliency(model, out_layer_index, filter_indices=[class_index],
+                                                                   seed_input=smiles_matrix)
+                        smiles_renderer.render(smiles_string, output_path, 5, heatmap)
                 progress.increment()
         data_h5.close()
         target_h5.close()

@@ -1,5 +1,5 @@
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
-    thread_pool, constants
+    thread_pool, constants, hdf5_util
 import numpy
 import h5py
 
@@ -71,15 +71,15 @@ class SmilesMatrix:
                                     characters, max_length, progress)
                     pool.wait()
             characters = sorted(characters.get_set_copy())
-            index = preprocessed_h5.create_dataset('index', (len(characters),), dtype='S1')
+            index = hdf5_util.create_dataset(preprocessed_h5, 'index', (len(characters),), dtype='S1')
             index_lookup = {}
             for i in range(len(characters)):
                 index_lookup[characters[i]] = i
                 index[i] = characters[i].encode('utf-8')
             global_parameters[constants.GlobalParameters.input_dimensions] = (max_length.get_max(), len(index))
-            preprocessed = preprocessed_h5.create_dataset(file_structure.Preprocessed.preprocessed,
+            preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                           (len(smiles_data), max_length.get_max(), len(index)),
-                                                          dtype='I')
+                                                          dtype='I', chunks=(1, max_length.get_max(), len(index)))
             print('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:

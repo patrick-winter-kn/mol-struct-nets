@@ -73,9 +73,9 @@ class StratifiedSampling:
                 for i in range(number_training_inactive):
                     del inactive_indices[random_.randint(0, len(inactive_indices) - 1)]
                     progress.increment()
-            partition_train = partition_h5.create_dataset(file_structure.Partitions.train, (number_training,),
+            partition_train = hdf5_util.create_dataset(partition_h5, file_structure.Partitions.train, (number_training,),
                                                           dtype='I')
-            partition_test = partition_h5.create_dataset(file_structure.Partitions.test,
+            partition_test = hdf5_util.create_dataset(partition_h5, file_structure.Partitions.test,
                                                          (len(classes) - number_training,), dtype='I')
             logger.log('Writing partitions')
             with progressbar.ProgressBar(len(classes)) as progress:
@@ -122,7 +122,7 @@ class StratifiedSampling:
             else:
                 class_one_count += 1
         difference = abs(class_zero_count - class_one_count)
-        oversampled = partition_h5.create_dataset(data_set_name + '-oversampled', (ref.shape[0] + difference, ),
+        oversampled = hdf5_util.create_dataset(partition_h5, data_set_name + '-oversampled', (ref.shape[0] + difference, ),
                                                   dtype='I')
         left_difference = difference
         if class_zero_count < class_one_count:

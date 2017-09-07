@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, logger, file_util, progressbar, images, constants
+from util import data_validation, file_structure, logger, file_util, progressbar, images, constants, hdf5_util
 import h5py
 from keras import models
 import math
@@ -40,7 +40,7 @@ class Image:
             n = global_parameters[constants.GlobalParameters.n]
             temp_prediction_path = file_util.get_temporary_file_path('image_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
-            predictions = prediction_h5.create_dataset(file_structure.Predictions.prediction, (n, 2))
+            predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction, (n, 2))
             logger.log('Predicting data')
             with progressbar.ProgressBar(n) as progress:
                 for i in range(int(math.ceil(n / local_parameters['batch_size']))):

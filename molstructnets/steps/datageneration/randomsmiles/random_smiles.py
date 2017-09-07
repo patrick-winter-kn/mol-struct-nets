@@ -1,4 +1,4 @@
-from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger, constants
+from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger, constants, hdf5_util
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
 
@@ -45,7 +45,7 @@ class RandomSmiles:
             global_parameters[constants.GlobalParameters.n] = local_parameters['n']
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
-            smiles_data = data_h5.create_dataset(file_structure.DataSet.smiles, (local_parameters['n'],),
+            smiles_data = hdf5_util.create_dataset(data_h5, file_structure.DataSet.smiles, (local_parameters['n'],),
                                                  'S' + str(local_parameters['max_length']))
             chunks = misc.chunk(local_parameters['n'], number_threads)
             smiles_set = concurrent_set.ConcurrentSet()

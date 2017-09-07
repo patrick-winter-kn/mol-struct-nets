@@ -1,4 +1,4 @@
-from util import data_validation, file_structure, progressbar, logger, file_util, constants
+from util import data_validation, file_structure, progressbar, logger, file_util, constants, hdf5_util
 from keras import models
 import h5py
 import math
@@ -40,7 +40,7 @@ class Matrix:
             prediction_path = file_structure.get_prediction_file(global_parameters)
             temp_prediction_path = file_util.get_temporary_file_path('matrix_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
-            predictions = prediction_h5.create_dataset(file_structure.Predictions.prediction, (len(preprocessed), 2))
+            predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction, (len(preprocessed), 2))
             model_path = file_structure.get_network_file(global_parameters)
             model = models.load_model(model_path)
             logger.log('Predicting data')

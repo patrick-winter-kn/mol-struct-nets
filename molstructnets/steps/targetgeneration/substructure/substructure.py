@@ -56,7 +56,7 @@ class Substructure:
             smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_target_path = file_util.get_temporary_file_path('substructure_target_data')
             target_h5 = h5py.File(temp_target_path, 'w')
-            classes = target_h5.create_dataset(file_structure.Target.classes, (smiles_data.shape[0], 2))
+            classes = hdf5_util.create_dataset(target_h5, file_structure.Target.classes, (smiles_data.shape[0], 2))
             logic = local_parameters['logic']
             if logic is None:
                 logic = 'a'
