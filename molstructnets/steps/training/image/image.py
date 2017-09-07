@@ -22,8 +22,6 @@ class Image:
         parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 1)', 'type': int, 'default': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory.'})
-        parameters.append({'id': 'validation', 'name': 'Validation', 'type': bool, 'default': False,
-                           'description': 'Evaluate the model after each epoch using the test data set.'})
         return parameters
 
     @staticmethod
@@ -35,7 +33,6 @@ class Image:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        # TODO validation
         model_path = file_structure.get_network_file(global_parameters)
         epoch = hdf5_util.get_property(model_path, 'epochs_trained')
         if epoch is None:
