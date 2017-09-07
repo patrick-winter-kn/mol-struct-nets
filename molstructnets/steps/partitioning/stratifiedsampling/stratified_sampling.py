@@ -61,12 +61,12 @@ class StratifiedSampling:
                         inactive_indices.append(i)
                     progress.increment()
             logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
-                       ' inactive data points')
+                       ' inactive data points', logger.LogLevel.VERBOSE)
             number_training = round(len(classes) * local_parameters['train_percentage'] * 0.01)
             number_training_active = round(number_training * (len(active_indices) / len(classes)))
             number_training_inactive = number_training - number_training_active
-            logger.log('Picking data points for training')
-            with progressbar.ProgressBar(number_training) as progress:
+            logger.log('Picking data points for training', logger.LogLevel.VERBOSE)
+            with progressbar.ProgressBar(number_training, logger.LogLevel.VERBOSE) as progress:
                 for i in range(number_training_active):
                     del active_indices[random_.randint(0, len(active_indices) - 1)]
                     progress.increment()

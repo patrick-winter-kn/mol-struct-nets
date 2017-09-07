@@ -1,12 +1,13 @@
 class LogLevel:
 
     DEBUG = 1
-    INFO = 2
-    WARNING = 3
-    ERROR = 4
+    VERBOSE = 2
+    INFO = 3
+    WARNING = 4
+    ERROR = 5
 
 
-global_log_level = LogLevel.DEBUG
+global_log_level = LogLevel.INFO
 
 
 def log(string, log_level=LogLevel.INFO):

@@ -5,14 +5,13 @@ from util import logger, progressbar, file_util
 
 
 def plot(predictions_list, prediction_names, classes, enrichment_factors, enrichment_plot_file):
-    positives = positives_count(classes)
     actives_list = []
     efs_list = []
     auc_list = []
     for i in range(len(predictions_list)):
-        logger.log('Calculating stats for ' + prediction_names[i])
+        logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
         predictions = predictions_list[i]
-        actives, efs, auc = enrichment_stats(predictions[:, 0].argsort()[::-1], enrichment_factors, classes, positives)
+        actives, auc, efs = stats(predictions, classes, enrichment_factors)
         actives_list.append(actives)
         efs_list.append(efs)
         auc_list.append(auc)
@@ -46,21 +45,11 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     return auc_list, efs_list
 
 
-def positives_count(classes):
-    positives = 0
-    logger.log('Counting actives')
-    with progressbar.ProgressBar(len(classes)) as progress:
-        i = 0
-        for row in classes:
-            if numpy.where(row == max(row))[0] == 0:
-                positives += 1
-            i += 1
-            progress.increment()
-    logger.log('Found ' + str(positives) + ' actives and ' + str(len(classes) - positives) + ' inactives')
-    return positives
-
-
-def enrichment_stats(indices, ef_percent, classes, positives):
+def stats(predictions, classes, ef_percent, positives=None):
+    if positives is None:
+        positives = positives_count(classes)
+    # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
+    indices = predictions[:, 0].argsort()[::-1]
     actives = [0]
     # efs maps the percent to the number of found positives
     efs = {}
@@ -68,6 +57,7 @@ def enrichment_stats(indices, ef_percent, classes, positives):
         efs[percent] = 0
     found = 0
     curve_sum = 0
+    logger.log('Calculating enrichment stats')
     with progressbar.ProgressBar(len(indices)) as progress:
         for i in range(len(indices)):
             row = classes[indices[i]]
@@ -85,9 +75,23 @@ def enrichment_stats(indices, ef_percent, classes, positives):
     # AUC = sum of found positives for every x / (positives * (number of samples + 1))
     # + 1 is added to the number of samples for the start with 0 samples selected
     auc = curve_sum / (positives * (len(classes) + 1))
-    logger.log('AUC: ' + str(auc))
+    logger.log('AUC: ' + str(auc), logger.LogLevel.VERBOSE)
     # Turn number of found positives into enrichment factor by dividing the number of positives found at random
     for percent in sorted(efs.keys()):
         efs[percent] /= (positives * (percent * 0.01))
-        logger.log('EF at ' + str(percent) + '%: ' + str(efs[percent]))
-    return actives, efs, auc
+        logger.log('EF at ' + str(percent) + '%: ' + str(efs[percent]), logger.LogLevel.VERBOSE)
+    return actives, auc, efs
+
+
+def positives_count(classes):
+    positives = 0
+    logger.log('Counting actives')
+    with progressbar.ProgressBar(len(classes)) as progress:
+        i = 0
+        for row in classes:
+            if numpy.where(row == max(row))[0] == 0:
+                positives += 1
+            i += 1
+            progress.increment()
+    logger.log('Found ' + str(positives) + ' actives and ' + str(len(classes) - positives) + ' inactives', logger.LogLevel.VERBOSE)
+    return positives
