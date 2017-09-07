@@ -1,16 +1,16 @@
 from steps import repository
-from steps.partition.stratifiedsampling import stratified_sampling
+from steps.partitioning.stratifiedsampling import stratified_sampling
 
 
 class DataGenerationRepository(repository.Repository):
 
     @staticmethod
     def get_id():
-        return 'partition'
+        return 'partitioning'
 
     @staticmethod
     def get_name():
-        return 'Partition'
+        return 'Partitioning'
 
 
 instance = DataGenerationRepository()

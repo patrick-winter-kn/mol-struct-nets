@@ -1,7 +1,7 @@
 from steps import repository
 from steps.datageneration import data_generation_repository
 from steps.targetgeneration import target_generation_repository
-from steps.partition import partition_repository
+from steps.partitioning import partitioning_repository
 from steps.preprocessing import preprocessing_repository
 from steps.networkcreation import network_creation_repository
 from steps.training import training_repository
@@ -40,7 +40,7 @@ class StepsRepository(repository.Repository):
 instance = StepsRepository()
 instance.add_implementation(data_generation_repository.instance)
 instance.add_implementation(target_generation_repository.instance)
-instance.add_implementation(partition_repository.instance)
+instance.add_implementation(partitioning_repository.instance)
 instance.add_implementation(preprocessing_repository.instance)
 instance.add_implementation(network_creation_repository.instance)
 instance.add_implementation(training_repository.instance)
