@@ -1,10 +1,13 @@
-from util import data_validation, file_structure, reference_data_set, hdf5_util, logger, callbacks, constants,\
-    enrichment, progressbar
+import math
+
 import h5py
+import numpy
 from keras import models
 from keras.callbacks import ModelCheckpoint, TensorBoard, Callback
-import numpy
-import math
+
+from steps.evaluation.shared import enrichment
+from util import data_validation, file_structure, reference_data_set, hdf5_util, logger, callbacks, constants, \
+    progressbar
 
 
 class Matrix:
@@ -25,7 +28,7 @@ class Matrix:
         parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 50)', 'type': int, 'default': 50,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory.'})
-        parameters.append({'id': 'validation', 'name': 'Validation', 'type': bool, 'default': False,
+        parameters.append({'id': 'validation', 'name': 'Validation (default: False)', 'type': bool, 'default': False,
                            'description': 'Evaluate the model after each epoch using the test data set.'})
         return parameters
 

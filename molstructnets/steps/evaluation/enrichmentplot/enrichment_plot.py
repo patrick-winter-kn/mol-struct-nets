@@ -1,6 +1,7 @@
 import h5py
 
-from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants, enrichment
+from steps.evaluation.shared import enrichment
+from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants
 
 
 class EnrichmentPlot:
