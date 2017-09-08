@@ -16,6 +16,7 @@ def get_arguments():
     parser.add_argument('experiment', type=str, help='Path to the experiment file')
     parser.add_argument('--data_set', type=str, default=None, help='Data set name')
     parser.add_argument('--target', type=str, default=None, help='Target name')
+    parser.add_argument('--partition', type=str, default=None, help='Partition name')
     parser.add_argument('--step', type=int, default=None, help='Run the experiment up to the given step')
     return parser.parse_args()
 
@@ -60,6 +61,11 @@ def find_target(global_parameters_, name):
     return find_file(global_parameters_, target_folder, name)
 
 
+def find_partition(global_parameters_, name):
+    partition_folder = file_structure.get_partition_folder(global_parameters_)
+    return find_file(global_parameters_, partition_folder, name)
+
+
 args = get_arguments()
 start_time = datetime.datetime.now()
 logger.log('Starting experiment at ' + str(start_time))
@@ -72,6 +78,8 @@ if args.data_set is not None:
     global_parameters[constants.GlobalParameters.data_set] = find_data_set(global_parameters, args.data_set)
 if args.target is not None:
     global_parameters[constants.GlobalParameters.target] = find_target(global_parameters, args.target)
+if args.partition is not None:
+    global_parameters[constants.GlobalParameters.partition_data] = find_partition(global_parameters, args.partition)
 n = get_n(global_parameters)
 if n is not None:
     global_parameters[constants.GlobalParameters.n] = n

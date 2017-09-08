@@ -56,3 +56,8 @@ def move_file(source, destination):
 
 def is_folder(file_path):
     return path.isdir(file_path)
+
+
+def copy_file(source, destination):
+    make_folders(destination)
+    shutil.copy(source, destination)

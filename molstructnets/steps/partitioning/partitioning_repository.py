@@ -1,5 +1,6 @@
 from steps import repository
 from steps.partitioning.stratifiedsampling import stratified_sampling
+from steps.partitioning.postprocessing import postprocessing
 
 
 class DataGenerationRepository(repository.Repository):
@@ -15,3 +16,4 @@ class DataGenerationRepository(repository.Repository):
 
 instance = DataGenerationRepository()
 instance.add_implementation(stratified_sampling.StratifiedSampling)
+instance.add_implementation(postprocessing.Postprocessing)
