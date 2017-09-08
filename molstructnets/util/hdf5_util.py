@@ -18,5 +18,8 @@ def get_property(file_path, key):
     return value
 
 
-def create_dataset(file, name, shape, dtype='f', chunks=True):
+def create_dataset(file, name, shape, dtype='f'):
+    chunks = list(shape)
+    chunks[0] = 1
+    chunks = tuple(chunks)
     return file.create_dataset(name, shape, dtype=dtype, chunks=chunks, compression='gzip')

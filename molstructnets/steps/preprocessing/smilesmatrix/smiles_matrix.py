@@ -79,7 +79,7 @@ class SmilesMatrix:
             global_parameters[constants.GlobalParameters.input_dimensions] = (max_length.get_max(), len(index))
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                           (len(smiles_data), max_length.get_max(), len(index)),
-                                                          dtype='I', chunks=(1, max_length.get_max(), len(index)))
+                                                          dtype='I')
             print('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:

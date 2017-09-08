@@ -51,6 +51,7 @@ def stats(predictions, classes, ef_percent, positives=None):
     logger.log('Sorting predictions by probability')
     # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
     indices = predictions[:, 0].argsort()[::-1]
+    logger.log('Sorting done')
     actives = [0]
     # efs maps the percent to the number of found positives
     efs = {}
