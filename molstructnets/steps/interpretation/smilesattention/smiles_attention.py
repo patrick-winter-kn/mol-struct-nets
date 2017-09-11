@@ -75,8 +75,8 @@ class SmilesAttention:
         output_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
                                                     'smiles_attention')
         file_util.make_folders(output_dir_path, True)
-        j = 0
         with progressbar.ProgressBar(count) as progress:
+            j = 0
             for i in range(count):
                 index = -1
                 while index is not None and index not in references:
@@ -84,9 +84,9 @@ class SmilesAttention:
                         index = None
                     else:
                         index = indices[j]
-                    if local_parameters['correct_predictions']:
-                        if misc.is_active(classes[index]) is not misc.is_active(predictions[index]):
-                            index = -1
+                        if local_parameters['correct_predictions']:
+                            if classes[index][class_index] != 1:
+                                index = -1
                     j += 1
                 if index is not None:
                     output_path = file_util.resolve_subpath(output_dir_path, str(index) + '.svg')
