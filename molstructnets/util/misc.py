@@ -1,5 +1,7 @@
 import hashlib
 import math
+from util import reference_data_set
+import numpy
 
 
 def hash_parameters(parameters):
@@ -35,3 +37,12 @@ def chunk(number, number_chunks):
 
 def is_active(probabilities):
     return probabilities[0] > probabilities[1]
+
+
+def copy_ndarray(array):
+    if isinstance(array, reference_data_set.ReferenceDataSet):
+        array_copy = numpy.zeros(array.shape)
+        array_copy[:] = array[:]
+        return array_copy
+    else:
+        return numpy.copy(array)

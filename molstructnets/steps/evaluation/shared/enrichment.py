@@ -1,7 +1,7 @@
 import numpy
 import math
 from matplotlib import pyplot
-from util import logger, progressbar, file_util
+from util import logger, progressbar, file_util, misc
 
 
 def plot(predictions_list, prediction_names, classes, enrichment_factors, enrichment_plot_file):
@@ -50,7 +50,7 @@ def stats(predictions, classes, ef_percent, positives=None):
         positives = positives_count(classes)
     # We copy the needed data into memory to speed up sorting
     # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-    indices = numpy.copy(predictions)[:, 0].argsort()[::-1]
+    indices = misc.copy_ndarray(predictions)[:, 0].argsort()[::-1]
     actives = [0]
     # efs maps the percent to the number of found positives
     efs = {}
