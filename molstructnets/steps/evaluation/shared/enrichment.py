@@ -48,10 +48,9 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
 def stats(predictions, classes, ef_percent, positives=None):
     if positives is None:
         positives = positives_count(classes)
-    logger.log('Sorting predictions by probability')
+    # We copy the needed data into memory to speed up sorting
     # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-    indices = predictions[:, 0].argsort()[::-1]
-    logger.log('Sorting done')
+    indices = numpy.copy(predictions)[:, 0].argsort()[::-1]
     actives = [0]
     # efs maps the percent to the number of found positives
     efs = {}

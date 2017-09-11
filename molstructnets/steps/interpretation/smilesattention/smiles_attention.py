@@ -4,6 +4,7 @@ import h5py
 from vis.utils import utils
 from vis import visualization
 from steps.interpretation.smilesattention import smiles_renderer
+import numpy
 
 
 class SmilesAttention:
@@ -59,7 +60,11 @@ class SmilesAttention:
             references = partition_h5[file_structure.Partitions.train]
         preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
         preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-        indices = predictions[:, 0].argsort()[::-1]
+        # Speed up index in references calls by copying data into memory
+        references = numpy.copy(references)
+        # We copy the needed data into memory to speed up sorting
+        # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
+        indices = numpy.copy(predictions)[:, 0].argsort()[::-1]
         if local_parameters['top_n'] is None:
             count = len(indices)
         else:
