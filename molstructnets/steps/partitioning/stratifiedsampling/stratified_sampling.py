@@ -17,12 +17,12 @@ class StratifiedSampling:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'train_percentage', 'name': 'Size of training partitioning (in %)', 'type': int,
+        parameters.append({'id': 'train_percentage', 'name': 'Size of training partition (in %)', 'type': int,
                            'description': 'The percentage of the data that will be used for training.'})
-        parameters.append({'id': 'oversample', 'name': 'Oversample training partitioning', 'type': bool,
+        parameters.append({'id': 'oversample', 'name': 'Oversample training partition', 'type': bool,
                            'description': 'If this is set the minority class will be oversampled, so that the class'
                                           ' distribution in the training set is equal.'})
-        parameters.append({'id': 'shuffle', 'name': 'Shuffle training partitioning', 'type': bool,
+        parameters.append({'id': 'shuffle', 'name': 'Shuffle training partition', 'type': bool,
                            'description': 'If this is set the training data will be shuffled.'})
         return parameters
 
@@ -78,19 +78,22 @@ class StratifiedSampling:
             partition_test = hdf5_util.create_dataset(partition_h5, file_structure.Partitions.test,
                                                       (len(classes) - number_training,), dtype='I')
             logger.log('Writing partitions')
+            # Convert actives and inactives into set to speed up processing
+            actives = set(active_indices)
+            inactives = set(inactive_indices)
             with progressbar.ProgressBar(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0
                 for i in range(len(classes)):
                     if classes[i, 0] > 0.0:
-                        if i in active_indices:
+                        if i in actives:
                             partition_test[partition_test_index] = i
                             partition_test_index += 1
                         else:
                             partition_train[partition_train_index] = i
                             partition_train_index += 1
                     else:
-                        if i in inactive_indices:
+                        if i in inactives:
                             partition_test[partition_test_index] = i
                             partition_test_index += 1
                         else:
