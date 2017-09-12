@@ -51,7 +51,7 @@ class Substructure:
         else:
             substructures = []
             for string in local_parameters['substructures'].split(';'):
-                substructures.append(Chem.MolFromSmiles(string))
+                substructures.append(Chem.MolFromSmiles(string, sanity=False))
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_target_path = file_util.get_temporary_file_path('substructure_target_data')
@@ -79,7 +79,7 @@ class Substructure:
     @staticmethod
     def _generate_activities(smiles_data, substructures, logic, classes, offset, progress):
         for i in range(len(smiles_data)):
-            structure = Chem.MolFromSmiles(smiles_data[i].decode('utf-8'))
+            structure = Chem.MolFromSmiles(smiles_data[i].decode('utf-8'), sanity=False)
             evals = []
             for substructure in substructures:
                 evals.append(structure.HasSubstructMatch(substructure))
