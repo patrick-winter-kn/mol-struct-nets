@@ -50,17 +50,20 @@ class SmilesGenerator:
         while len(string) < length:
             action = self.random.uniform(0.0, 1.0)
             if SmilesGenerator.is_branch(action, len(string), length) and SmilesGenerator.is_atom(string[-1]):
+                # branch
                 string += '(' + self.generate_single_smiles(1, length - len(string) - 3, False, ring_label) + ')'\
                           + self.pick_atom()
-            elif SmilesGenerator.is_ring(action, len(string), length, len(str(ring_label)))\
+            elif SmilesGenerator.is_ring(action, len(string), length, len(str(ring_label[0])))\
                     and SmilesGenerator.is_atom(string[-1]) and not is_in_ring:
-                label = str(ring_label)
-                if ring_label > 9:
+                # ring
+                label = str(ring_label[0])
+                if ring_label[0] > 9:
                     label = '%' + label
-                ring_label += 1
+                ring_label[0] += 1
                 string += label + self.generate_single_smiles(2, length - len(string) - (len(label) * 2),
                                                               True, ring_label) + label
             else:
+                # single atom
                 string += self.pick_atom()
         return string
 
@@ -70,7 +73,7 @@ class SmilesGenerator:
             smiles = None
             valid = False
             while not valid:
-                smiles = self.generate_single_smiles(1, self.max_length, False, 1).encode()
+                smiles = self.generate_single_smiles(1, self.max_length, False, [1]).encode()
                 smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smiles, sanitize=False))
                 if len(smiles) <= self.max_length:
                     valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
