@@ -4,9 +4,12 @@ import h5py
 from vis.utils import utils
 from vis import visualization
 from steps.interpretation.smilesattention import smiles_renderer
+from keras import backend
 
 
 class SmilesAttention:
+
+    iterations_per_clear = 20
 
     @staticmethod
     def get_id():
@@ -42,10 +45,12 @@ class SmilesAttention:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
+        modified_model_path = file_util.get_temporary_file_path('modified_model')
         model = models.load_model(file_structure.get_network_file(global_parameters))
         out_layer_index = len(model.layers)-1
         model.layers[out_layer_index].activation = activations.linear
         model = utils.apply_modifications(model)
+        model.save(modified_model_path)
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
         smiles = data_h5[file_structure.DataSet.smiles]
         target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
@@ -95,6 +100,9 @@ class SmilesAttention:
                         smiles_matrix = preprocessed[index]
                         heatmap = visualization.visualize_saliency(model, out_layer_index, filter_indices=[class_index],
                                                                    seed_input=smiles_matrix)
+                        if i % SmilesAttention.iterations_per_clear == 0:
+                            backend.clear_session()
+                            model = models.load_model(modified_model_path)
                         smiles_renderer.render(smiles_string, output_path, 5, heatmap)
                 progress.increment()
         data_h5.close()
