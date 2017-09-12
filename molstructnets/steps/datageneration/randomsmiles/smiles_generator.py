@@ -74,8 +74,13 @@ class SmilesGenerator:
             valid = False
             while not valid:
                 smiles = self.generate_single_smiles(1, self.max_length, False, [1]).encode()
-                smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smiles, sanitize=False))
-                if len(smiles) <= self.max_length:
-                    valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
+                # TODO catch exceptions and redo
+                try:
+                    smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smiles))
+                    if len(smiles) <= self.max_length:
+                        valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
+                except Exception:
+                    # valid stays False
+                    pass
             array[i] = smiles.encode('utf-8')
             self.progress.increment()
