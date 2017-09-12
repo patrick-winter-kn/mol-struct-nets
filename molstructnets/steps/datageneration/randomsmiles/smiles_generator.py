@@ -1,6 +1,7 @@
 import re
 import random
 from rdkit import Chem
+from rdkit import RDLogger
 
 
 atom_ps = {'O': 0.13, 'S': 0.03, 'N': 0.12, 'C': 0.72}
@@ -68,19 +69,20 @@ class SmilesGenerator:
         return string
 
     def write_smiles(self, array):
+        logger = RDLogger.logger()
+        logger.setLevel(RDLogger.CRITICAL)
         for i in range(self.offset, self.number + self.offset):
             self.random.seed(self.seed + i)
             smiles = None
             valid = False
             while not valid:
-                smiles = self.generate_single_smiles(1, self.max_length, False, [1]).encode()
-                # TODO catch exceptions and redo
-                try:
-                    smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smiles))
-                    if len(smiles) <= self.max_length:
-                        valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
-                except Exception:
-                    # valid stays False
-                    pass
+                smiles = self.generate_single_smiles(1, self.max_length, False, [1])
+                mol = Chem.MolFromSmiles(smiles)
+                if mol is None:
+                    continue
+                smiles = Chem.MolToSmiles(mol)
+                if len(smiles) <= self.max_length:
+                    valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
             array[i] = smiles.encode('utf-8')
             self.progress.increment()
+        logger.setLevel(RDLogger.DEBUG)
