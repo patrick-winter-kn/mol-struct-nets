@@ -115,6 +115,9 @@ class SmilesGenerator:
                 ring_label = '%' + ring_label
             # A ring needs space for the label at the start and the end
             remaining_ring_length = remaining_length - 2 * len(ring_label)
+            if max(atom_valencies.values()) - bonds_in_back < 2:
+                # There is no atom that can support another ring being closed so this ring can't go to the end
+                remaining_ring_length -= 1
             # Check if we can add a branch
             if SmilesGenerator.branch_possible(remaining_branch_length, previous_atom, used_bonds):
                 valid_elements.add(Elements.branch)
