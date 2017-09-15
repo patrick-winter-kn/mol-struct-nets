@@ -1,10 +1,11 @@
-from util import data_validation, file_structure, file_util, progressbar, misc, constants
-from keras import models, activations
 import h5py
-from vis.utils import utils
-from vis import visualization
-from steps.interpretation.smilesattention import smiles_renderer
 from keras import backend
+from keras import models, activations
+from vis import visualization
+from vis.utils import utils
+
+from steps.interpretation.shared import smiles_renderer
+from util import data_validation, file_structure, file_util, progressbar, misc, constants
 
 
 class SmilesAttention:
