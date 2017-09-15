@@ -193,7 +193,11 @@ class SmilesGenerator:
                 # Decide length
                 length = self.random.randint(1, self.max_length)
                 # Generate SMILES
-                smiles = self.generate_smiles(length, 0, 0, False)[0]
+                try:
+                    smiles = self.generate_smiles(length, 0, 0, False)[0]
+                except Exception:
+                    # If something goes wrong try again
+                    continue
                 # Parse with RDKit
                 mol = Chem.MolFromSmiles(smiles)
                 # If it could not be parsed or failed a sanity check it is None
