@@ -1,10 +1,10 @@
 import h5py
 from keras import backend
 from keras import models, activations
-from vis import visualization
 from vis.utils import utils
 
 from steps.interpretation.shared import smiles_renderer
+from steps.interpretation.shared.kerasviz import attention_map
 from util import data_validation, file_structure, file_util, progressbar, misc, constants
 
 
@@ -99,8 +99,9 @@ class SmilesAttention:
                     if not file_util.file_exists(output_path):
                         smiles_string = smiles[index].decode('utf-8')
                         smiles_matrix = preprocessed[index]
-                        heatmap = visualization.visualize_saliency(model, out_layer_index, filter_indices=[class_index],
-                                                                   seed_input=smiles_matrix)
+                        grads = attention_map.visualize_saliency(model, out_layer_index, filter_indices=[class_index],
+                                                                 seed_input=smiles_matrix)
+                        heatmap = attention_map.array_to_heatmap(grads)
                         if i % SmilesAttention.iterations_per_clear == 0:
                             backend.clear_session()
                             model = models.load_model(modified_model_path)
