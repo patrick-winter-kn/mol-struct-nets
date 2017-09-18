@@ -4,7 +4,7 @@ import h5py
 from rdkit import Chem
 
 from steps.interpretation.shared import smiles_renderer
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, smiles_analyzer
 
 
 class SubstructureHighlight:
@@ -61,12 +61,11 @@ class SubstructureHighlight:
     @staticmethod
     def generate_heatmap(smiles_string, indices):
         heatmap = list()
-        index = 0
         for i in range(len(smiles_string)):
-            color = SubstructureHighlight.rgb_black
-            if SubstructureHighlight.atom_pattern.match(smiles_string[i]):
-                if index in indices:
-                    color = SubstructureHighlight.rgb_red
-                index += 1
-            heatmap.append(color)
+            heatmap.append(SubstructureHighlight.rgb_black)
+        positions = smiles_analyzer.atom_positions(smiles_string)
+        for i in range(len(positions)):
+            if i in indices:
+                for j in range(positions[i][0], positions[i][1] + 1):
+                    heatmap[j] = SubstructureHighlight.rgb_red
         return heatmap
