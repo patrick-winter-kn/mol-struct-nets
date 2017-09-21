@@ -28,6 +28,11 @@ def validate_prediction(global_parameters):
     validate_hdf5_file(path, file_structure.Predictions.prediction)
 
 
+def validate_attention_map(global_parameters, *data_set_names):
+    path = file_structure.get_attentionmap_file(global_parameters)
+    validate_hdf5_file(path, *data_set_names)
+
+
 def validate_network(global_parameters):
     path = file_structure.get_network_file(global_parameters)
     if not file_util.file_exists(path):

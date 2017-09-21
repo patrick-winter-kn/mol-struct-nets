@@ -1,6 +1,8 @@
 from steps import repository
-from steps.interpretation.smilesattention import smiles_attention
-from steps.interpretation.substructurehighlight import substructure_highlight
+from steps.interpretation.calculatesmilesattention import calculate_smiles_attention
+from steps.interpretation.calculatesubstructureatoms import calculate_substructure_atoms
+from steps.interpretation.rendersmilesattention import render_smiles_attention
+from steps.interpretation.rendersubstructureatoms import render_substructure_atoms
 
 
 class DataGenerationRepository(repository.Repository):
@@ -15,5 +17,7 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
-instance.add_implementation(smiles_attention.SmilesAttention)
-instance.add_implementation(substructure_highlight.SubstructureHighlight)
+instance.add_implementation(calculate_smiles_attention.CalculateSmilesAttention)
+instance.add_implementation(calculate_substructure_atoms.CalculateSubstructureAtoms)
+instance.add_implementation(render_smiles_attention.RenderSmilesAttention)
+instance.add_implementation(render_substructure_atoms.RenderSubstructureAtoms)

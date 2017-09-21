@@ -51,6 +51,7 @@ def get_temporary_file_path(prefix=None):
 
 def move_file(source, destination):
     make_folders(destination)
+    remove_file(destination)
     shutil.move(source, destination)
 
 
@@ -60,4 +61,13 @@ def is_folder(file_path):
 
 def copy_file(source, destination):
     make_folders(destination)
+    remove_file(destination)
     shutil.copy(source, destination)
+
+
+def remove_file(file_path):
+    if file_exists(file_path):
+        if path.isdir(file_path):
+            shutil.rntree(file_path)
+        else:
+            os.remove(file_path)

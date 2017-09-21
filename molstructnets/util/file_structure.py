@@ -27,6 +27,15 @@ class Predictions:
     prediction = 'prediction'
 
 
+class AttentionMap:
+
+    substructure_atoms = 'substructure_atoms'
+    attention_map_active = 'attention_map_active'
+    attention_map_inactive = 'attention_map_inactive'
+    attention_map_active_indices = 'attention_map_active_indices'
+    attention_map_inactive_indices = 'attention_map_inactive_indices'
+
+
 def get_root_from_experiment_file(experiment_file_path):
     return file_util.get_parent(file_util.get_parent(experiment_file_path))
 
@@ -93,3 +102,10 @@ def get_interpretation_folder(global_parameters):
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
                                      global_parameters[constants.GlobalParameters.target], 'interpretation')
+
+def get_attentionmap_file(global_parameters):
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+                                     global_parameters[constants.GlobalParameters.experiment],
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     global_parameters[constants.GlobalParameters.target], 'interpretation',
+                                     'attention_map.h5')
