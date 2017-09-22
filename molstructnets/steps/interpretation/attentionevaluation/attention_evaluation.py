@@ -69,6 +69,7 @@ class AttentionEvaluation:
         substructure_characters = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_characters', (len(indices),), dtype='I')
         substructure_mean = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_mean', (len(indices),))
         substructure_std_deviation = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_std_deviation', (len(indices),))
+        distance = hdf5_util.create_dataset(attention_evaluation_h5, 'distance', (len(indices),))
         index = 0
         with progressbar.ProgressBar(len(indices)) as progress:
             for i in indices:
@@ -77,6 +78,8 @@ class AttentionEvaluation:
                     AttentionEvaluation.calculate_single_attention_evaluation(smiles[i].decode('utf-8'),
                                                                               substructure_atoms[i],
                                                                               attention_map[i])
+                distance[index] = AttentionEvaluation.calculate_single_distance(smiles[i].decode('utf-8'),
+                                                                                substructure_atoms[i], attention_map[i])
                 index += 1
                 progress.increment()
         overall_mean = numpy.mean(mean)
@@ -111,3 +114,12 @@ class AttentionEvaluation:
             substructure_values = [1]
         return len(not_substructure_values), numpy.mean(not_substructure_values), numpy.std(not_substructure_values),\
                len(substructure_values), numpy.mean(substructure_values), numpy.std(substructure_values)
+
+    @staticmethod
+    def calculate_single_distance(smiles_string, substructure_atoms, attention_map):
+        positions = smiles_analyzer.atom_positions(smiles_string)
+        character_positions = set()
+        for position in positions:
+            for j in range(position[0], position[1] + 1):
+                character_positions.add(j)
+        return numpy.linalg.norm(substructure_atoms[list(character_positions)] - attention_map[list(character_positions)])
