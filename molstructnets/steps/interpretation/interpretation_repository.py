@@ -4,6 +4,7 @@ from steps.interpretation.calculatesubstructureatoms import calculate_substructu
 from steps.interpretation.rendersmilesattention import render_smiles_attention
 from steps.interpretation.rendersubstructureatoms import render_substructure_atoms
 from steps.interpretation.attentionevaluation import attention_evaluation
+from steps.interpretation.smilesattentionsubstructures import smiles_attention_substructures
 
 
 class DataGenerationRepository(repository.Repository):
@@ -23,3 +24,4 @@ instance.add_implementation(calculate_substructure_atoms.CalculateSubstructureAt
 instance.add_implementation(render_smiles_attention.RenderSmilesAttention)
 instance.add_implementation(render_substructure_atoms.RenderSubstructureAtoms)
 instance.add_implementation(attention_evaluation.AttentionEvaluation)
+instance.add_implementation(smiles_attention_substructures)
