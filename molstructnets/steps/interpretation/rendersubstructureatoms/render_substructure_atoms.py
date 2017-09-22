@@ -3,7 +3,10 @@ import re
 import h5py
 
 from steps.interpretation.shared import smiles_renderer
-from util import data_validation, file_structure, file_util, progressbar, logger
+from util import data_validation, file_structure, file_util, progressbar, logger, thread_pool, misc
+
+
+number_threads = thread_pool.default_number_threads
 
 
 class RenderSubstructureAtoms:
@@ -41,20 +44,24 @@ class RenderSubstructureAtoms:
             file_util.make_folders(substructure_atoms_dir_path, True)
             substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
             logger.log('Rendering substructure atoms', logger.LogLevel.INFO)
-            RenderSubstructureAtoms.render(substructure_atoms, smiles, substructure_atoms_dir_path)
+            chunks = misc.chunk(len(smiles), number_threads)
+            with progressbar.ProgressBar(len(smiles)) as progress:
+                with thread_pool.ThreadPool(number_threads) as pool:
+                    for chunk in chunks:
+                        pool.submit(RenderSubstructureAtoms.render, substructure_atoms, smiles, substructure_atoms_dir_path, chunk['start'], chunk['end'], progress)
+                    pool.wait()
         attention_map_h5.close()
         data_h5.close()
 
     @staticmethod
-    def render(substructure_atoms, smiles, output_dir_path):
-        with progressbar.ProgressBar(len(smiles)) as progress:
-            for i in range(len(smiles)):
-                output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svg')
-                if not file_util.file_exists(output_path):
-                    smiles_string = smiles[i].decode('utf-8')
-                    heatmap = RenderSubstructureAtoms.generate_heatmap(substructure_atoms[i])
-                    smiles_renderer.render(smiles_string, output_path, 5, heatmap)
-                progress.increment()
+    def render(substructure_atoms, smiles, output_dir_path, start, end, progress):
+        for i in range(start, end + 1):
+            output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svg')
+            if not file_util.file_exists(output_path):
+                smiles_string = smiles[i].decode('utf-8')
+                heatmap = RenderSubstructureAtoms.generate_heatmap(substructure_atoms[i])
+                smiles_renderer.render(smiles_string, output_path, 5, heatmap)
+            progress.increment()
 
     @staticmethod
     def generate_heatmap(substructure_atoms):
