@@ -1,6 +1,7 @@
 from util import data_validation, file_structure, file_util, logger, hdf5_util, smiles_analyzer, progressbar
 import h5py
 import numpy
+import warnings
 
 
 class AttentionEvaluation:
@@ -25,8 +26,10 @@ class AttentionEvaluation:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_evaluation_active_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters), 'attention_evaluation_active.h5')
-        attention_evaluation_inactive_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters), 'attention_evaluation_inactive.h5')
+        attention_evaluation_active_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'attention_evaluation_active.h5')
+        attention_evaluation_inactive_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'attention_evaluation_inactive.h5')
         attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
         substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
@@ -50,7 +53,8 @@ class AttentionEvaluation:
                 indices = None
                 if file_structure.AttentionMap.attention_map_inactive_indices in attention_map_h5.keys():
                     indices = attention_map_h5[file_structure.AttentionMap.attention_map_inactive_indices]
-                temp_attention_evaluation_inactive_path = file_util.get_temporary_file_path('attention_evaluation_inactive')
+                temp_attention_evaluation_inactive_path = file_util.get_temporary_file_path(
+                    'attention_evaluation_inactive')
                 attention_map_inactive = attention_map_h5[file_structure.AttentionMap.attention_map_inactive]
                 AttentionEvaluation.calculate_attention_evaluation(attention_map_inactive, substructure_atoms, smiles,
                                                                    temp_attention_evaluation_inactive_path, indices)
@@ -66,9 +70,11 @@ class AttentionEvaluation:
         characters = hdf5_util.create_dataset(attention_evaluation_h5, 'characters', (len(indices),), dtype='I')
         mean = hdf5_util.create_dataset(attention_evaluation_h5, 'mean', (len(indices),))
         std_deviation = hdf5_util.create_dataset(attention_evaluation_h5, 'std_deviation', (len(indices),))
-        substructure_characters = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_characters', (len(indices),), dtype='I')
+        substructure_characters = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_characters',
+                                                           (len(indices),), dtype='I')
         substructure_mean = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_mean', (len(indices),))
-        substructure_std_deviation = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_std_deviation', (len(indices),))
+        substructure_std_deviation = hdf5_util.create_dataset(attention_evaluation_h5, 'substructure_std_deviation',
+                                                              (len(indices),))
         distance = hdf5_util.create_dataset(attention_evaluation_h5, 'distance', (len(indices),))
         index = 0
         with progressbar.ProgressBar(len(indices)) as progress:
@@ -82,15 +88,18 @@ class AttentionEvaluation:
                                                                                 substructure_atoms[i], attention_map[i])
                 index += 1
                 progress.increment()
-        overall_mean = numpy.mean(mean)
-        overall_substructure_mean = numpy.mean(substructure_mean)
-        overall_mean_std_deviation = numpy.std(mean)
-        overall_substructure_mean_std_deviation = numpy.std(substructure_mean)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            overall_mean = numpy.mean(mean)
+            overall_substructure_mean = numpy.mean(substructure_mean)
+            overall_mean_std_deviation = numpy.std(mean)
+            overall_substructure_mean_std_deviation = numpy.std(substructure_mean)
         attention_evaluation_h5.close()
         hdf5_util.set_property(attention_evaluation_path, 'overall_mean', overall_mean)
         hdf5_util.set_property(attention_evaluation_path, 'overall_substructure_mean', overall_substructure_mean)
         hdf5_util.set_property(attention_evaluation_path, 'overall_mean_std_deviation', overall_mean_std_deviation)
-        hdf5_util.set_property(attention_evaluation_path, 'overall_substructure_mean_std_deviation', overall_substructure_mean_std_deviation)
+        hdf5_util.set_property(attention_evaluation_path, 'overall_substructure_mean_std_deviation',
+                               overall_substructure_mean_std_deviation)
 
     @staticmethod
     def calculate_single_attention_evaluation(smiles_string, substructure_atoms, attention_map):
@@ -108,12 +117,11 @@ class AttentionEvaluation:
                 not_substructure_positions.add(character_position)
         substructure_values = attention_map[list(substructure_positions)]
         not_substructure_values = attention_map[list(not_substructure_positions)]
-        if len(not_substructure_values) == 0:
-            not_substructure_values = [0]
-        if len(substructure_values) == 0:
-            substructure_values = [1]
-        return len(not_substructure_values), numpy.mean(not_substructure_values), numpy.std(not_substructure_values),\
-               len(substructure_values), numpy.mean(substructure_values), numpy.std(substructure_values)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            return len(not_substructure_values), numpy.mean(not_substructure_values),\
+                   numpy.std(not_substructure_values), len(substructure_values), numpy.mean(substructure_values),\
+                   numpy.std(substructure_values)
 
     @staticmethod
     def calculate_single_distance(smiles_string, substructure_atoms, attention_map):
@@ -122,4 +130,5 @@ class AttentionEvaluation:
         for position in positions:
             for j in range(position[0], position[1] + 1):
                 character_positions.add(j)
-        return numpy.linalg.norm(substructure_atoms[list(character_positions)] - attention_map[list(character_positions)])
+        return numpy.linalg.norm(substructure_atoms[list(character_positions)]
+                                 - attention_map[list(character_positions)])
