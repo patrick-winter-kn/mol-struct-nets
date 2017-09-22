@@ -89,6 +89,7 @@ class CalculateSmilesAttention:
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
+                attention_map_indices_list = None
                 attention_map_indices = None
             else:
                 # We copy the needed data into memory to speed up sorting
@@ -136,8 +137,9 @@ class CalculateSmilesAttention:
                                 backend.clear_session()
                                 model = models.load_model(modified_model_path)
                     progress.increment()
-            attention_map_indices_list = sorted(attention_map_indices_list)
-            attention_map_indices[:] = attention_map_indices_list[:]
+            if attention_map_indices_list is not None:
+                attention_map_indices_list = sorted(attention_map_indices_list)
+                attention_map_indices[:] = attention_map_indices_list[:]
             attention_map_h5.close()
             target_h5.close()
             prediction_h5.close()
