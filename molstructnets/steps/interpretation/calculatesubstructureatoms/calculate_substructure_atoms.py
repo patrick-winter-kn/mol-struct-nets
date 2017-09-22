@@ -2,9 +2,7 @@ import re
 
 import h5py
 from rdkit import Chem
-import numpy
 
-from steps.interpretation.shared import smiles_renderer
 from util import data_validation, file_structure, file_util, progressbar, hdf5_util, smiles_analyzer, logger
 
 

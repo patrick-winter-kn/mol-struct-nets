@@ -99,6 +99,7 @@ class CalculateSmilesAttention:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_active_indices
                 else:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_inactive_indices
+                attention_map_indices_list = list()
                 attention_map_indices = hdf5_util.create_dataset(attention_map_h5, indices_data_set_name, (count,), dtype='I')
             if local_parameters['actives']:
                 class_index = 0
@@ -129,12 +130,14 @@ class CalculateSmilesAttention:
                             grads = attention_map.calculate_saliency(model, out_layer_index, filter_indices=[class_index],
                                                                      seed_input=smiles_matrix)
                             attention_map_[index] = grads[:]
-                            if attention_map_indices is not None:
-                                attention_map_indices[i] = index
+                            if attention_map_indices_list is not None:
+                                attention_map_indices_list.append(index)
                             if i % CalculateSmilesAttention.iterations_per_clear == 0:
                                 backend.clear_session()
                                 model = models.load_model(modified_model_path)
                     progress.increment()
+            attention_map_indices_list = sorted(attention_map_indices_list)
+            attention_map_indices[:] = attention_map_indices_list[:]
             attention_map_h5.close()
             target_h5.close()
             prediction_h5.close()
