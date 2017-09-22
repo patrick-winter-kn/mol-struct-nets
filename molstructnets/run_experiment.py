@@ -63,7 +63,8 @@ def find_target(global_parameters_, name):
 
 def find_partition(global_parameters_, name):
     partition_folder = file_structure.get_partition_folder(global_parameters_)
-    return find_file(global_parameters_, partition_folder, name)
+    name = find_file(global_parameters_, partition_folder, name)
+    return file_util.resolve_subpath(partition_folder, name + '.h5')
 
 
 args = get_arguments()
