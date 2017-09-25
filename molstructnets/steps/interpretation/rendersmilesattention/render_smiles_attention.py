@@ -42,7 +42,7 @@ class RenderSmilesAttention:
             if file_structure.AttentionMap.attention_map_active_indices in attention_map_h5.keys():
                 indices = attention_map_h5[file_structure.AttentionMap.attention_map_active_indices]
             else:
-                indices = range(attention_map_active)
+                indices = range(len(attention_map_active))
             logger.log('Rendering active SMILES attention maps', logger.LogLevel.INFO)
             chunks = misc.chunk(len(smiles), number_threads)
             with progressbar.ProgressBar(len(indices)) as progress:

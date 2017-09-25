@@ -147,4 +147,3 @@ class SmilesAttentionSubstructures:
         return string
 
     # TODO what about half atoms (e.g. l from Cl)?
-    
