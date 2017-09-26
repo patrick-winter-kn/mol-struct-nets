@@ -188,20 +188,20 @@ class SmilesAttentionSubstructures:
 
     @staticmethod
     def close_brackets(string):
-        # TODO no brackets are added for e.g. C)C(C
         open_count = 0
         close_count = 0
         for character in string:
             if character == '(':
                 open_count += 1
             elif character == ')':
-                close_count += 1
-        if open_count > close_count:
-            for i in range(open_count - close_count):
-                string += ')'
-        elif close_count > open_count:
-            for i in range(close_count - open_count):
-                string = '(' + string
+                if open_count > 0:
+                    open_count -= 1
+                else:
+                    close_count += 1
+        for i in range(close_count):
+            string = '(' + string
+        for i in range(open_count):
+            string += ')'
         return string
 
     @staticmethod
