@@ -1,8 +1,7 @@
 import h5py
 
-from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, concurrent_set, hdf5_util
+from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, concurrent_counting_set, hdf5_util, smiles_tokenizer
 from rdkit import Chem
-import re
 
 
 number_threads = thread_pool.default_number_threads
@@ -52,7 +51,7 @@ class SmilesAttentionSubstructures:
                 else:
                     indices = range(attention_map_active)
                 logger.log('Extracting active SMILES attention substructures', logger.LogLevel.INFO)
-                substructures = concurrent_set.ConcurrentSet()
+                substructures = concurrent_counting_set.ConcurrentCountingSet()
                 chunks = misc.chunk(len(smiles), number_threads)
                 with progressbar.ProgressBar(len(indices)) as progress:
                     with thread_pool.ThreadPool(number_threads) as pool:
@@ -81,53 +80,88 @@ class SmilesAttentionSubstructures:
     def extract(attention_map, indices, smiles, substructures_set, threshold, min_length, start, end, progress):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
-            raw_strings = SmilesAttentionSubstructures.extract_raw_strings(smiles_string, attention_map[i], threshold)
-            SmilesAttentionSubstructures.raw_strings_to_smiles(substructures_set, raw_strings, min_length)
+            tokenized_smiles = smiles_tokenizer.TokenizedSmiles(smiles_string)
+            tokens = SmilesAttentionSubstructures.pick_tokens(tokenized_smiles, attention_map[i], threshold)
+            SmilesAttentionSubstructures.extract_clean_substructures(smiles_string, tokens, min_length, substructures_set)
             progress.increment()
 
     @staticmethod
-    def extract_raw_strings(smiles_string, attention_map, threshold):
-        raw_strings = list()
-        raw_string = ''
-        for i in range(len(smiles_string)):
-            if attention_map[i] >= threshold:
-                raw_string += smiles_string[i]
-            elif len(raw_string) > 0:
-                raw_strings.append(raw_string)
-        if len(raw_string) > 0:
-            raw_strings.append(raw_string)
-        return raw_strings
+    def pick_tokens(tokenized_smiles, attention_map, threshold):
+        picked_tokens = list()
+        for token in tokenized_smiles.get_tokens():
+            attention = 0
+            position = token.get_position()
+            for i in range(position[0], position[1]):
+                attention += attention_map[i]
+            attention /= position[1]
+            if attention >= threshold:
+                picked_tokens.append(token)
+        return picked_tokens
 
     @staticmethod
-    def raw_strings_to_smiles(substructure_set, raw_strings, min_length):
-        for raw_string in raw_strings:
-            raw_string = SmilesAttentionSubstructures.remove_leading_characters(raw_string, '[()-=0-9]')
-            raw_string = SmilesAttentionSubstructures.remove_trailing_characters(raw_string, '[()-=]')
-            raw_string = SmilesAttentionSubstructures.remove_unclosed_rings(raw_string)
-            raw_string = SmilesAttentionSubstructures.close_brackets(raw_string)
-            molecule = Chem.MolFromSmiles(raw_string)
-            smiles = Chem.MolToSmiles(molecule)
-            if len(smiles) >= min_length:
-                substructure_set.add(smiles)
+    def extract_clean_substructures(smiles_string, tokens, min_length, substructures_set):
+        token_index = 0
+        while token_index < len(tokens):
+            # Collect connected tokens
+            first_token = tokens(token_index)
+            token_index += 1
+            # First token must be ATOM
+            while first_token.get_type() != smiles_tokenizer.Token.ATOM:
+                first_token = tokens(token_index)
+                token_index += 1
+            last_token = first_token
+            # Add tokens until gap
+            while last_token.get_position()[1] == tokens(token_index).get_position()[0]:
+                last_token = tokens(token_index)
+                token_index += 1
+            backwards_index = token_index - 1
+            # Remove trailing tokens if they are not ATOM or RING
+            while last_token.get_type() != smiles_tokenizer.Token.ATOM or last_token.get_type() != smiles_tokenizer.Token.RING:
+                backwards_index -= 1
+                last_token = tokens(backwards_index)
+            start = first_token.get_position()[0]
+            end = last_token.get_position()[1]
+            prefix_smiles = smiles_string[:start]
+            substructure_smiles = smiles_string[start:end]
+            substructure_smiles = SmilesAttentionSubstructures.remove_unclosed_rings(substructure_smiles, prefix_smiles)
+            substructure_smiles = SmilesAttentionSubstructures.close_brackets(substructure_smiles)
+            molecule = Chem.MolFromSmiles(substructure_smiles)
+            substructure_smiles = Chem.MolToSmiles(molecule)
+            if len(substructure_smiles) >= min_length:
+                substructures_set.add(substructure_smiles)
 
     @staticmethod
-    def remove_leading_characters(string, pattern):
-        pattern = re.compile(pattern)
-        while len(string) > 0 and pattern.match(string[0]):
-            string = string[1:]
-        return string
-
-    @staticmethod
-    def remove_trailing_characters(string, pattern):
-        pattern = re.compile(pattern)
-        while len(string) > 0 and pattern.match(string[-1]):
-            string = string[:-1]
-        return string
-
-    @staticmethod
-    def remove_unclosed_rings(string):
-        # TODO implement (problem: ...CCC1CCCC1CCC1CC...)
-        return string
+    def remove_unclosed_rings(smiles_string, prefix_smiles_string):
+        prefix_tokens = smiles_tokenizer.TokenizedSmiles(prefix_smiles_string)
+        unclosed_prefix_rings = set()
+        for token in prefix_tokens:
+            if token.get_type() == smiles_tokenizer.Token.RING:
+                label = token.get_token()
+                if label in unclosed_prefix_rings:
+                    unclosed_prefix_rings.remove(label)
+                else:
+                    unclosed_prefix_rings.add(label)
+        smiles_tokens = smiles_tokenizer.TokenizedSmiles(smiles_string).get_tokens()
+        positions_to_remove = list()
+        unclosed_smiles_rings = set()
+        for token in smiles_tokens:
+            if token.get_type() == smiles_tokenizer.Token.RING:
+                label = token.get_token()
+                if label in unclosed_prefix_rings:
+                    positions_to_remove.append(token.get_position())
+                    unclosed_prefix_rings.remove(label)
+                else:
+                    if label in unclosed_prefix_rings:
+                        unclosed_smiles_rings.remove(label)
+                    else:
+                        unclosed_smiles_rings.add(label)
+        for token in smiles_tokens[::-1]:
+            if token.get_type() == smiles_tokenizer.Token.RING:
+                label = token.get_token()
+                if label in unclosed_smiles_rings:
+                    positions_to_remove.append(token.get_position())
+                    unclosed_smiles_rings.remove(label)
+        return misc.substring_cut_from_middle(smiles_string, positions_to_remove)
 
     @staticmethod
     def close_brackets(string):
@@ -145,5 +179,3 @@ class SmilesAttentionSubstructures:
             for i in range(close_count - open_count):
                 string = '(' + string
         return string
-
-    # TODO what about half atoms (e.g. l from Cl)?
