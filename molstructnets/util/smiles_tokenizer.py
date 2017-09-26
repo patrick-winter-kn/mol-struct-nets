@@ -16,7 +16,7 @@ class TokenizedSmiles:
 
     def tokenize(self):
         atom_symbols = list()
-        molecule = Chem.MolfromSmiles(self.smiles_string)
+        molecule = Chem.MolFromSmiles(self.smiles_string)
         for atom in molecule.GetAtoms():
             atom_symbols.append(atom.GetSymbol())
         rest_string = self.smiles_string
@@ -32,7 +32,7 @@ class TokenizedSmiles:
             length = match.span()[1]
             self.tokens.append(Token(self.smiles_string, done, done + length, type))
             done += length
-            rest_string = rest_string[:length]
+            rest_string = rest_string[length:]
 
     def matching_pattern(self, string, atom_pattern):
         if atom_pattern is not None:
@@ -52,6 +52,14 @@ class TokenizedSmiles:
 
     def get_tokens(self):
         return self.tokens
+
+    def get_substring_tokens(self, start, end):
+        substring_tokens = list()
+        for token in self.tokens:
+            position = token.get_position()
+            if position[0] >= start and position[1] <= end:
+                substring_tokens.append(token)
+        return substring_tokens
 
 
 class Token:
@@ -75,3 +83,9 @@ class Token:
 
     def get_token(self):
         return self.smiles[self.start:self.end]
+
+    def __str__(self):
+        return self.get_token()
+
+    def __repr__(self):
+        return self.get_token()
