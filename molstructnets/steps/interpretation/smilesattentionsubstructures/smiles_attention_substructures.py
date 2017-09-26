@@ -45,36 +45,53 @@ class SmilesAttentionSubstructures:
             temp_smiles_attention_substructures_path = file_util.get_temporary_file_path('smiles_attention_substructures')
             smiles_attention_substructures_h5 = h5py.File(temp_smiles_attention_substructures_path, 'w')
             if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
-                attention_map_active = attention_map_h5[file_structure.AttentionMap.attention_map_active]
-                if file_structure.AttentionMap.attention_map_active_indices in attention_map_h5.keys():
-                    indices = attention_map_h5[file_structure.AttentionMap.attention_map_active_indices]
-                else:
-                    indices = range(attention_map_active)
-                logger.log('Extracting active SMILES attention substructures', logger.LogLevel.INFO)
-                substructures = concurrent_counting_set.ConcurrentCountingSet()
-                chunks = misc.chunk(len(smiles), number_threads)
-                with progressbar.ProgressBar(len(indices)) as progress:
-                    with thread_pool.ThreadPool(number_threads) as pool:
-                        for chunk in chunks:
-                            pool.submit(SmilesAttentionSubstructures.extract, attention_map_active, indices, smiles,
-                                        substructures, local_parameters['threshold'], local_parameters['min_length'],
-                                        chunk['start'], chunk['end'], progress)
-                        pool.wait()
-                substructures = list(substructures.get_set_copy())
-                max_length = 0
-                for smiles_string in substructures:
-                    max_length = max(max_length, len(smiles_string))
-                dtype = 'S' + str(max_length)
-                active_substructures = hdf5_util.create_dataset(smiles_attention_substructures_h5, 'active_substructures', (len(substructures),), dtype=dtype)
-                for i in range(len(substructures)):
-                    active_substructures[i] = substructures[i].encode()
+                SmilesAttentionSubstructures.extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, True)
             if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
-                # TODO like active
-                pass
+                SmilesAttentionSubstructures.extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, False)
             file_util.move_file(temp_smiles_attention_substructures_path, smiles_attention_substructures_path)
             attention_map_h5.close()
             data_h5.close()
 
+    @staticmethod
+    def extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, active):
+        if active:
+            log_message = 'Extracting active SMILES attention substructures'
+            attention_map_dataset_name = file_structure.AttentionMap.attention_map_active
+            attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_active_indices
+            substructures_dataset_name = 'active_substructures'
+            substructures_occurrences_dataset_name = 'active_substructures_occurrences'
+        else:
+            log_message = 'Extracting inactive SMILES attention substructures'
+            attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
+            attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_inactive_indices
+            substructures_dataset_name = 'inactive_substructures'
+            substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
+        attention_map = attention_map_h5[attention_map_dataset_name]
+        if attention_map_indices_dataset_name in attention_map_h5.keys():
+            indices = attention_map_h5[attention_map_indices_dataset_name]
+        else:
+            indices = range(attention_map)
+        logger.log(log_message, logger.LogLevel.INFO)
+        substructures = concurrent_counting_set.ConcurrentCountingSet()
+        chunks = misc.chunk(len(smiles), number_threads)
+        with progressbar.ProgressBar(len(indices)) as progress:
+            with thread_pool.ThreadPool(number_threads) as pool:
+                for chunk in chunks:
+                    pool.submit(SmilesAttentionSubstructures.extract, attention_map, indices, smiles,
+                                substructures, local_parameters['threshold'], local_parameters['min_length'],
+                                chunk['start'], chunk['end'], progress)
+                pool.wait()
+        substructures_dict = list(substructures.get_dict_copy())
+        substructures = sorted(substructures_dict.keys())
+        max_length = 0
+        for smiles_string in substructures:
+            max_length = max(max_length, len(smiles_string))
+        dtype = 'S' + str(max_length)
+        substructures_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_dataset_name, (len(substructures),), dtype=dtype)
+        substructures_occurrences_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_occurrences_dataset_name, (len(substructures),), dtype='I')
+        for i in range(len(substructures)):
+            substructures_dataset[i] = substructures[i].encode()
+            substructures_occurrences_dataset[i] = substructures_dict[substructures[i]]
 
     @staticmethod
     def extract(attention_map, indices, smiles, substructures_set, threshold, min_length, start, end, progress):
