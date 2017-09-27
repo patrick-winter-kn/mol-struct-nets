@@ -1,6 +1,7 @@
 import h5py
 
-from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, concurrent_counting_set, hdf5_util, smiles_tokenizer
+from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool,\
+    concurrent_counting_set, hdf5_util, smiles_tokenizer
 from rdkit import Chem
 
 
@@ -35,26 +36,31 @@ class SmilesAttentionSubstructures:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        smiles_attention_substructures_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters), 'smiles_attention_substructures.h5')
+        smiles_attention_substructures_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'smiles_attention_substructures.h5')
         if file_util.file_exists(smiles_attention_substructures_path):
             logger.log('Skipping step: ' + smiles_attention_substructures_path + ' already exists')
         else:
             attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles = data_h5[file_structure.DataSet.smiles]
-            temp_smiles_attention_substructures_path = file_util.get_temporary_file_path('smiles_attention_substructures')
+            temp_smiles_attention_substructures_path = file_util.get_temporary_file_path(
+                'smiles_attention_substructures')
             smiles_attention_substructures_h5 = h5py.File(temp_smiles_attention_substructures_path, 'w')
             if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
-                SmilesAttentionSubstructures.extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, True)
+                SmilesAttentionSubstructures.extract_attention_map_substructures(
+                    attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, True)
             if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
-                SmilesAttentionSubstructures.extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, False)
+                SmilesAttentionSubstructures.extract_attention_map_substructures(
+                    attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, False)
             smiles_attention_substructures_h5.close()
             file_util.move_file(temp_smiles_attention_substructures_path, smiles_attention_substructures_path)
             attention_map_h5.close()
             data_h5.close()
 
     @staticmethod
-    def extract_attention_map_substructures(attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, active):
+    def extract_attention_map_substructures(attention_map_h5, smiles, local_parameters,
+                                            smiles_attention_substructures_h5, active):
         if active:
             log_message = 'Extracting active SMILES attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_active
@@ -88,8 +94,11 @@ class SmilesAttentionSubstructures:
         for smiles_string in substructures:
             max_length = max(max_length, len(smiles_string))
         dtype = 'S' + str(max(max_length, 1))
-        substructures_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_dataset_name, (len(substructures),), dtype=dtype)
-        substructures_occurrences_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_occurrences_dataset_name, (len(substructures),), dtype='I')
+        substructures_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_dataset_name,
+                                                         (len(substructures),), dtype=dtype)
+        substructures_occurrences_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+                                                                     substructures_occurrences_dataset_name,
+                                                                     (len(substructures),), dtype='I')
         for i in range(len(substructures)):
             substructures_dataset[i] = substructures[i].encode()
             substructures_occurrences_dataset[i] = substructures_dict[substructures[i]]
@@ -98,9 +107,11 @@ class SmilesAttentionSubstructures:
     def extract(attention_map, indices, smiles, substructures_set, threshold, min_length, start, end, progress):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
+            smiles_string = SmilesAttentionSubstructures.replace_multi_use_ring_labels(smiles_string)
             tokenized_smiles = smiles_tokenizer.TokenizedSmiles(smiles_string)
             tokens = SmilesAttentionSubstructures.pick_tokens(tokenized_smiles, attention_map[i], threshold)
-            SmilesAttentionSubstructures.extract_clean_substructures(smiles_string, tokens, min_length, substructures_set)
+            SmilesAttentionSubstructures.extract_clean_substructures(smiles_string, tokens, min_length,
+                                                                     substructures_set)
             progress.increment()
 
     @staticmethod
@@ -138,12 +149,14 @@ class SmilesAttentionSubstructures:
             backwards_index = token_index - 1
             last_token = tokens[backwards_index]
             # Remove trailing tokens if they are not ATOM or RING
-            while last_token.get_type() != smiles_tokenizer.Token.ATOM and last_token.get_type() != smiles_tokenizer.Token.RING:
+            while last_token.get_type() != smiles_tokenizer.Token.ATOM and\
+                last_token.get_type() != smiles_tokenizer.Token.RING:
                 backwards_index -= 1
                 last_token = tokens[backwards_index]
             start = first_token.get_position()[0]
             end = last_token.get_position()[1]
-            substructure_smiles = SmilesAttentionSubstructures.remove_unclosed_rings(smiles_string, start, end)
+            substructure_smiles = smiles_string[start:end]
+            substructure_smiles = SmilesAttentionSubstructures.remove_unclosed_rings(substructure_smiles)
             substructure_smiles = SmilesAttentionSubstructures.close_brackets(substructure_smiles)
             substructure_smiles_strings = SmilesAttentionSubstructures.split_separate_branches(substructure_smiles)
             for substructure_smiles_string in substructure_smiles_strings:
@@ -151,40 +164,6 @@ class SmilesAttentionSubstructures:
                 substructure_smiles_string = Chem.MolToSmiles(molecule)
                 if len(substructure_smiles_string) >= min_length:
                     substructures_set.add(substructure_smiles_string)
-
-    @staticmethod
-    def remove_unclosed_rings(smiles_string, start, end):
-        tokenized_smiles = smiles_tokenizer.TokenizedSmiles(smiles_string)
-        prefix_tokens = tokenized_smiles.get_substring_tokens(0, start)
-        smiles_tokens = tokenized_smiles.get_substring_tokens(start, end)
-        unclosed_prefix_rings = set()
-        for token in prefix_tokens:
-            if token.get_type() == smiles_tokenizer.Token.RING:
-                label = token.get_token()
-                if label in unclosed_prefix_rings:
-                    unclosed_prefix_rings.remove(label)
-                else:
-                    unclosed_prefix_rings.add(label)
-        positions_to_remove = list()
-        unclosed_smiles_rings = set()
-        for token in smiles_tokens:
-            if token.get_type() == smiles_tokenizer.Token.RING:
-                label = token.get_token()
-                if label in unclosed_prefix_rings:
-                    positions_to_remove.append(token.get_position())
-                    unclosed_prefix_rings.remove(label)
-                else:
-                    if label in unclosed_smiles_rings:
-                        unclosed_smiles_rings.remove(label)
-                    else:
-                        unclosed_smiles_rings.add(label)
-        for token in smiles_tokens[::-1]:
-            if token.get_type() == smiles_tokenizer.Token.RING:
-                label = token.get_token()
-                if label in unclosed_smiles_rings:
-                    positions_to_remove.append(token.get_position())
-                    unclosed_smiles_rings.remove(label)
-        return misc.substring_cut_from_middle(smiles_string, [(0,start)] + positions_to_remove + [(end, len(smiles_string))])
 
     @staticmethod
     def close_brackets(string):
@@ -213,7 +192,7 @@ class SmilesAttentionSubstructures:
             splits += 1
             index += 1
         if splits == 0:
-            return [smiles_string]
+            return [SmilesAttentionSubstructures.remove_unclosed_rings(smiles_string)]
         new_smiles = ''
         # We skip the starting branch brackets
         index = splits
@@ -228,13 +207,13 @@ class SmilesAttentionSubstructures:
                     level -= 1
                     new_smiles += character
                 else:
-                    smiles_strings.append(new_smiles)
+                    smiles_strings.append(SmilesAttentionSubstructures.remove_unclosed_rings(new_smiles))
                     new_smiles = ''
                     splits -= 1
             else:
                 new_smiles += character
             index += 1
-        smiles_strings.append(smiles_string[index:])
+        smiles_strings.append(SmilesAttentionSubstructures.remove_unclosed_rings(smiles_string[index:]))
         need_resolving = list()
         for i in range(1, len(smiles_strings)):
             if smiles_strings[i].startswith('('):
@@ -243,3 +222,51 @@ class SmilesAttentionSubstructures:
             smiles_strings.remove(unfinished)
             smiles_strings += SmilesAttentionSubstructures.split_separate_branches(unfinished)
         return smiles_strings
+
+    @staticmethod
+    def replace_multi_use_ring_labels(smiles_string):
+        tokens = smiles_tokenizer.TokenizedSmiles(smiles_string).get_tokens()
+        label = 1
+        new_smiles_string = ''
+        open_rings = dict()
+        for token in tokens:
+            if token.get_type() == smiles_tokenizer.Token.RING:
+                original_label = token.get_token()
+                if original_label in open_rings:
+                    replacement_label = open_rings[original_label]
+                    del open_rings[original_label]
+                else:
+                    replacement_label = str(label)
+                    label += 1
+                    if len(replacement_label) > 1:
+                        replacement_label = '%' + replacement_label
+                    open_rings[original_label] = replacement_label
+                new_smiles_string += replacement_label
+            else:
+                new_smiles_string += token.get_token()
+        return new_smiles_string
+
+    @staticmethod
+    def remove_unclosed_rings(smiles_string):
+        label_pattern = smiles_tokenizer.TokenizedSmiles.ring_pattern
+        parts = list()
+        unclosed_rings = set()
+        while len(smiles_string) > 0:
+            match = label_pattern.match(smiles_string)
+            if match is not None:
+                length = match.span()[1]
+                part = smiles_string[:length]
+                if part in unclosed_rings:
+                    unclosed_rings.remove(part)
+                else:
+                    unclosed_rings.add(part)
+            else:
+                length = 1
+                part = smiles_string[:length]
+            parts.append(part)
+            smiles_string = smiles_string[length:]
+        new_smiles_string = ''
+        for part in parts:
+            if part not in unclosed_rings:
+                new_smiles_string += part
+        return new_smiles_string
