@@ -5,7 +5,7 @@ from util import data_validation, file_structure, file_util, progressbar, logger
 from rdkit import Chem
 
 
-number_threads = thread_pool.default_number_threads
+number_threads = 1
 
 
 class SmilesAttentionSubstructures:
