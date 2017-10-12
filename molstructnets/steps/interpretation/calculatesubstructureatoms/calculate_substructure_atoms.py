@@ -19,6 +19,10 @@ class CalculateSubstructureAtoms:
     @staticmethod
     def get_parameters():
         parameters = list()
+        parameters.append({'id': 'substructures', 'name': 'Substructures (default: use generated target)', 'type': str,
+                           'default': None, 'description': 'Semicolon separated list of substructure to search for. If'
+                                                           ' None then the substructures of the target generation step'
+                                                           ' are used.'})
         return parameters
 
     @staticmethod
@@ -46,8 +50,12 @@ class CalculateSubstructureAtoms:
             attention_map_h5 = h5py.File(temp_attention_map_path, 'a')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles = data_h5[file_structure.DataSet.smiles]
-            substructures = hdf5_util.get_property(file_structure.get_target_file(global_parameters),
-                                                   'substructures').split(';')
+            if 'substructures' in local_parameters:
+                substructures = local_parameters['substructures']
+            else:
+                substructures = hdf5_util.get_property(file_structure.get_target_file(global_parameters),
+                                                       'substructures')
+            substructures = substructures.split(';')
             if file_structure.AttentionMap.substructure_atoms in attention_map_h5.keys():
                 substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
             else:
