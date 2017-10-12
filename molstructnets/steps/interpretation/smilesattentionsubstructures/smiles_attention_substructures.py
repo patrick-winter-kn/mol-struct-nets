@@ -1,7 +1,7 @@
 import h5py
 
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool,\
-    concurrent_counting_set, hdf5_util, smiles_tokenizer
+    concurrent_counting_set, hdf5_util, smiles_analyzer
 from rdkit import Chem
 
 
@@ -24,9 +24,6 @@ class SmilesAttentionSubstructures:
         parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float,
                            'description': 'The threshold used to decide which parts of the attention map are'
                                           ' interpreted as part of the substructure.'})
-        parameters.append({'id': 'min_length', 'name': 'Minimum length (default: 1)', 'type': int, 'default': 1,
-                           'description': 'The minimum length of a found substructure. If it is smaller it will not be'
-                                          ' rejected.'})
         return parameters
 
     @staticmethod
@@ -77,7 +74,7 @@ class SmilesAttentionSubstructures:
         if attention_map_indices_dataset_name in attention_map_h5.keys():
             indices = attention_map_h5[attention_map_indices_dataset_name]
         else:
-            indices = range(attention_map)
+            indices = range(len(attention_map))
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = concurrent_counting_set.ConcurrentCountingSet()
         chunks = misc.chunk(len(smiles), number_threads)
@@ -85,8 +82,7 @@ class SmilesAttentionSubstructures:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
                     pool.submit(SmilesAttentionSubstructures.extract, attention_map, indices, smiles,
-                                substructures, local_parameters['threshold'], local_parameters['min_length'],
-                                chunk['start'], chunk['end'], progress)
+                                substructures, local_parameters['threshold'], chunk['start'], chunk['end'], progress)
                 pool.wait()
         substructures_dict = substructures.get_dict_copy()
         substructures = sorted(substructures_dict.keys())
@@ -104,169 +100,27 @@ class SmilesAttentionSubstructures:
             substructures_occurrences_dataset[i] = substructures_dict[substructures[i]]
 
     @staticmethod
-    def extract(attention_map, indices, smiles, substructures_set, threshold, min_length, start, end, progress):
+    def extract(attention_map, indices, smiles, substructures_set, threshold, start, end, progress):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
-            smiles_string = SmilesAttentionSubstructures.replace_multi_use_ring_labels(smiles_string)
-            tokenized_smiles = smiles_tokenizer.TokenizedSmiles(smiles_string)
-            tokens = SmilesAttentionSubstructures.pick_tokens(tokenized_smiles, attention_map[i], threshold)
-            SmilesAttentionSubstructures.extract_clean_substructures(smiles_string, tokens, min_length,
-                                                                     substructures_set)
+            atom_indices = SmilesAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold)
+            if len(atom_indices) > 0:
+                molecule = Chem.MolFromSmiles(smiles_string)
+                substructure_smiles = Chem.MolFragmentToSmiles(molecule, atom_indices)
+                substructures_set.update(substructure_smiles.split('.'))
             progress.increment()
 
     @staticmethod
-    def pick_tokens(tokenized_smiles, attention_map, threshold):
-        picked_tokens = list()
-        for token in tokenized_smiles.get_tokens():
-            attention = 0
-            position = token.get_position()
-            for i in range(position[0], position[1]):
-                attention += attention_map[i]
-            attention /= position[1]
-            if attention >= threshold:
-                picked_tokens.append(token)
-        return picked_tokens
-
-    @staticmethod
-    def extract_clean_substructures(smiles_string, tokens, min_length, substructures_set):
-        token_index = 0
-        while token_index < len(tokens):
-            # Collect connected tokens
-            first_token = tokens[token_index]
-            token_index += 1
-            # First token must be ATOM
-            while token_index < len(tokens) and first_token.get_type() != smiles_tokenizer.Token.ATOM:
-                first_token = tokens[token_index]
-                token_index += 1
-            # If we ended the previous loop because we found no legit starting token we need to end here
-            if first_token.get_type() != smiles_tokenizer.Token.ATOM:
-                break
-            last_token = first_token
-            # Add tokens until gap
-            while token_index < len(tokens) and last_token.get_position()[1] == tokens[token_index].get_position()[0]:
-                last_token = tokens[token_index]
-                token_index += 1
-            backwards_index = token_index - 1
-            last_token = tokens[backwards_index]
-            # Remove trailing tokens if they are not ATOM or RING
-            while last_token.get_type() != smiles_tokenizer.Token.ATOM and\
-                last_token.get_type() != smiles_tokenizer.Token.RING:
-                backwards_index -= 1
-                last_token = tokens[backwards_index]
-            start = first_token.get_position()[0]
-            end = last_token.get_position()[1]
-            substructure_smiles = smiles_string[start:end]
-            substructure_smiles = SmilesAttentionSubstructures.remove_unclosed_rings(substructure_smiles)
-            substructure_smiles = SmilesAttentionSubstructures.close_brackets(substructure_smiles)
-            substructure_smiles_strings = SmilesAttentionSubstructures.split_separate_branches(substructure_smiles)
-            for substructure_smiles_string in substructure_smiles_strings:
-                molecule = Chem.MolFromSmiles(substructure_smiles_string)
-                substructure_smiles_string = Chem.MolToSmiles(molecule)
-                if len(substructure_smiles_string) >= min_length:
-                    substructures_set.add(substructure_smiles_string)
-
-    @staticmethod
-    def close_brackets(string):
-        open_count = 0
-        close_count = 0
-        for character in string:
-            if character == '(':
-                open_count += 1
-            elif character == ')':
-                if open_count > 0:
-                    open_count -= 1
-                else:
-                    close_count += 1
-        for i in range(close_count):
-            string = '(' + string
-        for i in range(open_count):
-            string += ')'
-        return string
-
-    @staticmethod
-    def split_separate_branches(smiles_string):
-        smiles_strings = list()
-        splits = 0
-        index = 0
-        while smiles_string[index] == '(':
-            splits += 1
-            index += 1
-        if splits == 0:
-            return [SmilesAttentionSubstructures.remove_unclosed_rings(smiles_string)]
-        new_smiles = ''
-        # We skip the starting branch brackets
-        index = splits
-        level = 0
-        while splits > 0:
-            character = smiles_string[index]
-            if character == '(':
-                level += 1
-                new_smiles += character
-            elif character == ')':
-                if level > 0:
-                    level -= 1
-                    new_smiles += character
-                else:
-                    smiles_strings.append(SmilesAttentionSubstructures.remove_unclosed_rings(new_smiles))
-                    new_smiles = ''
-                    splits -= 1
-            else:
-                new_smiles += character
-            index += 1
-        smiles_strings.append(SmilesAttentionSubstructures.remove_unclosed_rings(smiles_string[index:]))
-        need_resolving = list()
-        for i in range(1, len(smiles_strings)):
-            if smiles_strings[i].startswith('('):
-                need_resolving.append(smiles_strings[i])
-        for unfinished in need_resolving:
-            smiles_strings.remove(unfinished)
-            smiles_strings += SmilesAttentionSubstructures.split_separate_branches(unfinished)
-        return smiles_strings
-
-    @staticmethod
-    def replace_multi_use_ring_labels(smiles_string):
-        tokens = smiles_tokenizer.TokenizedSmiles(smiles_string).get_tokens()
-        label = 1
-        new_smiles_string = ''
-        open_rings = dict()
-        for token in tokens:
-            if token.get_type() == smiles_tokenizer.Token.RING:
-                original_label = token.get_token()
-                if original_label in open_rings:
-                    replacement_label = open_rings[original_label]
-                    del open_rings[original_label]
-                else:
-                    replacement_label = str(label)
-                    label += 1
-                    if len(replacement_label) > 1:
-                        replacement_label = '%' + replacement_label
-                    open_rings[original_label] = replacement_label
-                new_smiles_string += replacement_label
-            else:
-                new_smiles_string += token.get_token()
-        return new_smiles_string
-
-    @staticmethod
-    def remove_unclosed_rings(smiles_string):
-        label_pattern = smiles_tokenizer.TokenizedSmiles.ring_pattern
-        parts = list()
-        unclosed_rings = set()
-        while len(smiles_string) > 0:
-            match = label_pattern.match(smiles_string)
-            if match is not None:
-                length = match.span()[1]
-                part = smiles_string[:length]
-                if part in unclosed_rings:
-                    unclosed_rings.remove(part)
-                else:
-                    unclosed_rings.add(part)
-            else:
-                length = 1
-                part = smiles_string[:length]
-            parts.append(part)
-            smiles_string = smiles_string[length:]
-        new_smiles_string = ''
-        for part in parts:
-            if part not in unclosed_rings:
-                new_smiles_string += part
-        return new_smiles_string
+    def pick_atoms(attention_map, smiles_string, threshold):
+        atom_positions = smiles_analyzer.atom_positions(smiles_string)
+        picked_indices = set()
+        for i in range(len(atom_positions)):
+            position = atom_positions[i]
+            mean = 0
+            position_range = range(position[0], position[1] + 1)
+            for j in position_range:
+                mean += attention_map[j]
+            mean /= len(position_range)
+            if mean >= threshold:
+                picked_indices.add(i)
+        return picked_indices

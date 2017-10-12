@@ -19,6 +19,15 @@ class ConcurrentCountingSet:
         self.lock.release()
         return result
 
+    def update(self, values):
+        self.lock.acquire()
+        for value in values:
+            if value not in self.dict:
+                self.dict[value] = 1
+            else:
+                self.dict[value] += 1
+        self.lock.release()
+
     def contains(self, value):
         self.lock.acquire()
         result = value in self.dict
