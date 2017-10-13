@@ -1,7 +1,7 @@
 import h5py
-
-from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool,\
-    concurrent_counting_set, hdf5_util, smiles_analyzer
+from steps.interpretation.smilesattentionsubstructures import substructure_set
+from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
+    smiles_analyzer
 from rdkit import Chem
 
 
@@ -64,19 +64,23 @@ class SmilesAttentionSubstructures:
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_active_indices
             substructures_dataset_name = 'active_substructures'
             substructures_occurrences_dataset_name = 'active_substructures_occurrences'
+            substructures_value_dataset_name = 'active_substructures_value'
+            substructures_score_dataset_name = 'active_substructures_score'
         else:
             log_message = 'Extracting inactive SMILES attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_inactive_indices
             substructures_dataset_name = 'inactive_substructures'
             substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
+            substructures_value_dataset_name = 'inactive_substructures_value'
+            substructures_score_dataset_name = 'inactive_substructures_score'
         attention_map = attention_map_h5[attention_map_dataset_name]
         if attention_map_indices_dataset_name in attention_map_h5.keys():
             indices = attention_map_h5[attention_map_indices_dataset_name]
         else:
             indices = range(len(attention_map))
         logger.log(log_message, logger.LogLevel.INFO)
-        substructures = concurrent_counting_set.ConcurrentCountingSet()
+        substructures = substructure_set.SubstructureSet()
         chunks = misc.chunk(len(smiles), number_threads)
         with progressbar.ProgressBar(len(indices)) as progress:
             with thread_pool.ThreadPool(number_threads) as pool:
@@ -84,7 +88,7 @@ class SmilesAttentionSubstructures:
                     pool.submit(SmilesAttentionSubstructures.extract, attention_map, indices, smiles,
                                 substructures, local_parameters['threshold'], chunk['start'], chunk['end'], progress)
                 pool.wait()
-        substructures_dict = substructures.get_dict_copy()
+        substructures_dict = substructures.get_dict()
         substructures = sorted(substructures_dict.keys())
         max_length = 0
         for smiles_string in substructures:
@@ -95,25 +99,32 @@ class SmilesAttentionSubstructures:
         substructures_occurrences_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
                                                                      substructures_occurrences_dataset_name,
                                                                      (len(substructures),), dtype='I')
+        substructures_value_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+                                                               substructures_value_dataset_name, (len(substructures),))
+        substructures_score_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+                                                               substructures_score_dataset_name, (len(substructures),))
         for i in range(len(substructures)):
             substructures_dataset[i] = substructures[i].encode()
-            substructures_occurrences_dataset[i] = substructures_dict[substructures[i]]
+            substructure = substructures_dict[substructures[i]]
+            substructures_occurrences_dataset[i] = substructure.get_occurrences()
+            substructures_value_dataset[i] = substructure.get_mean_value()
+            substructures_score_dataset[i] = substructure.get_score()
 
     @staticmethod
-    def extract(attention_map, indices, smiles, substructures_set, threshold, start, end, progress):
+    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
-            atom_indices = SmilesAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold)
+            atom_indices, values = SmilesAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold)
             if len(atom_indices) > 0:
                 molecule = Chem.MolFromSmiles(smiles_string)
-                substructure_smiles = Chem.MolFragmentToSmiles(molecule, atom_indices)
-                substructures_set.update(substructure_smiles.split('.'))
+                SmilesAttentionSubstructures.add_substructures(molecule, atom_indices, values, substructures)
             progress.increment()
 
     @staticmethod
     def pick_atoms(attention_map, smiles_string, threshold):
         atom_positions = smiles_analyzer.atom_positions(smiles_string)
-        picked_indices = set()
+        picked_indices = list()
+        values = list()
         for i in range(len(atom_positions)):
             position = atom_positions[i]
             mean = 0
@@ -122,5 +133,31 @@ class SmilesAttentionSubstructures:
                 mean += attention_map[j]
             mean /= len(position_range)
             if mean >= threshold:
-                picked_indices.add(i)
-        return picked_indices
+                picked_indices.append(i)
+                values.append(mean)
+        return picked_indices, values
+
+    @staticmethod
+    def add_substructures(molecule, atom_indices, values, substructure):
+        while len(atom_indices) > 0:
+            indices = {atom_indices[0]}
+            new_indices = {atom_indices[0]}
+            value_sum = 0
+            while len(new_indices) > 0:
+                next_new_indices = set()
+                for index in new_indices:
+                    for neighbor in molecule.GetAtoms()[index].GetNeighbors():
+                        neighbor_index = neighbor.GetIdx()
+                        if neighbor_index in atom_indices:
+                            if neighbor_index not in indices:
+                                indices.add(neighbor_index)
+                                next_new_indices.add(neighbor_index)
+                new_indices = next_new_indices
+            for index in indices:
+                list_index = atom_indices.index(index)
+                value_sum += values[list_index]
+                del atom_indices[list_index]
+                del values[list_index]
+            value_mean = value_sum/len(indices)
+            smiles = Chem.MolFragmentToSmiles(molecule, indices)
+            substructure.add_substructure(smiles, value_mean)
