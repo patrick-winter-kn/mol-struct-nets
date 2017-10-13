@@ -28,7 +28,6 @@ class StratifiedSampling:
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
-        data_validation.validate_data_set(global_parameters)
         data_validation.validate_target(global_parameters)
 
     @staticmethod

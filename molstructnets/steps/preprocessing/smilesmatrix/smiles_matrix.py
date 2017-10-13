@@ -27,11 +27,18 @@ class SmilesMatrix:
         parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,
                            'default': None, 'description': 'Characters in the given string will be added to the index'
                                                            ' in addition to characters found in the data set.'})
+        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each SMILES (default: none)',
+                           'type': int, 'default': 0,
+                           'description': 'The number of transformations done for each SMILES string in the training'
+                                          ' data set.'})
         return parameters
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
+        if local_parameters['transformations'] > 0:
+            data_validation.validate_target(global_parameters)
+            data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
@@ -88,6 +95,7 @@ class SmilesMatrix:
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, max_length.get_max(),
                                     chunk['start'], progress)
                     pool.wait()
+            # TODO create preprocessed training and references data sets
             data_h5.close()
             preprocessed_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)

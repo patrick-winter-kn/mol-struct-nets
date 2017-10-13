@@ -20,6 +20,8 @@ class Partitions:
 class Preprocessed:
 
     preprocessed = 'preprocessed'
+    preprocessed_training = 'preprocessed_training'
+    preprocessed_training_references = 'preprocessed_training_references'
 
 
 class Predictions:
