@@ -21,7 +21,7 @@ class SmilesAttentionSubstructures:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float,
+        parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25,
                            'description': 'The threshold used to decide which parts of the attention map are'
                                           ' interpreted as part of the substructure.'})
         return parameters
