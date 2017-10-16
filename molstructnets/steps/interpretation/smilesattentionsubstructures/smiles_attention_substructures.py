@@ -1,8 +1,9 @@
 import h5py
 from steps.interpretation.smilesattentionsubstructures import substructure_set
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
-    smiles_analyzer
+    smiles_analyzer, constants
 from rdkit import Chem
+import numpy
 
 
 number_threads = 1
@@ -24,12 +25,18 @@ class SmilesAttentionSubstructures:
         parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25,
                            'description': 'The threshold used to decide which parts of the attention map are'
                                           ' interpreted as part of the substructure.'})
+        parameters.append({'id': 'partition', 'name': 'Partition (options: train or test, default: both)', 'type': str,
+                           'default': 'both',
+                           'description': 'The partition that the substructures will be extracted from. By default both'
+                                          ' the train and test partition will be used.'})
         return parameters
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_attention_map(global_parameters)
+        if local_parameters['partition'] != 'both':
+            data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
@@ -46,17 +53,19 @@ class SmilesAttentionSubstructures:
             smiles_attention_substructures_h5 = h5py.File(temp_smiles_attention_substructures_path, 'w')
             if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
                 SmilesAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, True)
+                    attention_map_h5, smiles, global_parameters, local_parameters, smiles_attention_substructures_h5,
+                    True)
             if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
                 SmilesAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, local_parameters, smiles_attention_substructures_h5, False)
+                    attention_map_h5, smiles, global_parameters, local_parameters, smiles_attention_substructures_h5,
+                    False)
             smiles_attention_substructures_h5.close()
             file_util.move_file(temp_smiles_attention_substructures_path, smiles_attention_substructures_path)
             attention_map_h5.close()
             data_h5.close()
 
     @staticmethod
-    def extract_attention_map_substructures(attention_map_h5, smiles, local_parameters,
+    def extract_attention_map_substructures(attention_map_h5, smiles, global_parameters, local_parameters,
                                             smiles_attention_substructures_h5, active):
         if active:
             log_message = 'Extracting active SMILES attention substructures'
@@ -79,6 +88,15 @@ class SmilesAttentionSubstructures:
             indices = attention_map_h5[attention_map_indices_dataset_name]
         else:
             indices = range(len(attention_map))
+        if local_parameters['partition'] != 'both':
+            partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+            if local_parameters['partition'] == 'train':
+                train = partition_h5[file_structure.Partitions.train]
+                indices = list(set(indices) & set(numpy.array(train).flatten()))
+            elif local_parameters['partition'] == 'test':
+                test = partition_h5[file_structure.Partitions.test]
+                indices = list(set(indices) & set(numpy.array(test).flatten()))
+            partition_h5.close()
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = substructure_set.SubstructureSet()
         chunks = misc.chunk(len(smiles), number_threads)
