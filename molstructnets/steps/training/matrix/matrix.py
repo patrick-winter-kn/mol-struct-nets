@@ -76,7 +76,8 @@ class Matrix:
                       batch_size=local_parameters['batch_size'], callbacks=callback_list, initial_epoch=epoch)
             target_h5.close()
             preprocessed_h5.close()
-            partition_h5.close()
+            if 'partition_h5' in locals():
+                partition_h5.close()
 
 
 class DrugDiscoveryEval(Callback):
