@@ -73,9 +73,11 @@ def get_partition_folder(global_parameters):
 
 
 def get_preprocessed_folder(global_parameters):
+    partition = file_util.get_filename(global_parameters[constants.GlobalParameters.partition_data], False)
     return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     'preprocessed')
+                                     global_parameters[constants.GlobalParameters.data_set], 'targets',
+                                     global_parameters[constants.GlobalParameters.target], 'partitions',
+                                     partition, 'preprocessed')
 
 
 def get_network_file(global_parameters):
