@@ -120,7 +120,7 @@ class SmilesMatrix:
                                         index_lookup, max_length.get_max(), chunk['start'], progress,
                                         local_parameters['transformations'], len(train_smiles_data),
                                         random.Random(global_parameters[constants.GlobalParameters.seed]
-                                                      + chunk['start']))
+                                                      + chunk['start']), train)
                         pool.wait()
             data_h5.close()
             preprocessed_h5.close()
@@ -157,9 +157,9 @@ class SmilesMatrix:
     @staticmethod
     def write_transformed_smiles_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
                                           max_length, offset, progress, number_transformations,
-                                          offset_per_transformation, random_):
+                                          offset_per_transformation, random_, train_ref):
         for i in range(len(smiles_data)):
-            original_index = i + offset
+            original_index = train_ref[i + offset]
             original_smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(original_smiles)
             atom_indices = list(range(molecule.GetNumAtoms()))
