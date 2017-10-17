@@ -44,7 +44,7 @@ class SmilesMatrix:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters'])
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters', 'transformations'])
         file_name = 'smiles_matrix_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
