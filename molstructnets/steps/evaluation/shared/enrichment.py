@@ -2,15 +2,25 @@ import numpy
 import math
 from matplotlib import pyplot
 from util import logger, progressbar, file_util, misc
+import random
 
 
-def plot(predictions_list, prediction_names, classes, enrichment_factors, enrichment_plot_file):
+def plot(predictions_list, prediction_names, classes, enrichment_factors, enrichment_plot_file, shuffle=True, seed=42):
     actives_list = []
     efs_list = []
     auc_list = []
+    # We copy the needed data into memory to speed up sorting
+    classes = misc.copy_ndarray(classes)
+    if shuffle:
+        shuffle_indices = list(range(len(classes)))
+        random.Random(seed).shuffle(shuffle_indices)
+        classes = classes[shuffle_indices, ...]
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
-        predictions = predictions_list[i]
+        # First axis of first element
+        predictions = misc.copy_ndarray(predictions_list[i])[:,0]
+        if shuffle:
+            predictions = predictions[shuffle_indices, ...]
         actives, auc, efs = stats(predictions, classes, enrichment_factors)
         actives_list.append(actives)
         efs_list.append(efs)
@@ -49,8 +59,10 @@ def stats(predictions, classes, ef_percent, positives=None):
     if positives is None:
         positives = positives_count(classes)
     # We copy the needed data into memory to speed up sorting
-    # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-    indices = misc.copy_ndarray(predictions)[:, 0].argsort()[::-1]
+    if not isinstance(predictions, numpy.ndarray):
+        predictions = misc.copy_ndarray(predictions)
+    # Sort it (.argsort()) and reverse the order ([::-1]))
+    indices = predictions.argsort()[::-1]
     actives = [0]
     # efs maps the percent to the number of found positives
     efs = {}

@@ -21,6 +21,10 @@ class EnrichmentPlot:
                            'description': 'Name of the evaluated method that will be shown in the plot.'})
         parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors (in %, default: 5,10)', 'type': str,
                            'default': '5,10', 'description': 'List of enrichment factors in percent.'})
+        parameters.append({'id': 'shuffle', 'name': 'Shuffle before evaluation (default: True)', 'type': bool,
+                           'default': True, 'description': 'Shuffles the data before evaluation to counter sorted data'
+                                                           ' sets, which can be a problem in cases where the'
+                                                           ' probability is equal.'})
         return parameters
 
     @staticmethod
@@ -53,7 +57,8 @@ class EnrichmentPlot:
             predictions = reference_data_set.ReferenceDataSet(test,
                                                               prediction_h5[file_structure.Predictions.prediction])
             enrichment.plot([predictions], [local_parameters['method_name']], ground_truth, enrichment_factors,
-                            enrichment_plot_path)
+                            enrichment_plot_path, local_parameters['shuffle'],
+                            global_parameters[constants.GlobalParameters.seed])
             partition_h5.close()
             target_h5.close()
             prediction_h5.close()
