@@ -112,6 +112,7 @@ class SmilesMatrix:
                                              (preprocessed_training.shape[0],), dtype='I')
                 train_smiles_data = reference_data_set.ReferenceDataSet(train, smiles_data)
                 chunks = misc.chunk(len(train), number_threads)
+                originals_set = concurrent_set.ConcurrentSet()
                 with progressbar.ProgressBar(len(preprocessed_training)) as progress:
                     with thread_pool.ThreadPool(number_threads) as pool:
                         for chunk in chunks:
@@ -120,7 +121,7 @@ class SmilesMatrix:
                                         index_lookup, max_length.get_max(), chunk['start'], progress,
                                         local_parameters['transformations'], len(train_smiles_data),
                                         random.Random(global_parameters[constants.GlobalParameters.seed]
-                                                      + chunk['start']), train)
+                                                      + chunk['start']), train, originals_set)
                         pool.wait()
             data_h5.close()
             preprocessed_h5.close()
@@ -157,18 +158,21 @@ class SmilesMatrix:
     @staticmethod
     def write_transformed_smiles_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
                                           max_length, offset, progress, number_transformations,
-                                          offset_per_transformation, random_, train_ref):
+                                          offset_per_transformation, random_, train_ref, originals_set):
         for i in range(len(smiles_data)):
             original_index = train_ref[i + offset]
             original_smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(original_smiles)
             atom_indices = list(range(molecule.GetNumAtoms()))
-            # Add original smiles first
-            string = SmilesMatrix.pad_string(original_smiles, max_length)
-            preprocessed_training[i + offset] = SmilesMatrix.string_to_matrix(string, index_lookup)
-            preprocessed_training_ref[i + offset] = original_index
-            progress.increment()
-            for j in range(1, number_transformations):
+            start = 0
+            if originals_set.add(original_smiles):
+                # Add original smiles first
+                string = SmilesMatrix.pad_string(original_smiles, max_length)
+                preprocessed_training[i + offset] = SmilesMatrix.string_to_matrix(string, index_lookup)
+                preprocessed_training_ref[i + offset] = original_index
+                start += 1
+                progress.increment()
+            for j in range(start, number_transformations):
                 invalid = True
                 while invalid:
                     random_.shuffle(atom_indices)
