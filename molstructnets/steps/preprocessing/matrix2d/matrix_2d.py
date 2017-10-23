@@ -1,5 +1,6 @@
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
     thread_pool, constants, hdf5_util, concurrent_min
+from steps.preprocessing.matrix2d import bond_positions
 import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -156,23 +157,13 @@ class Matrix2D:
                 atom_locations_row[atom.GetIdx(), 0] = x
                 atom_locations_row[atom.GetIdx(), 1] = y
                 atom_positions[atom.GetIdx()] = [x, y]
+            bond_positions_ = bond_positions.calculate(molecule, atom_positions)
             for bond in molecule.GetBonds():
                 bond_symbol = get_bond_symbol(bond.GetBondType())
                 if bond_symbol is not None:
-                    x1 = atom_positions[bond.GetBeginAtomIdx()][0]
-                    y1 = atom_positions[bond.GetBeginAtomIdx()][1]
-                    x2 = atom_positions[bond.GetEndAtomIdx()][0]
-                    y2 = atom_positions[bond.GetEndAtomIdx()][1]
-                    f = LinearFunction(x1, y1, x2, y2)
                     bond_symbol_index = index_lookup[bond_symbol]
-                    for x in range(min(x1, x2) + 1, max(x1, x2)):
-                        y = round(f.get_y(x))
-                        if preprocessed_row[x, y].max() == 0:
-                            preprocessed_row[x, y, bond_symbol_index] = 1
-                    for y in range(min(y1, y2) + 1, max(y1, y2)):
-                        x = round(f.get_x(y))
-                        if preprocessed_row[x, y].max() == 0:
-                            preprocessed_row[x, y, bond_symbol_index] = 1
+                    for position in bond_positions_[bond.GetIdx()]:
+                        preprocessed_row[position[0], position[1], bond_symbol_index] = 1
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
@@ -193,23 +184,3 @@ def get_bond_symbol(bond_type):
         return ':'
     else:
         return '-'
-
-
-class LinearFunction:
-
-    def __init__(self, x1, y1, x2, y2):
-        if x1 - x2 == 0:
-            self.x = x1
-        else:
-            self.x = None
-            self.m = (y1 - y2) / (x1 - x2)
-            self.b = y1 - self.m * x1
-
-    def get_x(self, y):
-        if self.x is not None:
-            return self.x
-        else:
-            return (y - self.b) / self.m
-
-    def get_y(self, x):
-        return self.m * x + self.b
