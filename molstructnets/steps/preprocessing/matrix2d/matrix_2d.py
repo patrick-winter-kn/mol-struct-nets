@@ -10,7 +10,6 @@ import numpy
 
 number_threads = thread_pool.default_number_threads
 bond_symbols = {'-', '=', '#', '$', ':'}
-layout_factor = 2
 
 
 class Matrix2D:
@@ -26,6 +25,8 @@ class Matrix2D:
     @staticmethod
     def get_parameters():
         parameters = list()
+        parameters.append({'id': 'scale', 'name': 'Scale factor (default: 2)', 'type': float, 'default': 2.0,
+                           'description': 'The scaling factor used to change the size of the resulting grid.'})
         parameters.append({'id': 'width', 'name': 'Width (default: automatic)', 'type': int,
                            'default': None,
                            'description': 'The maximum width of molecules that will fit into the preprocessed data'
@@ -46,7 +47,7 @@ class Matrix2D:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['width', 'height', 'symbols'])
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['scale', 'width', 'height', 'symbols'])
         file_name = 'matrix_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -81,8 +82,8 @@ class Matrix2D:
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(Matrix2D.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1],
-                                    symbols, max_nr_atoms, min_x, min_y, max_x, max_y, progress)
+                        pool.submit(Matrix2D.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1], symbols,
+                                    max_nr_atoms, min_x, min_y, max_x, max_y, local_parameters['scale'], progress)
                     pool.wait()
             max_nr_atoms = max_nr_atoms.get_max()
             min_x = min_x.get_min()
@@ -115,14 +116,14 @@ class Matrix2D:
                     for chunk in chunks:
                         pool.submit(Matrix2D.write_2d_matrices, preprocessed, atom_locations,
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, min_x, min_y,
-                                    chunk['start'], progress)
+                                    chunk['start'], local_parameters['scale'], progress)
                     pool.wait()
             data_h5.close()
             preprocessed_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
 
     @staticmethod
-    def analyze_smiles(smiles_data, symbols, max_nr_atoms, min_x, min_y, max_x, max_y, progress):
+    def analyze_smiles(smiles_data, symbols, max_nr_atoms, min_x, min_y, max_x, max_y, scale_factor, progress):
         for smiles in smiles_data:
             smiles = smiles.decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
@@ -131,8 +132,8 @@ class Matrix2D:
             for atom in molecule.GetAtoms():
                 symbols.add(atom.GetSymbol())
                 position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
-                x = round(position.x * layout_factor)
-                y = round(position.y * layout_factor)
+                x = round(position.x * scale_factor)
+                y = round(position.y * scale_factor)
                 min_x.add_value(x)
                 max_x.add_value(x)
                 min_y.add_value(y)
@@ -140,7 +141,7 @@ class Matrix2D:
             progress.increment()
 
     @staticmethod
-    def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, min_x, min_y, offset, progress):
+    def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, min_x, min_y, offset, scale_factor, progress):
         for i in range(len(smiles_data)):
             preprocessed_row = numpy.zeros((preprocessed.shape[1], preprocessed.shape[2], preprocessed.shape[3]), dtype='int16')
             atom_locations_row = numpy.zeros((atom_locations.shape[1], atom_locations.shape[2]), dtype='int16')
@@ -151,8 +152,8 @@ class Matrix2D:
             for atom in molecule.GetAtoms():
                 symbol_index = index_lookup[atom.GetSymbol()]
                 position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
-                x = round(position.x * layout_factor) - min_x
-                y = round(position.y * layout_factor) - min_y
+                x = round(position.x * scale_factor) - min_x
+                y = round(position.y * scale_factor) - min_y
                 preprocessed_row[x, y, symbol_index] = 1
                 atom_locations_row[atom.GetIdx(), 0] = x
                 atom_locations_row[atom.GetIdx(), 1] = y
