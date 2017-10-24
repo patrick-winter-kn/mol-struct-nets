@@ -58,7 +58,7 @@ def substring_cut_from_middle(string, slices):
     return string
 
 
-def min(value_1, value_2):
+def minimum(value_1, value_2):
     if value_1 is None:
         return value_2
     if value_2 is None:
@@ -66,7 +66,7 @@ def min(value_1, value_2):
     return min(value_1, value_2)
 
 
-def max(value_1, value_2):
+def maximum(value_1, value_2):
     if value_1 is None:
         return value_2
     if value_2 is None:

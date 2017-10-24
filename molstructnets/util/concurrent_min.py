@@ -11,7 +11,7 @@ class ConcurrentMin:
     def add_value(self, value):
         if value is not None and self.min is None or value < self.min:
             self.lock.acquire()
-            self.min = misc.min(self.min, value)
+            self.min = misc.minimum(self.min, value)
             self.lock.release()
 
     def get_min(self):

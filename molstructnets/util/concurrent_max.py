@@ -11,7 +11,7 @@ class ConcurrentMax:
     def add_value(self, value):
         if value is not None and self.max is None or value > self.max:
             self.lock.acquire()
-            self.max = misc.max(self.max, value)
+            self.max = misc.maximum(self.max, value)
             self.lock.release()
 
     def get_max(self):
