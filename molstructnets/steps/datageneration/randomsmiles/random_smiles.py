@@ -30,7 +30,7 @@ class RandomSmiles:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(global_parameters, ['seed'])
+        hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['n', 'max_length']))
         file_name = str(local_parameters['n']) + 'x' + str(local_parameters['max_length']) + '_'\
                     + misc.hash_parameters(hash_parameters) + '.h5'
