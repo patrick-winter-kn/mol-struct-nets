@@ -1,18 +1,17 @@
 import threading
-import sys
+from util import misc
 
 
 class ConcurrentMin:
 
     def __init__(self):
-        self.min = sys.maxsize
+        self.min = None
         self.lock = threading.Lock()
 
     def add_value(self, value):
-        if value < self.min:
+        if value is not None and self.min is None or value < self.min:
             self.lock.acquire()
-            if value < self.min:
-                self.min = value
+            self.min = misc.min(self.min, value)
             self.lock.release()
 
     def get_min(self):

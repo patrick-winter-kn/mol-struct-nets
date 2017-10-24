@@ -56,3 +56,19 @@ def substring_cut_from_middle(string, slices):
         string = string[:cut_start] + string[cut_end:]
         removed += slice[1] - slice[0]
     return string
+
+
+def min(value_1, value_2):
+    if value_1 is None:
+        return value_2
+    if value_2 is None:
+        return value_1
+    return min(value_1, value_2)
+
+
+def max(value_1, value_2):
+    if value_1 is None:
+        return value_2
+    if value_2 is None:
+        return value_1
+    return max(value_1, value_2)

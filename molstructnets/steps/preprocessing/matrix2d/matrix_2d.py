@@ -6,6 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdchem import BondType
 import numpy
+import sys
 
 
 number_threads = thread_pool.default_number_threads
@@ -156,6 +157,11 @@ class Matrix2D:
 
     @staticmethod
     def analyze_smiles(smiles_data, symbols, max_nr_atoms, min_x, min_y, max_x, max_y, scale_factor, progress):
+        soft_limit = 100 * scale_factor
+        local_min_x = None
+        local_max_x = None
+        local_min_y = None
+        local_max_y = None
         for smiles in smiles_data:
             smiles = smiles.decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
@@ -166,10 +172,20 @@ class Matrix2D:
                 position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
                 x = round(position.x * scale_factor)
                 y = round(position.y * scale_factor)
-                min_x.add_value(x)
-                max_x.add_value(x)
-                min_y.add_value(y)
-                max_y.add_value(y)
+                local_min_x = misc.min(local_min_x, x)
+                local_max_x = misc.max(local_max_x, x)
+                local_min_y = misc.min(local_min_y, y)
+                local_max_y = misc.max(local_max_y, y)
+            min_x.add_value(local_min_x)
+            max_x.add_value(local_max_x)
+            min_y.add_value(local_min_y)
+            max_y.add_value(local_max_y)
+            # Warn about very big molecules
+            size_x = local_max_x - local_min_x
+            size_y = local_max_y - local_min_y
+            if size_x > soft_limit or size_y > soft_limit:
+                logger.log('Encountered big molecule with size ' + str(size_x) + '×' + str(size_y) + ': '
+                           + smiles, logger.LogLevel.WARNING)
             progress.increment()
 
     @staticmethod
