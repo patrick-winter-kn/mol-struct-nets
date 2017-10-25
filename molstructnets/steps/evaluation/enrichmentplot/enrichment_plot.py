@@ -25,6 +25,10 @@ class EnrichmentPlot:
                            'default': True, 'description': 'Shuffles the data before evaluation to counter sorted data'
                                                            ' sets, which can be a problem in cases where the'
                                                            ' probability is equal.'})
+        parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: test)',
+                           'type': str, 'default': 'both',
+                           'description': 'The enrichment plot will be generated for the specified partition. The test'
+                                          ' partition will be used by default.'})
         return parameters
 
     @staticmethod
@@ -49,13 +53,20 @@ class EnrichmentPlot:
             for enrichment_factor in local_parameters['enrichment_factors'].split(','):
                 enrichment_factors.append(int(enrichment_factor))
             partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
-            test = partition_h5[file_structure.Partitions.test]
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
-            ground_truth = reference_data_set.ReferenceDataSet(test, classes)
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-            predictions = reference_data_set.ReferenceDataSet(test,
-                                                              prediction_h5[file_structure.Predictions.prediction])
+            ground_truth = classes
+            predictions = prediction_h5[file_structure.Predictions.prediction]
+            partition = None
+            if local_parameters['partition'] == 'train':
+                partition = partition_h5[file_structure.Partitions.train]
+            elif local_parameters['partition'] == 'test' or local_parameters['partition'] != 'both':
+                partition = partition_h5[file_structure.Partitions.test]
+            if partition is not None:
+                ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
+                predictions = reference_data_set.ReferenceDataSet(partition,
+                                                                  prediction_h5[file_structure.Predictions.prediction])
             enrichment.plot([predictions], [local_parameters['method_name']], ground_truth, enrichment_factors,
                             enrichment_plot_path, local_parameters['shuffle'],
                             global_parameters[constants.GlobalParameters.seed])

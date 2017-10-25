@@ -32,10 +32,10 @@ class CalculateSmilesAttention:
         parameters.append({'id': 'correct_predictions', 'name': 'Only correct predictions (default: False)',
                            'type': bool, 'default': False,
                            'description': 'If true only correct predictions will be considered.'})
-        parameters.append({'id': 'partition', 'name': 'Partition (options: train or test, default: both)', 'type': str,
-                           'default': 'both',
-                           'description': 'Attention maps will be generated for the specified partition. By default both'
-                                          ' the train and test partition will be used.'})
+        parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: both)',
+                           'type': str, 'default': 'both',
+                           'description': 'Attention maps will be generated for the specified partition. By default'
+                                          ' both the train and test partition will be used.'})
         return parameters
 
     @staticmethod
