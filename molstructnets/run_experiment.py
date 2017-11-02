@@ -15,7 +15,7 @@ def get_arguments():
     parser = argparse.ArgumentParser(description='Runs an existing experiment')
     parser.add_argument('experiment', type=str, help='Path to the experiment file')
     parser.add_argument('--data_set', type=str, default=None, help='Data set name')
-    parser.add_argument('--target', type=str, default='default', help='Target name')
+    parser.add_argument('--target', type=str, default=None, help='Target name')
     parser.add_argument('--partition', type=str, default=None, help='Partition name')
     parser.add_argument('--step', type=int, default=None, help='Run the experiment up to the given step')
     return parser.parse_args()
