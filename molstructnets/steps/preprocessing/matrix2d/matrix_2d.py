@@ -139,10 +139,13 @@ class Matrix2D:
                                              file_structure.Preprocessed.preprocessed_training_references,
                                              (preprocessed_training.shape[0],), dtype='I')
                 train_smiles_data = reference_data_set.ReferenceDataSet(train, smiles_data)
-                chunks = misc.chunk(len(train), number_threads)
+                # If we do the transformation in parallel it leads to race conditions for the original data point
+                # (oversampled data). In this case the same seed does not lead to the same results. For this reason
+                # parallelization is disabled
+                chunks = misc.chunk(len(train), 1)
                 originals_set = concurrent_set.ConcurrentSet()
                 with progressbar.ProgressBar(len(preprocessed_training)) as progress:
-                    with thread_pool.ThreadPool(number_threads) as pool:
+                    with thread_pool.ThreadPool(len(chunks)) as pool:
                         for chunk in chunks:
                             pool.submit(Matrix2D.write_transformed_2d_matrices, preprocessed_training,
                                         preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end'] + 1],
