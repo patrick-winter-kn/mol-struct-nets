@@ -27,8 +27,11 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
         auc_list.append(auc)
     axis = pyplot.subplots()[1]
     axis.grid(True, linestyle='--')
+    # Plot ideal line
+    pyplot.plot((0, actives[-1]), (0, actives[-1]), ls='-', c='0.75')
+    pyplot.plot((actives[-1], len(actives)), (actives[-1], actives[-1]), ls='-', c='0.75')
     # Plot random line
-    pyplot.plot((0,len(actives)), (0,actives[-1]), ls='-', c='0.75', label='Random')
+    pyplot.plot((0,len(actives)), (0,actives[-1]), ls='-', c='0.75')
     # Plot actives
     for i in range(len(predictions_list)):
         pyplot.plot(actives_list[i], label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
