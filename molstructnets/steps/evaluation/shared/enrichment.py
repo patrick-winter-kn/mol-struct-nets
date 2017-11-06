@@ -11,17 +11,9 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     auc_list = []
     # We copy the needed data into memory to speed up sorting
     classes = misc.copy_ndarray(classes)
-    if shuffle:
-        shuffle_indices = list(range(len(classes)))
-        random.Random(seed).shuffle(shuffle_indices)
-        classes = classes[shuffle_indices, ...]
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
-        # First axis of first element
-        predictions = misc.copy_ndarray(predictions_list[i])[:,0]
-        if shuffle:
-            predictions = predictions[shuffle_indices, ...]
-        actives, auc, efs = stats(predictions, classes, enrichment_factors)
+        actives, auc, efs = stats(predictions_list[i], classes, enrichment_factors, shuffle, seed)
         actives_list.append(actives)
         efs_list.append(efs)
         auc_list.append(auc)
@@ -58,12 +50,21 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     return auc_list, efs_list
 
 
-def stats(predictions, classes, ef_percent, positives=None):
+def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=42):
     if positives is None:
         positives = positives_count(classes)
     # We copy the needed data into memory to speed up sorting
+    if not isinstance(classes, numpy.ndarray):
+        classes = misc.copy_ndarray(classes)
     if not isinstance(predictions, numpy.ndarray):
         predictions = misc.copy_ndarray(predictions)
+    # First axis of first element
+    predictions = predictions[:,0]
+    if shuffle:
+        shuffle_indices = list(range(len(classes)))
+        random.Random(seed).shuffle(shuffle_indices)
+        classes = classes[shuffle_indices, ...]
+        predictions = predictions[shuffle_indices, ...]
     # Sort it (.argsort()) and reverse the order ([::-1]))
     indices = predictions.argsort()[::-1]
     actives = [0]
@@ -73,8 +74,8 @@ def stats(predictions, classes, ef_percent, positives=None):
         efs[percent] = 0
     found = 0
     curve_sum = 0
-    logger.log('Calculating enrichment stats')
-    with progressbar.ProgressBar(len(indices)) as progress:
+    logger.log('Calculating enrichment stats', logger.LogLevel.VERBOSE)
+    with progressbar.ProgressBar(len(indices), logger.LogLevel.VERBOSE) as progress:
         for i in range(len(indices)):
             row = classes[indices[i]]
             # Check if index (numpy.where) of maximum value (max(row)) in row is 0 (==0)
