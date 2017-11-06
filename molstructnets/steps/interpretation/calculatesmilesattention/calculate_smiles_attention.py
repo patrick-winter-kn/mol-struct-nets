@@ -77,7 +77,7 @@ class CalculateSmilesAttention:
             classes = target_h5[file_structure.Target.classes]
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
             predictions = prediction_h5[file_structure.Predictions.prediction]
-            partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             if local_parameters['partition'] == 'train':

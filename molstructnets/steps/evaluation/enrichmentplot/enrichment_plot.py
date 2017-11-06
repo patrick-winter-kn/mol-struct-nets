@@ -52,7 +52,7 @@ class EnrichmentPlot:
             enrichment_factors = []
             for enrichment_factor in local_parameters['enrichment_factors'].split(','):
                 enrichment_factors.append(int(enrichment_factor))
-            partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')

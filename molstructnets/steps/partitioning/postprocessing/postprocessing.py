@@ -34,15 +34,16 @@ class Postprocessing:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['oversample', 'shuffle']))
-        file_name = file_util.get_filename(global_parameters[constants.GlobalParameters.partition_data], False)\
+        file_name = file_util.get_filename(file_structure.get_partition_file(global_parameters), False)\
                     + '_postprocessed_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_partition_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        source_partition_path = global_parameters[constants.GlobalParameters.partition_data]
+        source_partition_path = file_structure.get_partition_file(global_parameters)
         partition_path = Postprocessing.get_result_file(global_parameters, local_parameters)
-        global_parameters[constants.GlobalParameters.partition_data] = partition_path
+        global_parameters[constants.GlobalParameters.partition_data] = file_util.get_filename(partition_path,
+                                                                                              with_extension=False)
         if file_util.file_exists(partition_path):
             logger.log('Skipping step: ' + partition_path + ' already exists')
         else:

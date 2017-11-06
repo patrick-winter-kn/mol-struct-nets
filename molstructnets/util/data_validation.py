@@ -14,7 +14,7 @@ def validate_target(global_parameters):
 
 
 def validate_partition(global_parameters):
-    path = global_parameters[constants.GlobalParameters.partition_data]
+    path = file_structure.get_partition_file(global_parameters)
     validate_hdf5_file(path, file_structure.Partitions.train, file_structure.Partitions.test)
 
 

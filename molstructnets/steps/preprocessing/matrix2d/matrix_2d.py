@@ -126,7 +126,7 @@ class Matrix2D:
                     pool.wait()
             if local_parameters['transformations'] > 0:
                 logger.log('Writing transformed training data')
-                partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
                 train = partition_h5[file_structure.Partitions.train]
                 preprocessed_training = \
                     hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed_training,

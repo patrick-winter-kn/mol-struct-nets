@@ -56,7 +56,7 @@ class Matrix:
                 train = preprocessed_h5[file_structure.Preprocessed.preprocessed_training_references]
             else:
                 preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-                partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
                 train = partition_h5[file_structure.Partitions.train]
                 input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
             output = reference_data_set.ReferenceDataSet(train, classes)

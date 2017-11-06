@@ -89,7 +89,7 @@ class SmilesAttentionSubstructures:
         else:
             indices = range(len(attention_map))
         if local_parameters['partition'] != 'both':
-            partition_h5 = h5py.File(global_parameters[constants.GlobalParameters.partition_data], 'r')
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
                 train = partition_h5[file_structure.Partitions.train]
                 indices = list(set(indices) & set(numpy.array(train).flatten()))

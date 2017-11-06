@@ -44,80 +44,119 @@ def get_root_from_experiment_file(experiment_file_path):
 
 
 def get_experiment_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments')
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments')
 
 
 def get_data_set_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets')
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets')
 
 
 def get_data_set_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
                                      global_parameters[constants.GlobalParameters.data_set] + '.h5')
 
 
 def get_target_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set], 'targets')
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'targets')
 
 
 def get_target_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set], 'targets',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'targets',
                                      global_parameters[constants.GlobalParameters.target] + '.h5')
 
 
 def get_partition_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set], 'targets',
-                                     global_parameters[constants.GlobalParameters.target], 'partitions')
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'targets',
+                                     global_parameters[constants.GlobalParameters.target],
+                                     'partitions')
+
+
+def get_partition_file(global_parameters):
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'targets',
+                                     global_parameters[constants.GlobalParameters.target],
+                                     'partitions',
+                                     global_parameters[constants.GlobalParameters.partition_data] + '.h5')
 
 
 def get_preprocessed_folder(global_parameters):
     partition = file_util.get_filename(global_parameters[constants.GlobalParameters.partition_data], False)
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set], 'targets',
-                                     global_parameters[constants.GlobalParameters.target], 'partitions',
-                                     partition, 'preprocessed')
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'targets',
+                                     global_parameters[constants.GlobalParameters.target],
+                                     'partitions',
+                                     partition,
+                                     'preprocessed')
 
 
 def get_network_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target], 'network.h5')
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'network.h5')
 
 
 def get_prediction_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target], 'predictions.h5')
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'predictions.h5')
 
 
 def get_evaluation_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target], 'evaluation')
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'evaluation')
 
 
 def get_interpretation_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target], 'interpretation')
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'interpretation')
 
 
 def get_attentionmap_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'experiments',
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target], 'interpretation',
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'interpretation',
                                      'attention_map.h5')
 
 
-def find_file(global_parameters_, folder_path, name):
+def find_file(folder_path, name):
     prefix = file_util.resolve_subpath(folder_path, name)
     if file_util.file_exists(prefix + '.h5'):
         return name
@@ -137,15 +176,14 @@ def find_file(global_parameters_, folder_path, name):
 
 def find_data_set(global_parameters_, name):
     data_set_folder = get_data_set_folder(global_parameters_)
-    return find_file(global_parameters_, data_set_folder, name)
+    return find_file(data_set_folder, name)
 
 
 def find_target(global_parameters_, name):
     target_folder = get_target_folder(global_parameters_)
-    return find_file(global_parameters_, target_folder, name)
+    return find_file(target_folder, name)
 
 
 def find_partition(global_parameters_, name):
     partition_folder = get_partition_folder(global_parameters_)
-    name = find_file(global_parameters_, partition_folder, name)
-    return file_util.resolve_subpath(partition_folder, name + '.h5')
+    return find_file(partition_folder, name)
