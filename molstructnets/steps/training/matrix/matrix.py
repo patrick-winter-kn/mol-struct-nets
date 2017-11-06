@@ -51,12 +51,12 @@ class Matrix:
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             if file_structure.Preprocessed.preprocessed_training in preprocessed_h5:
                 input_ = preprocessed_h5[file_structure.Preprocessed.preprocessed_training]
                 train = preprocessed_h5[file_structure.Preprocessed.preprocessed_training_references]
             else:
-                preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
                 train = partition_h5[file_structure.Partitions.train]
                 input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
             output = reference_data_set.ReferenceDataSet(train, classes)
@@ -101,7 +101,7 @@ class DrugDiscoveryEval(Callback):
                 results = self.model.predict(self.input[start:end])
                 predictions[start:end] = results[:]
                 progress.increment(end - start)
-        actives, auc, efs = enrichment.stats(predictions, self.output, self.ef_percent, self.positives)
+        actives, auc, efs = enrichment.stats(predictions, self.output, self.ef_percent, positives=self.positives)
         for percent in sorted(efs.keys()):
             logs['enrichment_factor_' + str(percent)] = numpy.float64(efs[percent])
         logs['enrichment_auc'] = numpy.float64(auc)

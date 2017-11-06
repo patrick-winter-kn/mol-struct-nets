@@ -8,6 +8,7 @@ from util import file_structure, constants, file_util
 from steps import steps_repository
 from steps.datageneration import data_generation_repository
 from steps.targetgeneration import target_generation_repository
+from steps.partitioning import partitioning_repository
 import threading
 import time
 
@@ -56,6 +57,8 @@ for i in range(nr_steps):
         global_parameters[constants.GlobalParameters.data_set] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
     if type_id == target_generation_repository.instance.get_id():
         global_parameters[constants.GlobalParameters.target] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
+    if type_id == partitioning_repository.instance.get_id():
+        global_parameters[constants.GlobalParameters.partition_data] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
 tensorboard_path = file_structure.get_network_file(global_parameters)
 tensorboard_path = tensorboard_path[:tensorboard_path.rfind('.')] + '-tensorboard'
 threading.Thread(target=open_tensorboard).start()

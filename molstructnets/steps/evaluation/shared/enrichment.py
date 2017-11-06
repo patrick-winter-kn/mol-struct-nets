@@ -13,7 +13,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     classes = misc.copy_ndarray(classes)
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
-        actives, auc, efs = stats(predictions_list[i], classes, enrichment_factors, shuffle, seed)
+        actives, auc, efs = stats(predictions_list[i], classes, enrichment_factors, shuffle=shuffle, seed=seed)
         actives_list.append(actives)
         efs_list.append(efs)
         auc_list.append(auc)
