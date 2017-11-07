@@ -10,7 +10,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     efs_list = []
     auc_list = []
     # We copy the needed data into memory to speed up sorting
-    classes = misc.copy_ndarray(classes)
+    classes = misc.copy_into_memory(classes)
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
         actives, auc, efs = stats(predictions_list[i], classes, enrichment_factors, shuffle=shuffle, seed=seed)
@@ -54,10 +54,8 @@ def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=4
     if positives is None:
         positives = positives_count(classes)
     # We copy the needed data into memory to speed up sorting
-    if not isinstance(classes, numpy.ndarray):
-        classes = misc.copy_ndarray(classes)
-    if not isinstance(predictions, numpy.ndarray):
-        predictions = misc.copy_ndarray(predictions)
+    classes = misc.copy_into_memory(classes)
+    predictions = misc.copy_into_memory(predictions)
     # First axis of first element
     predictions = predictions[:,0]
     if shuffle:

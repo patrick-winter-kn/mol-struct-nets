@@ -81,11 +81,13 @@ class CalculateSmilesAttention:
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             if local_parameters['partition'] == 'train':
-                references = misc.copy_ndarray(partition_h5[file_structure.Partitions.train])
+                references = partition_h5[file_structure.Partitions.train]
             elif local_parameters['partition'] == 'test':
-                references = misc.copy_ndarray(partition_h5[file_structure.Partitions.test])
+                references = partition_h5[file_structure.Partitions.test]
             else:
                 references = numpy.arange(0, len(preprocessed))
+            # Speedup lookup by copying into memory
+            references = misc.copy_into_memory(references)
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
@@ -94,7 +96,7 @@ class CalculateSmilesAttention:
             else:
                 # We copy the needed data into memory to speed up sorting
                 # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-                indices = misc.copy_ndarray(predictions)[:, 0].argsort()[::-1]
+                indices = misc.copy_into_memory(predictions)[:, 0].argsort()[::-1]
                 count = min(local_parameters['top_n'], len(indices))
                 if local_parameters['actives']:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_active_indices

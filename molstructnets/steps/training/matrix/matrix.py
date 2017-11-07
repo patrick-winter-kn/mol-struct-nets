@@ -7,7 +7,7 @@ from keras.callbacks import ModelCheckpoint, TensorBoard, Callback
 
 from steps.evaluation.shared import enrichment
 from util import data_validation, file_structure, reference_data_set, hdf5_util, logger, callbacks, constants, \
-    progressbar
+    progressbar, misc
 
 
 class Matrix:
@@ -30,6 +30,10 @@ class Matrix:
                                           ' to faster processing but needs more memory.'})
         parameters.append({'id': 'validation', 'name': 'Validation (default: False)', 'type': bool, 'default': False,
                            'description': 'Evaluate the model after each epoch using the test data set.'})
+        parameters.append({'id': 'in_memory', 'name': 'Keep data in memory (default: False)', 'type': bool,
+                           'default': False,
+                           'description': 'Copy the full data set into memory before training. This will speedup'
+                                          ' training but might not be possible for bigger data sets.'})
         return parameters
 
     @staticmethod
@@ -65,6 +69,9 @@ class Matrix:
                 test = partition_h5[file_structure.Partitions.test]
                 validation_input = reference_data_set.ReferenceDataSet(test, preprocessed)
                 validation_output = reference_data_set.ReferenceDataSet(test, classes)
+                if local_parameters['in_memory']:
+                    validation_input = misc.copy_into_memory(validation_input)
+                    validation_output = misc.copy_into_memory(validation_output)
                 callback_list.append(DrugDiscoveryEval(validation_input, validation_output,
                                                        local_parameters['batch_size']))
             model = models.load_model(model_path)
@@ -72,6 +79,9 @@ class Matrix:
             callback_list.append(callbacks.CustomCheckpoint(model_path))
             callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
                                              write_graph=True, write_images=False, embeddings_freq=1))
+            if local_parameters['in_memory']:
+                input_ = misc.copy_into_memory(input_)
+                output = misc.copy_into_memory(output)
             model.fit(input_, output, epochs=local_parameters['epochs'], shuffle='batch',
                       batch_size=local_parameters['batch_size'], callbacks=callback_list, initial_epoch=epoch)
             target_h5.close()

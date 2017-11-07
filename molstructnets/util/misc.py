@@ -39,6 +39,13 @@ def is_active(probabilities):
     return probabilities[0] > probabilities[1]
 
 
+def copy_into_memory(array):
+    if isinstance(array, numpy.ndarray):
+        return array
+    else:
+        return copy_ndarray(array)
+
+
 def copy_ndarray(array):
     if isinstance(array, reference_data_set.ReferenceDataSet):
         array_copy = numpy.zeros(array.shape)
