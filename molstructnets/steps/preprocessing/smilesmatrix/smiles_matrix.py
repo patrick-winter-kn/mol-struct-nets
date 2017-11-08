@@ -182,9 +182,16 @@ class SmilesMatrix:
                 while invalid:
                     random_.shuffle(atom_indices)
                     smiles = Chem.MolToSmiles(Chem.RenumberAtoms(molecule, atom_indices), canonical=False)
-                    invalid = len(smiles) > max_length
+                    invalid = len(smiles) > max_length or SmilesMatrix.invalid_characters(smiles, index_lookup)
                 index = i + offset + offset_per_transformation * j
                 string = SmilesMatrix.pad_string(smiles, max_length)
                 preprocessed_training[index] = SmilesMatrix.string_to_matrix(string, index_lookup)
                 preprocessed_training_ref[index] = original_index
                 progress.increment()
+
+    @staticmethod
+    def invalid_characters(smiles, index_lookup):
+        for character in smiles:
+            if character not in index_lookup:
+                return True
+        return False
