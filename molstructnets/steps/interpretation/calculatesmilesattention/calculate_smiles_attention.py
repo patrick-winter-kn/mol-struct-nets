@@ -103,7 +103,8 @@ class CalculateSmilesAttention:
                 else:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_inactive_indices
                 attention_map_indices_list = list()
-                attention_map_indices = hdf5_util.create_dataset(attention_map_h5, indices_data_set_name, (count,), dtype='I')
+                attention_map_indices = hdf5_util.create_dataset(attention_map_h5, indices_data_set_name, (count,),
+                                                                 dtype='I')
             if local_parameters['actives']:
                 class_index = 0
             else:
@@ -113,7 +114,8 @@ class CalculateSmilesAttention:
             else:
                 attention_map_shape = list(preprocessed.shape)
                 attention_map_shape = tuple(attention_map_shape[:-1])
-                attention_map_ = hdf5_util.create_dataset(attention_map_h5, attention_map_dataset_name, attention_map_shape)
+                attention_map_ = hdf5_util.create_dataset(attention_map_h5, attention_map_dataset_name,
+                                                          attention_map_shape)
             with progressbar.ProgressBar(count) as progress:
                 j = 0
                 for i in range(count):
@@ -130,7 +132,8 @@ class CalculateSmilesAttention:
                     if index is not None:
                         if not numpy.max(attention_map_[index]) > 0:
                             smiles_matrix = preprocessed[index]
-                            grads = attention_map.calculate_saliency(model, out_layer_index, filter_indices=[class_index],
+                            grads = attention_map.calculate_saliency(model, out_layer_index,
+                                                                     filter_indices=[class_index],
                                                                      seed_input=smiles_matrix)
                             attention_map_[index] = grads[:]
                             if attention_map_indices_list is not None:

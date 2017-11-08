@@ -1,5 +1,4 @@
 import threading
-import copy
 
 
 class SubstructureSet:

@@ -22,19 +22,23 @@ class TokenizedSmiles:
         rest_string = self.smiles_string
         atom_index = -1
         done = 0
-        type = Token.ATOM
+        type_ = Token.ATOM
         while len(rest_string) > 0:
-            if type == Token.ATOM:
+            atom_pattern = None
+            if type_ == Token.ATOM:
                 atom_index += 1
                 if atom_index < len(atom_symbols):
-                    atom_pattern = re.compile(TokenizedSmiles.atom_pattern_string.replace('SYMBOL', atom_symbols[atom_index]), re.IGNORECASE)
-            match, type = self.matching_pattern(rest_string, atom_pattern)
+                    atom_pattern =\
+                        re.compile(TokenizedSmiles.atom_pattern_string.replace('SYMBOL', atom_symbols[atom_index]),
+                                   re.IGNORECASE)
+            match, type_ = TokenizedSmiles.matching_pattern(rest_string, atom_pattern)
             length = match.span()[1]
-            self.tokens.append(Token(self.smiles_string, done, done + length, type))
+            self.tokens.append(Token(self.smiles_string, done, done + length, type_))
             done += length
             rest_string = rest_string[length:]
 
-    def matching_pattern(self, string, atom_pattern):
+    @staticmethod
+    def matching_pattern(string, atom_pattern):
         if atom_pattern is not None:
             atom_match = atom_pattern.match(string)
             if atom_match:
@@ -69,14 +73,14 @@ class Token:
     BRANCH = 'branch'
     RING = 'ring'
 
-    def __init__(self, smiles, start, end, type):
+    def __init__(self, smiles, start, end, type_):
         self.smiles = smiles
         self.start = start
         self.end = end
-        self.type = type
+        self.type = type_
 
     def get_position(self):
-        return (self.start, self.end)
+        return self.start, self.end
 
     def get_type(self):
         return self.type

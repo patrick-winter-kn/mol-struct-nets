@@ -92,9 +92,12 @@ class Matrix:
 
 class DrugDiscoveryEval(Callback):
 
-    def __init__(self, input_, output, batch_size, ef_percent=[5, 10]):
+    def __init__(self, input_, output, batch_size, ef_percent=None):
         super().__init__()
-        self.ef_percent = ef_percent
+        if ef_percent is None:
+            self.ef_percent = [5, 10]
+        else:
+            self.ef_percent = ef_percent
         self.input = input_
         self.output = output
         self.positives = enrichment.positives_count(output)

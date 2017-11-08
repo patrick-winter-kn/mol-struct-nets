@@ -1,7 +1,7 @@
 import h5py
 from steps.interpretation.smilesattentionsubstructures import substructure_set
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
-    smiles_analyzer, constants
+    smiles_analyzer
 from rdkit import Chem
 import numpy
 

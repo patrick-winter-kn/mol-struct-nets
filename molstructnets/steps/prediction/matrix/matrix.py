@@ -39,7 +39,8 @@ class Matrix:
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             temp_prediction_path = file_util.get_temporary_file_path('matrix_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
-            predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction, (len(preprocessed), 2))
+            predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
+                                                   (len(preprocessed), 2))
             model_path = file_structure.get_network_file(global_parameters)
             model = models.load_model(model_path)
             logger.log('Predicting data')

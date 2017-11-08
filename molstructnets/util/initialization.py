@@ -4,6 +4,8 @@ import random
 import numpy
 import json
 import matplotlib
+
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['PYTHONHASHSEED'] = '0'
 seed = random.randint(0, numpy.iinfo(numpy.uint32).max)

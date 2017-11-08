@@ -7,7 +7,6 @@ from experiments import experiment
 from util import file_structure, logger, file_util, constants
 from steps import steps_repository
 import h5py
-import re
 import datetime
 
 
@@ -42,11 +41,13 @@ global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
 if args.data_set is not None:
-    global_parameters[constants.GlobalParameters.data_set] = file_structure.find_data_set(global_parameters, args.data_set)
+    global_parameters[constants.GlobalParameters.data_set] = file_structure.find_data_set(global_parameters,
+                                                                                          args.data_set)
 if args.target is not None:
     global_parameters[constants.GlobalParameters.target] = file_structure.find_target(global_parameters, args.target)
 if args.partition is not None:
-    global_parameters[constants.GlobalParameters.partition_data] = file_structure.find_partition(global_parameters, args.partition)
+    global_parameters[constants.GlobalParameters.partition_data] = file_structure.find_partition(global_parameters,
+                                                                                                 args.partition)
 n = get_n(global_parameters)
 if n is not None:
     global_parameters[constants.GlobalParameters.n] = n

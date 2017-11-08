@@ -38,7 +38,6 @@ class RenderSmilesAttention:
                                                         'smiles_attention_active')
             file_util.make_folders(active_dir_path, True)
             attention_map_active = attention_map_h5[file_structure.AttentionMap.attention_map_active]
-            indices = None
             if file_structure.AttentionMap.attention_map_active_indices in attention_map_h5.keys():
                 indices = attention_map_h5[file_structure.AttentionMap.attention_map_active_indices]
             else:
@@ -48,11 +47,12 @@ class RenderSmilesAttention:
             with progressbar.ProgressBar(len(indices)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(RenderSmilesAttention.render, attention_map_active, indices, smiles, active_dir_path, chunk['start'], chunk['end'], progress)
+                        pool.submit(RenderSmilesAttention.render, attention_map_active, indices, smiles,
+                                    active_dir_path, chunk['start'], chunk['end'], progress)
                     pool.wait()
         if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
             inactive_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
-                                                        'smiles_attention_inactive')
+                                                          'smiles_attention_inactive')
             file_util.make_folders(inactive_dir_path, True)
             attention_map_inactive = attention_map_h5[file_structure.AttentionMap.attention_map_inactive]
             if file_structure.AttentionMap.attention_map_inactive_indices in attention_map_h5.keys():
@@ -64,11 +64,11 @@ class RenderSmilesAttention:
             with progressbar.ProgressBar(len(indices)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(RenderSmilesAttention.render, attention_map_inactive, indices, smiles, inactive_dir_path, chunk['start'], chunk['end'], progress)
+                        pool.submit(RenderSmilesAttention.render, attention_map_inactive, indices, smiles,
+                                    inactive_dir_path, chunk['start'], chunk['end'], progress)
                     pool.wait()
         attention_map_h5.close()
         data_h5.close()
-
 
     @staticmethod
     def render(data_set, indices, smiles, output_dir_path, start, end, progress):

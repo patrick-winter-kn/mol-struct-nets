@@ -35,11 +35,13 @@ global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
 if args.data_set is not None:
-    global_parameters[constants.GlobalParameters.data_set] = file_structure.find_data_set(global_parameters, args.data_set)
+    global_parameters[constants.GlobalParameters.data_set] =\
+        file_structure.find_data_set(global_parameters, args.data_set)
 if args.target is not None:
     global_parameters[constants.GlobalParameters.target] = file_structure.find_target(global_parameters, args.target)
 if args.partition is not None:
-    global_parameters[constants.GlobalParameters.partition_data] = file_structure.find_partition(global_parameters, args.partition)
+    global_parameters[constants.GlobalParameters.partition_data] =\
+        file_structure.find_partition(global_parameters, args.partition)
 nr_steps = experiment_.number_steps()
 for i in range(nr_steps):
     step_config = experiment_.get_step(i)
@@ -54,11 +56,14 @@ for i in range(nr_steps):
         for parameter in step_config['parameters']:
             parameters[parameter] = step_config['parameters'][parameter]
     if type_id == data_generation_repository.instance.get_id():
-        global_parameters[constants.GlobalParameters.data_set] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
+        global_parameters[constants.GlobalParameters.data_set] =\
+            file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
     if type_id == target_generation_repository.instance.get_id():
-        global_parameters[constants.GlobalParameters.target] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
+        global_parameters[constants.GlobalParameters.target] =\
+            file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
     if type_id == partitioning_repository.instance.get_id():
-        global_parameters[constants.GlobalParameters.partition_data] = file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
+        global_parameters[constants.GlobalParameters.partition_data] =\
+            file_util.get_filename(step.get_result_file(global_parameters, parameters), False)
 tensorboard_path = file_structure.get_network_file(global_parameters)
 tensorboard_path = tensorboard_path[:tensorboard_path.rfind('.')] + '-tensorboard'
 threading.Thread(target=open_tensorboard).start()

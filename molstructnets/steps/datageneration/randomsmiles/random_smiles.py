@@ -33,7 +33,7 @@ class RandomSmiles:
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['n', 'max_length']))
         file_name = str(local_parameters['n']) + 'x' + str(local_parameters['max_length']) + '_'\
-                    + misc.hash_parameters(hash_parameters) + '.h5'
+            + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_data_set_folder(global_parameters), file_name)
 
     @staticmethod
@@ -47,7 +47,7 @@ class RandomSmiles:
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             data_h5 = h5py.File(temp_data_set_path, 'w')
             smiles_data = hdf5_util.create_dataset(data_h5, file_structure.DataSet.smiles, (local_parameters['n'],),
-                                                 'S' + str(local_parameters['max_length']))
+                                                   'S' + str(local_parameters['max_length']))
             chunks = misc.chunk(local_parameters['n'], number_threads)
             smiles_set = concurrent_set.ConcurrentSet()
             with progressbar.ProgressBar(local_parameters['n']) as progress:

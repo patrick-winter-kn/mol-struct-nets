@@ -57,11 +57,11 @@ def copy_ndarray(array):
 
 def substring_cut_from_middle(string, slices):
     removed = 0
-    for slice in slices:
-        cut_start = slice[0] - removed
-        cut_end = slice[1] - removed
+    for slice_ in slices:
+        cut_start = slice_[0] - removed
+        cut_end = slice_[1] - removed
         string = string[:cut_start] + string[cut_end:]
-        removed += slice[1] - slice[0]
+        removed += slice_[1] - slice_[0]
     return string
 
 

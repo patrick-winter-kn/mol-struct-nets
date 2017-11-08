@@ -14,6 +14,7 @@ class Transformer:
             x, y = Transformer.rotate((self.center_x, self.center_y), (x, y), rotation)
         return x, y
 
+    @staticmethod
     def rotate(origin, point, angle):
         angle = math.radians(angle)
         origin_x, origin_y = origin
@@ -21,4 +22,3 @@ class Transformer:
         rotated_x = origin_x + math.cos(angle) * (point_x - origin_x) - math.sin(angle) * (point_y - origin_y)
         rotated_y = origin_y + math.sin(angle) * (point_x - origin_x) + math.cos(angle) * (point_y - origin_y)
         return rotated_x, rotated_y
-    

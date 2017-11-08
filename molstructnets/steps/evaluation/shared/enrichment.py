@@ -23,7 +23,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     pyplot.plot((0, actives[-1]), (0, actives[-1]), ls='-', c='0.75')
     pyplot.plot((actives[-1], len(actives)), (actives[-1], actives[-1]), ls='-', c='0.75')
     # Plot random line
-    pyplot.plot((0,len(actives)), (0,actives[-1]), ls='-', c='0.75')
+    pyplot.plot((0, len(actives)), (0, actives[-1]), ls='-', c='0.75')
     # Plot actives
     for i in range(len(predictions_list)):
         pyplot.plot(actives_list[i], label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
@@ -57,7 +57,7 @@ def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=4
     classes = misc.copy_into_memory(classes)
     predictions = misc.copy_into_memory(predictions)
     # First axis of first element
-    predictions = predictions[:,0]
+    predictions = predictions[:, 0]
     if shuffle:
         shuffle_indices = list(range(len(classes)))
         random.Random(seed).shuffle(shuffle_indices)
@@ -108,5 +108,6 @@ def positives_count(classes):
                 positives += 1
             i += 1
             progress.increment()
-    logger.log('Found ' + str(positives) + ' actives and ' + str(len(classes) - positives) + ' inactives', logger.LogLevel.VERBOSE)
+    logger.log('Found ' + str(positives) + ' actives and ' + str(len(classes) - positives) + ' inactives',
+               logger.LogLevel.VERBOSE)
     return positives

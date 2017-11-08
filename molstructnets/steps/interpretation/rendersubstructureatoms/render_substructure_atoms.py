@@ -39,8 +39,9 @@ class RenderSubstructureAtoms:
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
         smiles = data_h5[file_structure.DataSet.smiles]
         if file_structure.AttentionMap.substructure_atoms in attention_map_h5.keys():
-            substructure_atoms_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
-                                                        'substructure_atoms')
+            substructure_atoms_dir_path =\
+                file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
+                                          'substructure_atoms')
             file_util.make_folders(substructure_atoms_dir_path, True)
             substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
             logger.log('Rendering substructure atoms', logger.LogLevel.INFO)
@@ -48,7 +49,8 @@ class RenderSubstructureAtoms:
             with progressbar.ProgressBar(len(smiles)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(RenderSubstructureAtoms.render, substructure_atoms, smiles, substructure_atoms_dir_path, chunk['start'], chunk['end'], progress)
+                        pool.submit(RenderSubstructureAtoms.render, substructure_atoms, smiles,
+                                    substructure_atoms_dir_path, chunk['start'], chunk['end'], progress)
                     pool.wait()
         attention_map_h5.close()
         data_h5.close()

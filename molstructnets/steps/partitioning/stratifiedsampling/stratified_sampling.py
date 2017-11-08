@@ -33,7 +33,8 @@ class StratifiedSampling:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
-        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['train_percentage', 'oversample', 'shuffle']))
+        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['train_percentage', 'oversample',
+                                                                           'shuffle']))
         file_name = 'stratified_sampling_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_partition_folder(global_parameters), file_name)
 

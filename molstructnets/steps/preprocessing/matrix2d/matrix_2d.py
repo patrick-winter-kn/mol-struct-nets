@@ -101,10 +101,13 @@ class Matrix2D:
                 index_lookup[symbols[i]] = i
                 index[i] = symbols[i].encode('utf-8')
             use_transformations = local_parameters['transformations'] > 0
-            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], padding, min_x, max_x, min_y, max_y, use_transformations)
-            global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x, rasterizer_.size_y, len(index))
+            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], padding, min_x, max_x, min_y, max_y,
+                                                use_transformations)
+            global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x, rasterizer_.size_y,
+                                                                              len(index))
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
-                                                    (len(smiles_data), rasterizer_.size_x, rasterizer_.size_y, len(index)), dtype='I',
+                                                    (len(smiles_data), rasterizer_.size_x, rasterizer_.size_y,
+                                                     len(index)), dtype='I',
                                                     chunks=(1, rasterizer_.size_x, rasterizer_.size_y, len(index)))
             atom_locations = hdf5_util.create_dataset(preprocessed_h5, 'atom_locations',
                                                       (len(smiles_data), max_nr_atoms, 2), dtype='I',
@@ -186,20 +189,20 @@ class Matrix2D:
             progress.increment()
 
     @staticmethod
-    def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer, offset, progress):
+    def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer_, offset, progress):
         for i in range(len(smiles_data)):
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
-            preprocessed_row, atom_locations_row = Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer,
-                                                                             preprocessed.shape,
-                                                                             atom_locations_shape=atom_locations.shape)
+            preprocessed_row, atom_locations_row =\
+                Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed.shape,
+                                               atom_locations_shape=atom_locations.shape)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
 
     @staticmethod
     def write_transformed_2d_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
-                                     rasterizer, transformer, offset, originals_set, number_transformations,
+                                      rasterizer_, transformer_, offset, originals_set, number_transformations,
                                       offset_per_transformation, seed, train_ref, progress):
         random_ = random.Random(seed)
         for i in range(len(smiles_data)):
@@ -208,16 +211,17 @@ class Matrix2D:
             molecule = Chem.MolFromSmiles(smiles)
             start = 0
             if originals_set.add(smiles):
-                preprocessed_row = Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer,
-                                                             preprocessed_training.shape)[0]
+                preprocessed_row = Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_,
+                                                                  preprocessed_training.shape)[0]
                 preprocessed_training[i + offset, :] = preprocessed_row[:]
                 preprocessed_training_ref[i + offset] = original_index
                 start += 1
                 progress.increment()
             for j in range(start, number_transformations):
                 index = i + offset + offset_per_transformation * j
-                preprocessed_row = Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer,
-                                                             preprocessed_training.shape, transformer=transformer, random_=random_)[0]
+                preprocessed_row =\
+                    Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_training.shape,
+                                                   transformer_=transformer_, random_=random_)[0]
                 preprocessed_training[index, :] = preprocessed_row[:]
                 preprocessed_training_ref[index] = original_index
                 progress.increment()
@@ -252,7 +256,8 @@ class Matrix2D:
             return '-'
 
     @staticmethod
-    def molecule_to_2d_matrix(molecule, index_lookup, rasterizer, preprocessed_shape, atom_locations_shape=None, transformer=None, random_=None):
+    def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
+                              transformer_=None, random_=None):
         preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
                                        dtype='int16')
         if atom_locations_shape is None:
@@ -266,11 +271,11 @@ class Matrix2D:
             position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
             x = position.x
             y = position.y
-            if transformer is not None and random_ is not None:
+            if transformer_ is not None and random_ is not None:
                 flip = bool(random_.getrandbits(1))
                 rotation = random_.randrange(0, 360)
-                x, y = transformer.apply(x, y, flip, rotation)
-            x, y = rasterizer.apply(x, y)
+                x, y = transformer_.apply(x, y, flip, rotation)
+            x, y = rasterizer_.apply(x, y)
             preprocessed_row[x, y, symbol_index] = 1
             if atom_locations_row is not None:
                 atom_locations_row[atom.GetIdx(), 0] = x
