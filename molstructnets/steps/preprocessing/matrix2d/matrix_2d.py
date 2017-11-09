@@ -88,8 +88,8 @@ class Matrix2D:
             max_nr_atoms = max_nr_atoms.get_max()
             min_x = min_x.get_min()
             min_y = min_y.get_min()
-            max_x = max_x.get_max() - min_x
-            max_y = max_y.get_max() - min_y
+            max_x = max_x.get_max()
+            max_y = max_y.get_max()
             symbols = sorted(symbols.get_set_copy() | bond_symbols)
             max_symbol_length = 0
             for symbol in symbols:
