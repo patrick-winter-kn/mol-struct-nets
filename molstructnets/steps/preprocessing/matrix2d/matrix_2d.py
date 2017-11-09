@@ -266,14 +266,15 @@ class Matrix2D:
             atom_locations_row = numpy.zeros((atom_locations_shape[1], atom_locations_shape[2]), dtype='int16')
         atom_positions = dict()
         AllChem.Compute2DCoords(molecule)
+        if transformer_ is not None and random_ is not None:
+            flip = bool(random_.getrandbits(1))
+            rotation = random_.randrange(0, 360)
         for atom in molecule.GetAtoms():
             symbol_index = index_lookup[atom.GetSymbol()]
             position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
             x = position.x
             y = position.y
             if transformer_ is not None and random_ is not None:
-                flip = bool(random_.getrandbits(1))
-                rotation = random_.randrange(0, 360)
                 x, y = transformer_.apply(x, y, flip, rotation)
             x, y = rasterizer_.apply(x, y)
             preprocessed_row[x, y, symbol_index] = 1
