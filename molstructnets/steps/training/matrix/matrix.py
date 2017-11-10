@@ -70,8 +70,8 @@ class Matrix:
                 validation_input = reference_data_set.ReferenceDataSet(test, preprocessed)
                 validation_output = reference_data_set.ReferenceDataSet(test, classes)
                 if local_parameters['in_memory']:
-                    validation_input = misc.copy_into_memory(validation_input)
-                    validation_output = misc.copy_into_memory(validation_output)
+                    validation_input = misc.copy_into_memory(validation_input, as_bool=True)
+                    validation_output = misc.copy_into_memory(validation_output, as_bool=True)
                 callback_list.append(DrugDiscoveryEval(validation_input, validation_output,
                                                        local_parameters['batch_size']))
             model = models.load_model(model_path)
@@ -80,8 +80,8 @@ class Matrix:
             callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
                                              write_graph=True, write_images=False, embeddings_freq=1))
             if local_parameters['in_memory']:
-                input_ = misc.copy_into_memory(input_)
-                output = misc.copy_into_memory(output)
+                input_ = misc.copy_into_memory(input_, as_bool=True)
+                output = misc.copy_into_memory(output, as_bool=True)
             model.fit(input_, output, epochs=local_parameters['epochs'], shuffle='batch',
                       batch_size=local_parameters['batch_size'], callbacks=callback_list, initial_epoch=epoch)
             target_h5.close()

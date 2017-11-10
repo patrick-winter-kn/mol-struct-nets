@@ -39,20 +39,27 @@ def is_active(probabilities):
     return probabilities[0] > probabilities[1]
 
 
-def copy_into_memory(array):
+def copy_into_memory(array, as_bool=False):
     if isinstance(array, numpy.ndarray):
+        if as_bool:
+            array = array.astype(bool)
         return array
     else:
-        return copy_ndarray(array)
+        return copy_ndarray(array, as_bool)
 
 
-def copy_ndarray(array):
+def copy_ndarray(array, as_bool=False):
     if isinstance(array, reference_data_set.ReferenceDataSet):
         array_copy = numpy.zeros(array.shape)
         array_copy[:] = array[:]
+        if as_bool:
+            array_copy = array_copy.astype(bool)
         return array_copy
     else:
-        return numpy.copy(array)
+        if as_bool:
+            return array.astype(bool)
+        else:
+            return numpy.copy(array)
 
 
 def substring_cut_from_middle(string, slices):
