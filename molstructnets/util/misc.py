@@ -51,7 +51,10 @@ def copy_into_memory(array, as_bool=False):
 
 def copy_ndarray(array, as_bool=False):
     if as_bool:
-        return array[:].astype(bool)
+        new_array = numpy.zeros(array.shape, dtype=bool)
+        for i in range(len(array)):
+            new_array[i,:] = array[i,:].astype(bool)
+        return new_array
     else:
         return array[:]
 
