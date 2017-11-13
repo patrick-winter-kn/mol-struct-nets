@@ -2,6 +2,7 @@ import hashlib
 import math
 from util import reference_data_set
 import numpy
+from util import progressbar, logger
 
 
 def hash_parameters(parameters):
@@ -52,8 +53,11 @@ def copy_into_memory(array, as_bool=False):
 def copy_ndarray(array, as_bool=False):
     if as_bool:
         new_array = numpy.zeros(array.shape, dtype=bool)
-        for i in range(len(array)):
-            new_array[i,:] = array[i,:].astype(bool)
+        logger.log('Copying boolean data with shape ' + str(array.shape) + ' into memory')
+        with progressbar.ProgressBar(len(array)) as progress:
+            for i in range(len(array)):
+                new_array[i,:] = array[i,:].astype(bool)
+                progress.increment()
         return new_array
     else:
         return array[:]
