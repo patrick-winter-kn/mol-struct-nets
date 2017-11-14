@@ -21,22 +21,22 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     axis.grid(True, linestyle='--')
     # Plot ideal line
     pyplot.plot((0, actives[-1]), (0, actives[-1]), ls='-', c='0.75')
-    pyplot.plot((actives[-1], len(actives)), (actives[-1], actives[-1]), ls='-', c='0.75')
+    pyplot.plot((actives[-1], len(actives) - 1), (actives[-1], actives[-1]), ls='-', c='0.75')
     # Plot random line
-    pyplot.plot((0, len(actives)), (0, actives[-1]), ls='-', c='0.75')
+    pyplot.plot((0, len(actives) - 1), (0, actives[-1]), ls='-', c='0.75')
     # Plot actives
     for i in range(len(predictions_list)):
         pyplot.plot(actives_list[i], label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
     # Add enrichment factors
     for percent in sorted(enrichment_factors):
-        x_start_end = int(math.ceil(percent * 0.01 * len(classes)))
+        x = percent * 0.01 * len(classes)
         y_end = 0
         for actives in actives_list:
-            y_end = max(y_end, actives[x_start_end])
+            y_end = max(y_end, calculate_y_at_x(x, actives))
         ef_label = 'Enrichment factor ' + str(percent) + '%'
         for i in range(len(efs_list)):
             ef_label += '\n' + prediction_names[i] + ': ' + str(round(efs_list[i][percent], 2))
-        pyplot.plot((x_start_end, x_start_end), (0, y_end), ls='--', label=ef_label)
+        pyplot.plot((x, x), (0, y_end), ls='--', label=ef_label)
     pyplot.ylabel('Active Compounds')
     pyplot.xlabel('Compounds')
     pyplot.legend(loc='lower right', fancybox=True)
@@ -66,36 +66,50 @@ def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=4
     # Sort it (.argsort()) and reverse the order ([::-1]))
     indices = predictions.argsort()[::-1]
     actives = [0]
-    # efs maps the percent to the number of found positives
-    efs = {}
-    for percent in ef_percent:
-        efs[percent] = 0
     found = 0
     curve_sum = 0
     logger.log('Calculating enrichment stats', logger.LogLevel.VERBOSE)
     with progressbar.ProgressBar(len(indices), logger.LogLevel.VERBOSE) as progress:
         for i in range(len(indices)):
             row = classes[indices[i]]
+            curve_sum += found
             # Check if index (numpy.where) of maximum value (max(row)) in row is 0 (==0)
             # This means the active value is higher than the inactive value
             if numpy.where(row == max(row))[0] == 0:
+                curve_sum += 0.5
                 found += 1
-                for percent in efs.keys():
-                    # If i is still part of the fraction count the number of founds up
-                    if i < int(math.floor(len(indices)*(percent*0.01))):
-                        efs[percent] += 1
-            curve_sum += found
             actives.append(found)
             progress.increment()
     # AUC = sum of found positives for every x / (positives * (number of samples + 1))
     # + 1 is added to the number of samples for the start with 0 samples selected
-    auc = curve_sum / (positives * (len(classes) + 1))
+    auc = curve_sum / (positives * len(classes))
     logger.log('AUC: ' + str(auc), logger.LogLevel.VERBOSE)
-    # Turn number of found positives into enrichment factor by dividing the number of positives found at random
-    for percent in sorted(efs.keys()):
-        efs[percent] /= (positives * (percent * 0.01))
+    # Calculate enrichment factor by dividing the number of found positives by the number of positives found at random
+    efs = {}
+    for percent in ef_percent:
+        # Calculate x position
+        x = percent * 0.01 * len(classes)
+        efs[percent] = calculate_y_at_x(x, actives) / calculate_y_at_x(x)
         logger.log('EF at ' + str(percent) + '%: ' + str(efs[percent]), logger.LogLevel.VERBOSE)
     return actives, auc, efs
+
+
+def calculate_y_at_x(x, actives=None):
+    if actives is None:
+        return x * 0.5
+    else:
+        # Integer x before / at x
+        previous_x = math.floor(x)
+        # Integer x after x
+        next_x = previous_x + 1
+        # How far is x on the way to next_x
+        between = x % 1
+        # Difference of y of previous_x and next_x
+        difference = actives[next_x] - actives[previous_x]
+        # Increase of y for x between previous and next x
+        increase = between * difference
+        # y at position x for predictions
+        return actives[previous_x] + increase
 
 
 def positives_count(classes):
