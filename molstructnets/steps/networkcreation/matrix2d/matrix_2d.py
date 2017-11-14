@@ -35,20 +35,21 @@ class Matrix2D:
         else:
             initializer = initializers.he_uniform()
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
-            layer = Dropout(0.3, name='dropout_input')(input_layer)
+            layer = input_layer
+            layer = Dropout(0.1, name='dropout_input')(layer)
             layer = Convolution2D(4, 4, activation='relu', name='convolution_1', kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_convolution_1')(layer)
-            layer = Convolution2D(8, 8, activation='relu', name='convolution_2', kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_convolution_2')(layer)
-            layer = Convolution2D(16, 16, activation='relu', name='convolution_3',
+            layer = Dropout(0.25, name='dropout_convolution_1')(layer)
+            layer = Convolution2D(8, 4, activation='relu', name='convolution_2', kernel_initializer=initializer)(layer)
+            layer = Dropout(0.25, name='dropout_convolution_2')(layer)
+            layer = Convolution2D(16, 4, activation='relu', name='convolution_3',
                                   kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_convolution_3')(layer)
-            layer = Convolution2D(32, 32, activation='relu', name='convolution_4',
+            layer = Dropout(0.25, name='dropout_convolution_3')(layer)
+            layer = Convolution2D(32, 4, activation='relu', name='convolution_4',
                                   kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_convolution_4')(layer)
+            layer = Dropout(0.25, name='dropout_convolution_4')(layer)
             layer = Flatten(name='flatten_1')(layer)
             layer = Dense(128, activation='relu', name='dense_1', kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_dense_1')(layer)
+            layer = Dropout(0.25, name='dropout_dense_1')(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
