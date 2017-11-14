@@ -39,8 +39,8 @@ class EnrichmentPlot:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['enrichment_factors'])
-        file_name = 'enrichment_plot_' + misc.hash_parameters(hash_parameters) + '.svg'
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['enrichment_factors', 'shuffle'])
+        file_name = 'enrichment_plot_' + local_parameters['partition'] + '-' + misc.hash_parameters(hash_parameters) + '.svg'
         return file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), file_name)
 
     @staticmethod
