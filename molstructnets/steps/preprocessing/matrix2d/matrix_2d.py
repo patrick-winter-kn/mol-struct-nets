@@ -9,8 +9,11 @@ import numpy
 import random
 
 
+with_empty_bits = False
 number_threads = thread_pool.default_number_threads
-bond_symbols = {'-', '=', '#', '$', ':'}
+fixed_symbols = {'-', '=', '#', '$', ':'}
+if with_empty_bits:
+    fixed_symbols.add(' ')
 padding = 2
 
 
@@ -90,7 +93,7 @@ class Matrix2D:
             min_y = min_y.get_min()
             max_x = max_x.get_max()
             max_y = max_y.get_max()
-            symbols = sorted(symbols.get_set_copy() | bond_symbols)
+            symbols = sorted(symbols.get_set_copy() | fixed_symbols)
             max_symbol_length = 0
             for symbol in symbols:
                 max_symbol_length = max(max_symbol_length, len(symbol))
@@ -289,4 +292,16 @@ class Matrix2D:
                 bond_symbol_index = index_lookup[bond_symbol]
                 for position in bond_positions_[bond.GetIdx()]:
                     preprocessed_row[position[0], position[1], bond_symbol_index] = 1
+        if with_empty_bits:
+            Matrix2D.set_empty_bits(preprocessed_row, index_lookup[' '])
         return preprocessed_row, atom_locations_row
+
+    @staticmethod
+    def set_empty_bits(preprocessed_row, empty_symbol_index):
+        for x in range(preprocessed_row.shape[0]):
+            for y in range(preprocessed_row.shape[1]):
+                value_sum = 0
+                for symbol in range(preprocessed_row.shape[2]):
+                    value_sum += preprocessed_row[x, y, symbol]
+                if value_sum == 0:
+                    preprocessed_row[x, y, empty_symbol_index] = 1
