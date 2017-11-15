@@ -45,7 +45,7 @@ class SmilesGenerator:
         # Substract probabilities until rest is smaller equals zero to find area that the picked number belongs to
         max_value = sum(option_probabilities_map.values())
         rest = self.random.uniform(0.0, max_value)
-        for option in option_probabilities_map:
+        for option in sorted(option_probabilities_map.keys()):
             rest -= option_probabilities_map[option]
             if rest <= 0:
                 return option
