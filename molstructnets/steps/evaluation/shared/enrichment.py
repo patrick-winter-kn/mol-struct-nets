@@ -89,14 +89,14 @@ def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=4
     for percent in ef_percent:
         # Calculate x position
         x = percent * 0.01 * len(classes)
-        efs[percent] = calculate_y_at_x(x, actives) / calculate_y_at_x(x)
+        efs[percent] = calculate_y_at_x(x, actives) / (percent * 0.01 * actives[-1])
         logger.log('EF at ' + str(percent) + '%: ' + str(efs[percent]), logger.LogLevel.VERBOSE)
     return actives, auc, efs
 
 
-def calculate_y_at_x(x, actives=None):
-    if actives is None:
-        return x * 0.5
+def calculate_y_at_x(x, actives, at_random=False):
+    if at_random:
+        return x * actives[-1]
     else:
         # Integer x before / at x
         previous_x = math.floor(x)
