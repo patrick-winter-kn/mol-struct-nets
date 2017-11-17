@@ -17,3 +17,12 @@ if os.path.exists(experiment_path):
 random.seed(seed)
 numpy.random.seed(seed)
 matplotlib.use('Agg')
+
+
+import tensorflow
+config = tensorflow.ConfigProto()
+config.gpu_options.allow_growth = True
+# config.gpu_options.per_process_gpu_memory_fraction = 0.75
+session = tensorflow.Session(config=config)
+from keras.backend import tensorflow_backend
+tensorflow_backend.set_session(session)
