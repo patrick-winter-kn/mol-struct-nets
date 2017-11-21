@@ -33,6 +33,9 @@ def get_n(global_parameters_):
 
 
 args = get_arguments()
+if not file_util.file_exists(args.experiment):
+    logger.log('Experiment file ' + args.experiment + ' does not exist.', logger.LogLevel.ERROR)
+    exit(1)
 start_time = datetime.datetime.now()
 logger.log('Starting experiment at ' + str(start_time))
 experiment_ = experiment.Experiment(args.experiment)

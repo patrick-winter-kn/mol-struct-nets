@@ -57,9 +57,12 @@ class Matrix:
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            if file_structure.Preprocessed.preprocessed_training in preprocessed_h5:
-                input_ = preprocessed_h5[file_structure.Preprocessed.preprocessed_training]
-                train = preprocessed_h5[file_structure.Preprocessed.preprocessed_training_references]
+            preprocessed_training_h5 = None
+            if constants.GlobalParameters.preprocessed_training_data in global_parameters:
+                preprocessed_training_h5 =\
+                    h5py.File(global_parameters[constants.GlobalParameters.preprocessed_training_data], 'r')
+                train = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training_references]
+                input_ = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training]
             else:
                 train = partition_h5[file_structure.Partitions.train]
                 input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
@@ -86,6 +89,8 @@ class Matrix:
                       batch_size=local_parameters['batch_size'], callbacks=callback_list, initial_epoch=epoch)
             target_h5.close()
             preprocessed_h5.close()
+            if preprocessed_training_h5 is not None:
+                preprocessed_training_h5.close()
             if 'partition_h5' in locals():
                 partition_h5.close()
 

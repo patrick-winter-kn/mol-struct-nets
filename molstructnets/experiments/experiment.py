@@ -11,7 +11,6 @@ class Experiment:
         if file_util.file_exists(self._file_path):
             self._dict = json.load(open(self._file_path))
         else:
-            logger.log('Could not read file ' + file_path, logger.LogLevel.ERROR)
             self._dict = {'steps': []}
 
     def save(self):

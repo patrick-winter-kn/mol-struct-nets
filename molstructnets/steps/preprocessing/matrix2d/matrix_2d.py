@@ -1,20 +1,16 @@
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
-    thread_pool, constants, hdf5_util, concurrent_min, reference_data_set
-from steps.preprocessing.matrix2d import bond_positions, rasterizer, transformer
 import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from rdkit.Chem.rdchem import BondType
-import numpy
-import random
+
+from steps.preprocessing.shared.matrix2d import rasterizer, molecule_2d_matrix
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max,\
+    concurrent_set, thread_pool, constants, hdf5_util, concurrent_min
 
 
-with_empty_bits = False
 number_threads = thread_pool.default_number_threads
 fixed_symbols = {'-', '=', '#', '$', ':'}
-if with_empty_bits:
+if molecule_2d_matrix.with_empty_bits:
     fixed_symbols.add(' ')
-padding = 2
 
 
 class Matrix2D:
@@ -25,7 +21,7 @@ class Matrix2D:
 
     @staticmethod
     def get_name():
-        return 'Matrix 2D'
+        return '2D Matrix'
 
     @staticmethod
     def get_parameters():
@@ -36,10 +32,10 @@ class Matrix2D:
                            'description': 'Symbols in the given string will be added to the index in addition to'
                                           ' symbols found in the data set. Multiple symbols are separated by a'
                                           ' semicolon (e.g. \'F;Cl;S\').'})
-        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each matrix (default: none)',
-                           'type': int, 'default': 0,
-                           'description': 'The number of transformations done for each matrix in the training data'
-                                          ' set.'})
+        parameters.append({'id': 'square', 'name': 'X and Y dimensions have the same size (default: True)',
+                           'type': bool, 'default': True,
+                           'description': 'Make the size of the X and Y dimensions the same. This is important if the'
+                                          ' training data should be transformed (in order to fit rotated data).'})
         return parameters
 
     @staticmethod
@@ -49,8 +45,7 @@ class Matrix2D:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
-        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['scale', 'symbols',
-                                                                           'transformations']))
+        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['scale', 'symbols', 'square']))
         file_name = 'matrix_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -103,9 +98,8 @@ class Matrix2D:
             for i in range(len(symbols)):
                 index_lookup[symbols[i]] = i
                 index[i] = symbols[i].encode('utf-8')
-            use_transformations = local_parameters['transformations'] > 0
-            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], padding, min_x, max_x, min_y, max_y,
-                                                use_transformations)
+            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_matrix.padding, min_x, max_x,
+                                                min_y, max_y, local_parameters['square'])
             global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x, rasterizer_.size_y,
                                                                               len(index))
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
@@ -123,39 +117,13 @@ class Matrix2D:
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, rasterizer_,
                                     chunk['start'], progress)
                     pool.wait()
-            if use_transformations:
-                transformer_ = transformer.Transformer(min_x, max_x, min_y, max_y)
-                logger.log('Writing transformed training data')
-                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-                train = partition_h5[file_structure.Partitions.train]
-                preprocessed_training = \
-                    hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed_training,
-                                             (train.shape[0] * local_parameters['transformations'],
-                                              preprocessed.shape[1], preprocessed.shape[2], preprocessed.shape[3]),
-                                             dtype='I', chunks=(1, preprocessed.shape[1], preprocessed.shape[2],
-                                                                preprocessed.shape[3]))
-                preprocessed_training_ref = \
-                    hdf5_util.create_dataset(preprocessed_h5,
-                                             file_structure.Preprocessed.preprocessed_training_references,
-                                             (preprocessed_training.shape[0],), dtype='I')
-                train_smiles_data = reference_data_set.ReferenceDataSet(train, smiles_data)
-                # If we do the transformation in parallel it leads to race conditions for the original data point
-                # (oversampled data). In this case the same seed does not lead to the same results. For this reason
-                # parallelization is disabled
-                chunks = misc.chunk(len(train), 1)
-                originals_set = concurrent_set.ConcurrentSet()
-                with progressbar.ProgressBar(len(preprocessed_training)) as progress:
-                    with thread_pool.ThreadPool(len(chunks)) as pool:
-                        for chunk in chunks:
-                            pool.submit(Matrix2D.write_transformed_2d_matrices, preprocessed_training,
-                                        preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end'] + 1],
-                                        index_lookup, rasterizer_, transformer_, chunk['start'],
-                                        originals_set, local_parameters['transformations'], len(train_smiles_data),
-                                        global_parameters[constants.GlobalParameters.seed] + chunk['start'], train,
-                                        progress)
-                        pool.wait()
             data_h5.close()
             preprocessed_h5.close()
+            hdf5_util.set_property(temp_preprocessed_path, 'scale', local_parameters['scale'])
+            hdf5_util.set_property(temp_preprocessed_path, 'min_x', min_x)
+            hdf5_util.set_property(temp_preprocessed_path, 'max_x', max_x)
+            hdf5_util.set_property(temp_preprocessed_path, 'min_y', min_y)
+            hdf5_util.set_property(temp_preprocessed_path, 'max_y', max_y)
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
 
     @staticmethod
@@ -197,117 +165,8 @@ class Matrix2D:
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             preprocessed_row, atom_locations_row =\
-                Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed.shape,
-                                               atom_locations_shape=atom_locations.shape)
+                molecule_2d_matrix.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed.shape,
+                                                         atom_locations_shape=atom_locations.shape)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
-
-    @staticmethod
-    def write_transformed_2d_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
-                                      rasterizer_, transformer_, offset, originals_set, number_transformations,
-                                      offset_per_transformation, seed, train_ref, progress):
-        random_ = random.Random(seed)
-        for i in range(len(smiles_data)):
-            original_index = train_ref[i + offset]
-            smiles = smiles_data[i].decode('utf-8')
-            molecule = Chem.MolFromSmiles(smiles)
-            start = 0
-            if originals_set.add(smiles):
-                preprocessed_row = Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_,
-                                                                  preprocessed_training.shape)[0]
-                preprocessed_training[i + offset, :] = preprocessed_row[:]
-                preprocessed_training_ref[i + offset] = original_index
-                start += 1
-                progress.increment()
-            for j in range(start, number_transformations):
-                index = i + offset + offset_per_transformation * j
-                preprocessed_row =\
-                    Matrix2D.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_training.shape,
-                                                   transformer_=transformer_, random_=random_)[0]
-                preprocessed_training[index, :] = preprocessed_row[:]
-                preprocessed_training_ref[index] = original_index
-                progress.increment()
-
-    @staticmethod
-    def fits(molecule, min_x, min_y, max_x, max_y, scale_factor):
-        invalid = False
-        for atom in molecule.GetAtoms():
-            position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
-            x = round(position.x * scale_factor) - min_x
-            y = round(position.y * scale_factor) - min_y
-            if not (0 <= x <= max_x and 0 <= y <= max_y):
-                invalid = True
-                break
-        return not invalid
-
-    @staticmethod
-    def get_bond_symbol(bond_type):
-        if bond_type == BondType.ZERO:
-            return None
-        elif bond_type == BondType.SINGLE:
-            return '-'
-        elif bond_type == BondType.DOUBLE:
-            return '='
-        elif bond_type == BondType.TRIPLE:
-            return '#'
-        elif bond_type == BondType.QUADRUPLE:
-            return '$'
-        elif bond_type == BondType.AROMATIC:
-            return ':'
-        else:
-            return '-'
-
-    @staticmethod
-    def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
-                              transformer_=None, random_=None):
-        # We redo this if the transformation size does not fit
-        while True:
-            preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
-                                           dtype='int16')
-            if atom_locations_shape is None:
-                atom_locations_row = None
-            else:
-                atom_locations_row = numpy.zeros((atom_locations_shape[1], atom_locations_shape[2]), dtype='int16')
-            atom_positions = dict()
-            AllChem.Compute2DCoords(molecule)
-            if transformer_ is not None and random_ is not None:
-                flip = bool(random_.getrandbits(1))
-                rotation = random_.randrange(0, 360)
-            for atom in molecule.GetAtoms():
-                symbol_index = index_lookup[atom.GetSymbol()]
-                position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
-                x = position.x
-                y = position.y
-                if transformer_ is not None and random_ is not None:
-                    x, y = transformer_.apply(x, y, flip, rotation)
-                x, y = rasterizer_.apply(x, y)
-                # Check if coordinates fit into the shape
-                if x >= preprocessed_row.shape[0] or y >= preprocessed_row.shape[1]:
-                    # Redo everything hoping for a better fitting transformation
-                    continue
-                preprocessed_row[x, y, symbol_index] = 1
-                if atom_locations_row is not None:
-                    atom_locations_row[atom.GetIdx(), 0] = x
-                    atom_locations_row[atom.GetIdx(), 1] = y
-                atom_positions[atom.GetIdx()] = [x, y]
-            bond_positions_ = bond_positions.calculate(molecule, atom_positions)
-            for bond in molecule.GetBonds():
-                bond_symbol = Matrix2D.get_bond_symbol(bond.GetBondType())
-                if bond_symbol is not None:
-                    bond_symbol_index = index_lookup[bond_symbol]
-                    for position in bond_positions_[bond.GetIdx()]:
-                        preprocessed_row[position[0], position[1], bond_symbol_index] = 1
-            if with_empty_bits:
-                Matrix2D.set_empty_bits(preprocessed_row, index_lookup[' '])
-            return preprocessed_row, atom_locations_row
-
-    @staticmethod
-    def set_empty_bits(preprocessed_row, empty_symbol_index):
-        for x in range(preprocessed_row.shape[0]):
-            for y in range(preprocessed_row.shape[1]):
-                value_sum = 0
-                for symbol in range(preprocessed_row.shape[2]):
-                    value_sum += preprocessed_row[x, y, symbol]
-                if value_sum == 0:
-                    preprocessed_row[x, y, empty_symbol_index] = 1

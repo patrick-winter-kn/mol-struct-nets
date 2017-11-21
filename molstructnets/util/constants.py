@@ -7,5 +7,6 @@ class GlobalParameters:
     target = 'target'
     partition_data = 'partition_data'
     preprocessed_data = 'preprocessed_data'
+    preprocessed_training_data = 'preprocessed_training_data'
     input_dimensions = 'input_dimensions'
     n = 'n'

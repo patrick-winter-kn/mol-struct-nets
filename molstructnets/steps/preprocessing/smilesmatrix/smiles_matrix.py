@@ -29,24 +29,16 @@ class SmilesMatrix:
         parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,
                            'default': None, 'description': 'Characters in the given string will be added to the index'
                                                            ' in addition to characters found in the data set.'})
-        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each SMILES (default: none)',
-                           'type': int, 'default': 0,
-                           'description': 'The number of transformations done for each SMILES string in the training'
-                                          ' data set.'})
         return parameters
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
-        if local_parameters['transformations'] > 0:
-            data_validation.validate_target(global_parameters)
-            data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
-        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters',
-                                                                           'transformations']))
+        hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters']))
         file_name = 'smiles_matrix_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -99,35 +91,6 @@ class SmilesMatrix:
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, max_length.get_max(),
                                     chunk['start'], progress)
                     pool.wait()
-            if local_parameters['transformations'] > 0:
-                logger.log('Writing transformed training data')
-                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-                train = partition_h5[file_structure.Partitions.train]
-                preprocessed_training =\
-                    hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed_training,
-                                             (train.shape[0] * local_parameters['transformations'],
-                                              max_length.get_max(), len(index)),
-                                             dtype='I', chunks=(1, max_length.get_max(), len(index)))
-                preprocessed_training_ref =\
-                    hdf5_util.create_dataset(preprocessed_h5,
-                                             file_structure.Preprocessed.preprocessed_training_references,
-                                             (preprocessed_training.shape[0],), dtype='I')
-                train_smiles_data = reference_data_set.ReferenceDataSet(train, smiles_data)
-                # If we do the transformation in parallel it leads to race conditions for the original data point
-                # (oversampled data). In this case the same seed does not lead to the same results. For this reason
-                # parallelization is disabled
-                chunks = misc.chunk(len(train), 1)
-                originals_set = concurrent_set.ConcurrentSet()
-                with progressbar.ProgressBar(len(preprocessed_training)) as progress:
-                    with thread_pool.ThreadPool(len(chunks)) as pool:
-                        for chunk in chunks:
-                            pool.submit(SmilesMatrix.write_transformed_smiles_matrices, preprocessed_training,
-                                        preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end'] + 1],
-                                        index_lookup, max_length.get_max(), chunk['start'], progress,
-                                        local_parameters['transformations'], len(train_smiles_data),
-                                        random.Random(global_parameters[constants.GlobalParameters.seed]
-                                                      + chunk['start']), train, originals_set)
-                        pool.wait()
             data_h5.close()
             preprocessed_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
@@ -159,39 +122,3 @@ class SmilesMatrix:
             string = SmilesMatrix.pad_string(smiles_data[i].decode('utf-8'), max_length)
             preprocessed[i + offset] = SmilesMatrix.string_to_matrix(string, index_lookup)
             progress.increment()
-
-    @staticmethod
-    def write_transformed_smiles_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
-                                          max_length, offset, progress, number_transformations,
-                                          offset_per_transformation, random_, train_ref, originals_set):
-        for i in range(len(smiles_data)):
-            original_index = train_ref[i + offset]
-            original_smiles = smiles_data[i].decode('utf-8')
-            molecule = Chem.MolFromSmiles(original_smiles)
-            atom_indices = list(range(molecule.GetNumAtoms()))
-            start = 0
-            if originals_set.add(original_smiles):
-                # Add original smiles first
-                string = SmilesMatrix.pad_string(original_smiles, max_length)
-                preprocessed_training[i + offset] = SmilesMatrix.string_to_matrix(string, index_lookup)
-                preprocessed_training_ref[i + offset] = original_index
-                start += 1
-                progress.increment()
-            for j in range(start, number_transformations):
-                invalid = True
-                while invalid:
-                    random_.shuffle(atom_indices)
-                    smiles = Chem.MolToSmiles(Chem.RenumberAtoms(molecule, atom_indices), canonical=False)
-                    invalid = len(smiles) > max_length or SmilesMatrix.invalid_characters(smiles, index_lookup)
-                index = i + offset + offset_per_transformation * j
-                string = SmilesMatrix.pad_string(smiles, max_length)
-                preprocessed_training[index] = SmilesMatrix.string_to_matrix(string, index_lookup)
-                preprocessed_training_ref[index] = original_index
-                progress.increment()
-
-    @staticmethod
-    def invalid_characters(smiles, index_lookup):
-        for character in smiles:
-            if character not in index_lookup:
-                return True
-        return False

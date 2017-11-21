@@ -20,7 +20,13 @@ class Partitions:
 
 class Preprocessed:
 
+    atom_locations = 'atom_locations'
+    index = 'index'
     preprocessed = 'preprocessed'
+
+
+class PreprocessedTraining:
+
     preprocessed_training = 'preprocessed_training'
     preprocessed_training_references = 'preprocessed_training_references'
 
@@ -94,6 +100,13 @@ def get_partition_file(global_parameters):
 
 
 def get_preprocessed_folder(global_parameters):
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'data_sets',
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     'preprocessed')
+
+
+def get_preprocessed_training_folder(global_parameters):
     partition = file_util.get_filename(global_parameters[constants.GlobalParameters.partition_data], False)
     return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
                                      'data_sets',
