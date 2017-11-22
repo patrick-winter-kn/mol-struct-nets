@@ -13,6 +13,8 @@ def oversample(partition_h5, data_set_name, classes):
             class_zero_count += 1
         else:
             class_one_count += 1
+    if class_zero_count == 0 or class_one_count == 0:
+        raise ValueError('One of the classes is not represented')
     difference = abs(class_zero_count - class_one_count)
     oversampled = hdf5_util.create_dataset(partition_h5, data_set_name + '-oversampled', (ref.shape[0] + difference,),
                                            dtype='I')
