@@ -1,8 +1,9 @@
 import hashlib
 import math
-from util import reference_data_set
 import numpy
 from util import progressbar, logger
+import humanize
+import psutil
 
 
 def hash_parameters(parameters):
@@ -40,21 +41,40 @@ def is_active(probabilities):
     return probabilities[0] > probabilities[1]
 
 
-def copy_into_memory(array, as_bool=False):
-    if isinstance(array, numpy.ndarray):
-        if as_bool:
-            return array.astype(bool)
-        else:
-            return array
+def copy_into_memory(array, as_bool=False, use_swap=True):
+    if isinstance(array, numpy.ndarray) and (not as_bool or array.dtype.name == 'bool'):
+        return array
     else:
-        return copy_ndarray(array, as_bool)
+        if as_bool:
+            target_type = numpy.dtype(bool)
+        else:
+            target_type = array.dtype
+        necessary_size = numpy.zeros(array.shape, target_type).nbytes
+        available_memory = psutil.virtual_memory().available
+        if use_swap:
+            available_memory += psutil.swap_memory().free
+        if available_memory < necessary_size:
+            logger.log('Available memory is ' + humanize.naturalsize(available_memory, binary=True)
+                       + ' but necessary memory is ' + humanize.naturalsize(necessary_size, binary=True)
+                       + '. Data will not be copied into memory.')
+            return array
+        else:
+            if necessary_size >= 10485760:
+                log_level = logger.LogLevel.INFO
+            else:
+                log_level = logger.LogLevel.DEBUG
+            logger.log('Copying data with shape: ' + str(array.shape) + ', type: ' + str(target_type) + ' and size '
+                       + humanize.naturalsize(necessary_size, binary=True) + ' into memory.', log_level)
+            if isinstance(array, numpy.ndarray):
+                return array.astype(bool)
+            else:
+                return copy_ndarray(array, as_bool, log_level=log_level)
 
 
-def copy_ndarray(array, as_bool=False):
+def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO):
     if as_bool:
         new_array = numpy.zeros(array.shape, dtype=bool)
-        logger.log('Copying boolean data with shape ' + str(array.shape) + ' into memory')
-        with progressbar.ProgressBar(len(array)) as progress:
+        with progressbar.ProgressBar(len(array), log_level) as progress:
             for i in range(len(array)):
                 new_array[i,:] = array[i,:].astype(bool)
                 progress.increment()
