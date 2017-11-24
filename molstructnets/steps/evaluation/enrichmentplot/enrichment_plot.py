@@ -26,7 +26,7 @@ class EnrichmentPlot:
                                                            ' sets, which can be a problem in cases where the'
                                                            ' probability is equal.'})
         parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: test)',
-                           'type': str, 'default': 'both',
+                           'type': str, 'default': 'test',
                            'description': 'The enrichment plot will be generated for the specified partition. The test'
                                           ' partition will be used by default.'})
         return parameters
