@@ -37,23 +37,42 @@ class Matrix2D:
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
             layer = Dropout(0.3, name='dropout_input')(layer)
-            layer = Convolution2D(16, 4, activation='relu', name='convolution_1_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(16, 4, activation='relu', name='convolution_1_2', kernel_initializer=initializer)(layer)
+
+            # Block 1
+            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_1', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_2', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_3', kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_1')(layer)
             layer = Dropout(0.75, name='dropout_convolution_1')(layer)
-            layer = Convolution2D(32, 4, activation='relu', name='convolution_2_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(32, 4, activation='relu', name='convolution_2_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(32, 4, activation='relu', name='convolution_2_3', kernel_initializer=initializer)(layer)
+
+            # Block 2
+            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_1', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_2', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_3', kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_2')(layer)
             layer = Dropout(0.75, name='dropout_convolution_2')(layer)
-            layer = Convolution2D(64, 4, activation='relu', name='convolution_3_1',
-                                  kernel_initializer=initializer)(layer)
-            layer = Convolution2D(64, 4, activation='relu', name='convolution_3_2',
-                                  kernel_initializer=initializer)(layer)
-            layer = Convolution2D(64, 4, activation='relu', name='convolution_3_3',
-                                  kernel_initializer=initializer)(layer)
+
+            # Block 3
+            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_1', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_2', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_3', kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_3')(layer)
             layer = Dropout(0.75, name='dropout_convolution_3')(layer)
+
+            # Block 4
+            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_1', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_2', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_3', kernel_initializer=initializer)(layer)
+            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_4')(layer)
+            layer = Dropout(0.75, name='dropout_convolution_4')(layer)
+
+            # Block 5
+            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_1', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_2', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_3', kernel_initializer=initializer)(layer)
+            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
+            layer = Dropout(0.75, name='dropout_convolution_5')(layer)
+
             layer = Flatten(name='flatten_1')(layer)
             layer = Dense(32, activation='relu', name='dense_1', kernel_initializer=initializer)(layer)
             layer = Dropout(0.75, name='dropout_dense_1')(layer)
