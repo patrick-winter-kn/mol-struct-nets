@@ -49,7 +49,11 @@ def copy_into_memory(array, as_bool=False, use_swap=True):
             target_type = numpy.dtype(bool)
         else:
             target_type = array.dtype
-        necessary_size = numpy.zeros(array.shape, target_type).nbytes
+        shape = list(array.shape)
+        shape[0] = 1
+        shape = tuple(shape)
+        necessary_size = numpy.zeros(shape, target_type).nbytes
+        necessary_size *= len(array)
         available_memory = psutil.virtual_memory().available
         if use_swap:
             available_memory += psutil.swap_memory().free
