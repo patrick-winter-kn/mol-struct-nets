@@ -1,5 +1,5 @@
 import h5py
-
+import numpy
 from steps.evaluation.shared import enrichment
 from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants
 
@@ -61,6 +61,8 @@ class EnrichmentPlot:
             partition = None
             if local_parameters['partition'] == 'train':
                 partition = partition_h5[file_structure.Partitions.train]
+                # Remove oversampling
+                partition = numpy.unique(partition)
             elif local_parameters['partition'] == 'test' or local_parameters['partition'] != 'both':
                 partition = partition_h5[file_structure.Partitions.test]
             if partition is not None:
