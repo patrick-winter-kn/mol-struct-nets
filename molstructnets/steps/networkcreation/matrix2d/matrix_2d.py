@@ -1,7 +1,7 @@
 from util import file_structure, file_util, logger, constants
 from keras.models import Model
 from keras.layers import Input
-from keras.layers.core import Dense, Flatten
+from keras.layers.core import Dense, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras import initializers
 
@@ -36,6 +36,7 @@ class Matrix2D:
             initializer = initializers.he_uniform()
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
+            layer = Dropout(0.3, name='input_dropout')(layer)
 
             # Block 1
             layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_1', kernel_initializer=initializer)(layer)
@@ -68,7 +69,7 @@ class Matrix2D:
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
 
             layer = Flatten(name='flatten_1')(layer)
-            layer = Dense(32, activation='relu', name='dense_1', kernel_initializer=initializer)(layer)
+            layer = Dense(128, activation='relu', name='dense_1', kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
