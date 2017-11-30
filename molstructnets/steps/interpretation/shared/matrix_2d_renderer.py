@@ -1,4 +1,4 @@
-def render(path, preprocessed, symbols, render_factor=50, show_grid=True):
+def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatmap=None):
     correction_x = 0.25 * render_factor
     correction_y = -0.125 * render_factor
     original_max_x = preprocessed.shape[0]
@@ -26,7 +26,11 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True):
             if preprocessed[x, y, symbol_index] > 0:
                 render_x = x * render_factor + correction_x
                 render_y = y * render_factor + correction_y
-                text += '<tspan x="' + str(render_x) + '" y="' + str(render_y) + '">' + symbols[
+                color = ''
+                if heatmap is not None:
+                    color = ' fill="rgb(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' +\
+                            str(heatmap[x, y, 2]) + ')"'
+                text += '<tspan x="' + str(render_x) + '" y="' + str(render_y) + '"' + color + '>' + symbols[
                     symbol_index].decode('utf-8') + '</tspan>\n'
     text += '</text>\n'
     svg = '<svg viewBox="0 -' + str(render_factor) + ' ' + str(render_max_x) + ' ' + str(
