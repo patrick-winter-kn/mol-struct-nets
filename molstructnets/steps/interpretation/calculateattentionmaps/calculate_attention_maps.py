@@ -8,17 +8,17 @@ from steps.interpretation.shared.kerasviz import attention_map
 from util import data_validation, file_structure, file_util, progressbar, misc, constants, hdf5_util, logger
 
 
-class CalculateSmilesAttention:
+class CalculateAttentionMaps:
 
     iterations_per_clear = 20
 
     @staticmethod
     def get_id():
-        return 'calculate_smiles_attention'
+        return 'calculate_attention_maps'
 
     @staticmethod
     def get_name():
-        return 'Calculate SMILES Attention'
+        return 'Calculate Attention Maps'
 
     @staticmethod
     def get_parameters():
@@ -131,14 +131,14 @@ class CalculateSmilesAttention:
                         j += 1
                     if index is not None:
                         if not numpy.max(attention_map_[index]) > 0:
-                            smiles_matrix = preprocessed[index]
+                            matrix = preprocessed[index]
                             grads = attention_map.calculate_saliency(model, out_layer_index,
                                                                      filter_indices=[class_index],
-                                                                     seed_input=smiles_matrix)
+                                                                     seed_input=matrix)
                             attention_map_[index] = grads[:]
                             if attention_map_indices_list is not None:
                                 attention_map_indices_list.append(index)
-                            if i % CalculateSmilesAttention.iterations_per_clear == 0:
+                            if i % CalculateAttentionMaps.iterations_per_clear == 0:
                                 backend.clear_session()
                                 model = models.load_model(modified_model_path)
                     progress.increment()
