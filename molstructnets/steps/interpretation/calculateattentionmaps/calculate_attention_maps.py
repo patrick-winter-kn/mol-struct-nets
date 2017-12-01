@@ -88,11 +88,10 @@ class CalculateAttentionMaps:
                 references = numpy.arange(0, len(preprocessed))
             # Speedup lookup by copying into memory
             references = misc.copy_into_memory(references)
+            attention_map_indices_list = list()
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
-                attention_map_indices_list = None
-                attention_map_indices = None
             else:
                 # We copy the needed data into memory to speed up sorting
                 # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
@@ -102,9 +101,6 @@ class CalculateAttentionMaps:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_active_indices
                 else:
                     indices_data_set_name = file_structure.AttentionMap.attention_map_inactive_indices
-                attention_map_indices_list = list()
-                attention_map_indices = hdf5_util.create_dataset(attention_map_h5, indices_data_set_name, (count,),
-                                                                 dtype='I')
             if local_parameters['actives']:
                 class_index = 0
             else:
@@ -116,35 +112,40 @@ class CalculateAttentionMaps:
                 attention_map_shape = tuple(attention_map_shape[:-1])
                 attention_map_ = hdf5_util.create_dataset(attention_map_h5, attention_map_dataset_name,
                                                           attention_map_shape)
-            with progressbar.ProgressBar(count) as progress:
-                j = 0
-                for i in range(count):
-                    index = -1
-                    while index is not None and index not in references:
-                        if j >= len(indices):
-                            index = None
-                        else:
-                            index = indices[j]
-                            if local_parameters['correct_predictions']:
-                                if classes[index][class_index] != 1:
-                                    index = -1
-                        j += 1
-                    if index is not None:
-                        if not numpy.max(attention_map_[index]) > 0:
-                            matrix = preprocessed[index]
-                            grads = attention_map.calculate_saliency(model, out_layer_index,
-                                                                     filter_indices=[class_index],
-                                                                     seed_input=matrix)
-                            attention_map_[index] = grads[:]
-                            if attention_map_indices_list is not None:
-                                attention_map_indices_list.append(index)
-                            if i % CalculateAttentionMaps.iterations_per_clear == 0:
-                                backend.clear_session()
-                                model = models.load_model(modified_model_path)
-                    progress.increment()
-            if attention_map_indices_list is not None:
+            j = 0
+            for i in range(count):
+                index = -1
+                while index is not None and index not in references:
+                    if j >= len(indices):
+                        index = None
+                    else:
+                        index = indices[j]
+                        if local_parameters['correct_predictions']:
+                            if classes[index][class_index] != 1:
+                                index = -1
+                    j += 1
+                if index is not None:
+                    if not numpy.max(attention_map_[index]) > 0:
+                        attention_map_indices_list.append(index)
+            if local_parameters['top_n'] is None:
+                attention_map_indices = None
+            else:
+                attention_map_indices = hdf5_util.create_dataset(attention_map_h5, indices_data_set_name,
+                                                                 (len(attention_map_indices_list),), dtype='I')
                 attention_map_indices_list = sorted(attention_map_indices_list)
                 attention_map_indices[:] = attention_map_indices_list[:]
+            with progressbar.ProgressBar(len(attention_map_indices_list)) as progress:
+                for i in range(len(attention_map_indices_list)):
+                    index = attention_map_indices_list[i]
+                    matrix = preprocessed[index]
+                    grads = attention_map.calculate_saliency(model, out_layer_index,
+                                                             filter_indices=[class_index],
+                                                             seed_input=matrix)
+                    attention_map_[index] = grads[:]
+                    if i % CalculateAttentionMaps.iterations_per_clear == 0:
+                        backend.clear_session()
+                        model = models.load_model(modified_model_path)
+                    progress.increment()
             attention_map_h5.close()
             target_h5.close()
             prediction_h5.close()

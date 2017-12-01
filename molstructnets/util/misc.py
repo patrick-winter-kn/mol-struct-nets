@@ -63,8 +63,8 @@ def copy_into_memory(array, as_bool=False, use_swap=True):
                        + '. Data will not be copied into memory.')
             return array
         else:
-            # Hide messages for data < 10MiB
-            if necessary_size >= 10485760:
+            # Hide messages for data < 1MiB
+            if necessary_size >= 1048576:
                 log_level = logger.LogLevel.INFO
             else:
                 log_level = logger.LogLevel.DEBUG

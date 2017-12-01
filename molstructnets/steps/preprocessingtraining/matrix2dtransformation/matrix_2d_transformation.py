@@ -39,6 +39,8 @@ class Matrix2DTransformed:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
+        scale = hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data], 'scale')
+        hash_parameters['scale'] = scale
         file_name = 'matrix_2d_transformation_' + str(local_parameters['transformations']) + '_'\
                     + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_training_folder(global_parameters), file_name)
