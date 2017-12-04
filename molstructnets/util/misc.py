@@ -112,3 +112,10 @@ def maximum(value_1, value_2):
     if value_2 is None:
         return value_1
     return max(value_1, value_2)
+
+
+def keys_in(keys, dict_):
+    contained = True
+    for key in keys:
+        contained &= key in dict_
+    return contained

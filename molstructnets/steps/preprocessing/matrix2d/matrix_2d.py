@@ -107,7 +107,7 @@ class Matrix2D:
                                                      len(index)), dtype='I',
                                                     chunks=(1, rasterizer_.size_x, rasterizer_.size_y, len(index)))
             atom_locations = hdf5_util.create_dataset(preprocessed_h5, 'atom_locations',
-                                                      (len(smiles_data), max_nr_atoms, 2), dtype='I',
+                                                      (len(smiles_data), max_nr_atoms, 2), dtype='int16',
                                                       chunks=(1, max_nr_atoms, 2))
             logger.log('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:

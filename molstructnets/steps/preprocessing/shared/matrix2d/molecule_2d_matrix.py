@@ -34,7 +34,7 @@ def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shap
         if atom_locations_shape is None:
             atom_locations_row = None
         else:
-            atom_locations_row = numpy.zeros((atom_locations_shape[1], atom_locations_shape[2]), dtype='int16')
+            atom_locations_row = numpy.full((atom_locations_shape[1], atom_locations_shape[2]), -1, dtype='int16')
         atom_positions = dict()
         AllChem.Compute2DCoords(molecule)
         if transformer_ is not None and random_ is not None:

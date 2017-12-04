@@ -4,7 +4,7 @@ import gc
 import time
 import argparse
 from experiments import experiment
-from util import file_structure, logger, file_util, constants
+from util import file_structure, logger, file_util, constants, misc
 from steps import steps_repository
 import h5py
 import datetime
@@ -35,12 +35,14 @@ def get_n(global_parameters_):
 
 
 def add_last_commit_hash(script_path, global_parameters):
-    commit_hash_path = file_structure.get_commit_hash_file(global_parameters)
-    if not file_util.file_exists(commit_hash_path):
-        git_repo_path = file_util.get_parent(script_path)
-        hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=git_repo_path).decode('utf-8')[:-1]
-        with open(commit_hash_path, 'w') as commit_hash_file:
-            commit_hash_file.write(hash)
+    if misc.keys_in([constants.GlobalParameters.data_set, constants.GlobalParameters.target,
+                     constants.GlobalParameters.partition_data], global_parameters):
+        commit_hash_path = file_structure.get_commit_hash_file(global_parameters)
+        if not file_util.file_exists(commit_hash_path):
+            git_repo_path = file_util.get_parent(script_path)
+            hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=git_repo_path).decode('utf-8')[:-1]
+            with open(commit_hash_path, 'w') as commit_hash_file:
+                commit_hash_file.write(hash)
 
 
 args = get_arguments()
