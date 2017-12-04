@@ -119,64 +119,43 @@ def get_preprocessed_training_folder(global_parameters):
 
 
 def get_network_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'network.h5')
 
 
 def get_prediction_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'predictions.h5')
 
 
 def get_evaluation_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'evaluation')
 
 
 def get_interpretation_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'interpretation')
 
 
 def get_attentionmap_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'interpretation',
                                      'attention_map.h5')
 
 
 def get_commit_hash_file(global_parameters):
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
+                                     'commit_hash.txt')
+
+
+def get_result_folder(global_parameters):
     return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
                                      'experiments',
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
                                      global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
-                                     'commit_hash.txt')
+                                     global_parameters[constants.GlobalParameters.partition_data])
 
 
 def find_file(folder_path, name):
