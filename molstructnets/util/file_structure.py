@@ -169,6 +169,16 @@ def get_attentionmap_file(global_parameters):
                                      'attention_map.h5')
 
 
+def get_commit_hash_file(global_parameters):
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
+                                     global_parameters[constants.GlobalParameters.experiment],
+                                     global_parameters[constants.GlobalParameters.data_set],
+                                     global_parameters[constants.GlobalParameters.target],
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     'commit_hash.txt')
+
+
 def find_file(folder_path, name):
     prefix = file_util.resolve_subpath(folder_path, name)
     if file_util.file_exists(prefix + '.h5'):

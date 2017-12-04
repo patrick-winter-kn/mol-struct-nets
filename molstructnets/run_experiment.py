@@ -8,6 +8,8 @@ from util import file_structure, logger, file_util, constants
 from steps import steps_repository
 import h5py
 import datetime
+import subprocess
+import sys
 
 
 def get_arguments():
@@ -30,6 +32,15 @@ def get_n(global_parameters_):
                 n_ = len(data_h5[file_structure.DataSet.smiles])
             data_h5.close()
     return n_
+
+
+def add_last_commit_hash(script_path, global_parameters):
+    commit_hash_path = file_structure.get_commit_hash_file(global_parameters)
+    if not file_util.file_exists(commit_hash_path):
+        git_repo_path = file_util.get_parent(script_path)
+        hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=git_repo_path).decode('utf-8')[:-1]
+        with open(commit_hash_path, 'w') as commit_hash_file:
+            commit_hash_file.write(hash)
 
 
 args = get_arguments()
@@ -76,6 +87,7 @@ for i in range(nr_steps):
     logger.log('Finished step: ' + type_name + ': ' + step.get_name())
     backend.clear_session()
 logger.log('=' * 100)
+add_last_commit_hash(sys.argv[0], global_parameters)
 end_time = datetime.datetime.now()
 logger.log('Finished execution of experiment successfully at ' + str(end_time))
 logger.log('Duration of experiment: ' + str(end_time - start_time))
