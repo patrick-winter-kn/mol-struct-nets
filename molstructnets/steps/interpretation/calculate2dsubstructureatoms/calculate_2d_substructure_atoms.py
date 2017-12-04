@@ -1,20 +1,18 @@
-import re
-
 import h5py
 from rdkit import Chem
 
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util, smiles_analyzer, logger
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, constants
 
 
-class CalculateSubstructureAtoms:
+class Calculate2DSubstructureAtoms:
 
     @staticmethod
     def get_id():
-        return 'calculate_substructure_atoms'
+        return 'calculate_2d_substructure_atoms'
 
     @staticmethod
     def get_name():
-        return 'Calculate Substructure Atoms'
+        return 'Calculate 2D Substructure Atoms'
 
     @staticmethod
     def get_parameters():
@@ -29,6 +27,7 @@ class CalculateSubstructureAtoms:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_target(global_parameters)
+        data_validation.validate_preprocessed(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
@@ -49,21 +48,19 @@ class CalculateSubstructureAtoms:
                 file_util.remove_file(attention_map_path)
             attention_map_h5 = h5py.File(temp_attention_map_path, 'a')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+            preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             smiles = data_h5[file_structure.DataSet.smiles]
-            if 'substructures' in local_parameters:
+            if local_parameters['substructures'] is not None:
                 substructures = local_parameters['substructures']
             else:
                 substructures = hdf5_util.get_property(file_structure.get_target_file(global_parameters),
                                                        'substructures')
             substructures = substructures.split(';')
-            if file_structure.AttentionMap.substructure_atoms in attention_map_h5.keys():
-                substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
-            else:
-                # dtype starts with '|S'
-                max_smiles_length = int(str(smiles.dtype)[2:])
-                substructure_atoms = hdf5_util.create_dataset(attention_map_h5,
-                                                              file_structure.AttentionMap.substructure_atoms,
-                                                              (len(smiles), max_smiles_length))
+            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
+            atom_locations = preprocessed_h5[file_structure.Preprocessed.atom_locations]
+            substructure_atoms = hdf5_util.create_dataset(attention_map_h5,
+                                                          file_structure.AttentionMap.substructure_atoms,
+                                                          (len(smiles), preprocessed.shape[1], preprocessed.shape[2]))
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
             with progressbar.ProgressBar(len(smiles)) as progress:
@@ -76,12 +73,12 @@ class CalculateSubstructureAtoms:
                         for match in matches:
                             for index in match:
                                 indices.add(index)
-                    positions = smiles_analyzer.atom_positions(smiles_string)
-                    for j in range(len(positions)):
-                        if j in indices:
-                            for k in range(positions[j][0], positions[j][1] + 1):
-                                substructure_atoms[i, k] = 1
+                    for index in indices:
+                        x = atom_locations[i][index][0]
+                        y = atom_locations[i][index][1]
+                        substructure_atoms[i, x, y] = 1.0
                     progress.increment()
             data_h5.close()
             attention_map_h5.close()
+            preprocessed_h5.close()
             file_util.move_file(temp_attention_map_path, attention_map_path)
