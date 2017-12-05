@@ -1,10 +1,22 @@
-def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatmap=None):
+def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatmap=None, background_heatmap=True):
     correction_x = 0.25 * render_factor
     correction_y = -0.125 * render_factor
     original_max_x = preprocessed.shape[0]
     original_max_y = preprocessed.shape[1]
     render_max_x = preprocessed.shape[0] * render_factor
     render_max_y = preprocessed.shape[1] * render_factor
+    # Colorize background
+    background = ''
+    if heatmap is not None and background_heatmap:
+        for x in range(original_max_x):
+            for y in range(original_max_y):
+                render_x = x * render_factor
+                render_y = y * render_factor - render_factor
+                pixel_size = str(render_factor * 1.01)
+                color = '(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' + str(heatmap[x, y, 2]) + ')'
+                background += '<rect x="' + str(render_x) + '" y="' + str(render_y) + '" width="' + pixel_size\
+                              + '" height="' + pixel_size + '" style="fill:rgb' + color + '" />\n'
+        background += '\n'
     grid = ''
     if show_grid:
         grid += '<g>\n'
@@ -27,13 +39,17 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
                 render_x = x * render_factor + correction_x
                 render_y = y * render_factor + correction_y
                 color = ''
+                # Colorize characters
                 if heatmap is not None:
-                    color = ' fill="rgb(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' +\
-                            str(heatmap[x, y, 2]) + ')"'
+                    if background_heatmap:
+                        color = ' fill="rgb(255,255,255)" stroke="rgb(0,0,0)"'
+                    else:
+                        color = ' fill="rgb(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' +\
+                                str(heatmap[x, y, 2]) + ')"'
                 text += '<tspan x="' + str(render_x) + '" y="' + str(render_y) + '"' + color + '>' + symbols[
                     symbol_index].decode('utf-8') + '</tspan>\n'
     text += '</text>\n'
     svg = '<svg viewBox="0 -' + str(render_factor) + ' ' + str(render_max_x) + ' ' + str(
-        render_max_y) + '">\n' + grid + text + '</svg>\n'
+        render_max_y) + '">\n' + background + grid + text + '</svg>\n'
     with open(path, 'w') as file:
         file.write(svg)
