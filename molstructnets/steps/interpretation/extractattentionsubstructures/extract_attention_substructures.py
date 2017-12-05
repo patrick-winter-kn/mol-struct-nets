@@ -1,7 +1,7 @@
 import h5py
-from steps.interpretation.smilesattentionsubstructures import substructure_set
+from steps.interpretation.extractattentionsubstructures import substructure_set
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
-    smiles_analyzer
+    smiles_analyzer, constants
 from rdkit import Chem
 import numpy
 
@@ -9,15 +9,15 @@ import numpy
 number_threads = 1
 
 
-class SmilesAttentionSubstructures:
+class ExtractAttentionSubstructures:
 
     @staticmethod
     def get_id():
-        return 'smiles_attention_substructures'
+        return 'extract_attention_substructures'
 
     @staticmethod
     def get_name():
-        return 'SMILES Attention Substructures'
+        return 'Extract Attention Substructures'
 
     @staticmethod
     def get_parameters():
@@ -34,41 +34,47 @@ class SmilesAttentionSubstructures:
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
+        data_validation.validate_preprocessed(global_parameters)
         data_validation.validate_attention_map(global_parameters)
         if local_parameters['partition'] != 'both':
             data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        smiles_attention_substructures_path = file_util.resolve_subpath(
-            file_structure.get_interpretation_folder(global_parameters), 'smiles_attention_substructures.h5')
-        if file_util.file_exists(smiles_attention_substructures_path):
-            logger.log('Skipping step: ' + smiles_attention_substructures_path + ' already exists')
+        attention_substructures_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'attention_substructures.h5')
+        if file_util.file_exists(attention_substructures_path):
+            logger.log('Skipping step: ' + attention_substructures_path + ' already exists')
         else:
             attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+            preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
+            if file_structure.Preprocessed.atom_locations in preprocessed_h5.keys():
+                atom_locations = preprocessed_h5[file_structure.Preprocessed.atom_locations]
+            else:
+                atom_locations = None
             smiles = data_h5[file_structure.DataSet.smiles]
-            temp_smiles_attention_substructures_path = file_util.get_temporary_file_path(
-                'smiles_attention_substructures')
-            smiles_attention_substructures_h5 = h5py.File(temp_smiles_attention_substructures_path, 'w')
+            temp_attention_substructures_path = file_util.get_temporary_file_path(
+                'attention_substructures')
+            attention_substructures_h5 = h5py.File(temp_attention_substructures_path, 'w')
             if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
-                SmilesAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, global_parameters, local_parameters, smiles_attention_substructures_h5,
-                    True)
+                ExtractAttentionSubstructures.extract_attention_map_substructures(
+                    attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
+                    True, atom_locations)
             if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
-                SmilesAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, global_parameters, local_parameters, smiles_attention_substructures_h5,
-                    False)
-            smiles_attention_substructures_h5.close()
-            file_util.move_file(temp_smiles_attention_substructures_path, smiles_attention_substructures_path)
+                ExtractAttentionSubstructures.extract_attention_map_substructures(
+                    attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
+                    False, atom_locations)
+            attention_substructures_h5.close()
+            file_util.move_file(temp_attention_substructures_path, attention_substructures_path)
             attention_map_h5.close()
             data_h5.close()
 
     @staticmethod
     def extract_attention_map_substructures(attention_map_h5, smiles, global_parameters, local_parameters,
-                                            smiles_attention_substructures_h5, active):
+                                            attention_substructures_h5, active, atom_locations=None):
         if active:
-            log_message = 'Extracting active SMILES attention substructures'
+            log_message = 'Extracting active attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_active
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_active_indices
             substructures_dataset_name = 'active_substructures'
@@ -76,7 +82,7 @@ class SmilesAttentionSubstructures:
             substructures_value_dataset_name = 'active_substructures_value'
             substructures_score_dataset_name = 'active_substructures_score'
         else:
-            log_message = 'Extracting inactive SMILES attention substructures'
+            log_message = 'Extracting inactive attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_inactive_indices
             substructures_dataset_name = 'inactive_substructures'
@@ -103,8 +109,8 @@ class SmilesAttentionSubstructures:
         with progressbar.ProgressBar(len(indices)) as progress:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
-                    pool.submit(SmilesAttentionSubstructures.extract, attention_map, indices, smiles,
-                                substructures, local_parameters['threshold'], chunk['start'], chunk['end'], progress)
+                    pool.submit(ExtractAttentionSubstructures.extract, attention_map, indices, smiles, substructures,
+                                local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations)
                 pool.wait()
         substructures_dict = substructures.get_dict()
         substructures = sorted(substructures_dict.keys())
@@ -112,14 +118,14 @@ class SmilesAttentionSubstructures:
         for smiles_string in substructures:
             max_length = max(max_length, len(smiles_string))
         dtype = 'S' + str(max(max_length, 1))
-        substructures_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5, substructures_dataset_name,
+        substructures_dataset = hdf5_util.create_dataset(attention_substructures_h5, substructures_dataset_name,
                                                          (len(substructures),), dtype=dtype)
-        substructures_occurrences_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+        substructures_occurrences_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                      substructures_occurrences_dataset_name,
                                                                      (len(substructures),), dtype='I')
-        substructures_value_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+        substructures_value_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_value_dataset_name, (len(substructures),))
-        substructures_score_dataset = hdf5_util.create_dataset(smiles_attention_substructures_h5,
+        substructures_score_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_score_dataset_name, (len(substructures),))
         for i in range(len(substructures)):
             substructures_dataset[i] = substructures[i].encode()
@@ -129,17 +135,22 @@ class SmilesAttentionSubstructures:
             substructures_score_dataset[i] = substructure.get_score()
 
     @staticmethod
-    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress):
+    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
-            atom_indices, values = SmilesAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold)
+            if atom_locations is not None:
+                locations = atom_locations[i]
+            else:
+                locations = None
+            atom_indices, values = ExtractAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold,
+                                                                            locations)
             if len(atom_indices) > 0:
                 molecule = Chem.MolFromSmiles(smiles_string)
-                SmilesAttentionSubstructures.add_substructures(molecule, atom_indices, values, substructures)
+                ExtractAttentionSubstructures.add_substructures(molecule, atom_indices, values, substructures)
             progress.increment()
 
     @staticmethod
-    def pick_atoms(attention_map, smiles_string, threshold):
+    def pick_atoms_smiles(attention_map, smiles_string, threshold):
         atom_positions = smiles_analyzer.atom_positions(smiles_string)
         picked_indices = list()
         values = list()
@@ -154,6 +165,23 @@ class SmilesAttentionSubstructures:
                 picked_indices.append(i)
                 values.append(mean)
         return picked_indices, values
+
+    @staticmethod
+    def pick_atoms(attention_map, smiles_string, threshold, atom_locations=None):
+        if atom_locations is None:
+            return ExtractAttentionSubstructures.pick_atoms_smiles(attention_map, smiles_string, threshold)
+        else:
+            picked_indices = list()
+            values = list()
+            for i in range(len(atom_locations)):
+                if atom_locations[i][0] < 0:
+                    break
+                location = tuple(atom_locations[i])
+                value = attention_map[location]
+                if value >= threshold:
+                    picked_indices.append(i)
+                    values.append(value)
+            return picked_indices, values
 
     @staticmethod
     def add_substructures(molecule, atom_indices, values, substructure):
