@@ -83,21 +83,20 @@ class RenderSubstructureAtoms:
 
     @staticmethod
     def generate_heatmap(substructure_atoms):
-        # TODO do this in a more generic way (for n dimensions)
-        if len(substructure_atoms.shape) == 1:
-            heatmap = list()
+        shape = list(substructure_atoms.shape)
+        shape.append(3)
+        shape = tuple(shape)
+        heatmap = numpy.zeros(shape, dtype='uint8')
+        RenderSubstructureAtoms.assign_color(substructure_atoms, heatmap)
+        return heatmap
+
+    @staticmethod
+    def assign_color(substructure_atoms, heatmap):
+        if isinstance(substructure_atoms, numpy.ndarray):
             for i in range(len(substructure_atoms)):
-                if substructure_atoms[i] == 1:
-                    heatmap.append(RenderSubstructureAtoms.rgb_red)
-                else:
-                    heatmap.append(RenderSubstructureAtoms.rgb_black)
-            return heatmap
+                RenderSubstructureAtoms.assign_color(substructure_atoms[i], heatmap[i])
         else:
-            heatmap = numpy.zeros((substructure_atoms.shape[0], substructure_atoms.shape[1], 3), dtype='int16')
-            for i in range(substructure_atoms.shape[0]):
-                for j in range(substructure_atoms.shape[1]):
-                    if substructure_atoms[i, j] == 1:
-                        heatmap[i, j] = RenderSubstructureAtoms.rgb_red[:]
-                    else:
-                        heatmap[i, j] = RenderSubstructureAtoms.rgb_black[:]
-            return heatmap
+            if substructure_atoms == 1:
+                heatmap[:] = RenderSubstructureAtoms.rgb_red[:]
+            else:
+                heatmap[:] = RenderSubstructureAtoms.rgb_black[:]
