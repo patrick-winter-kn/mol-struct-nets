@@ -16,7 +16,6 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
                 color = '(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' + str(heatmap[x, y, 2]) + ')'
                 background += '<rect x="' + str(render_x) + '" y="' + str(render_y) + '" width="' + pixel_size\
                               + '" height="' + pixel_size + '" style="fill:rgb' + color + '" />\n'
-        background += '\n'
     grid = ''
     if show_grid:
         grid += '<g>\n'
