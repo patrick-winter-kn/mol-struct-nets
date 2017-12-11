@@ -119,3 +119,10 @@ def keys_in(keys, dict_):
     for key in keys:
         contained &= key in dict_
     return contained
+
+
+def to_int(string):
+    try:
+        return int(string)
+    except:
+        return None

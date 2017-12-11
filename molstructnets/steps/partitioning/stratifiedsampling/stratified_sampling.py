@@ -17,7 +17,8 @@ class StratifiedSampling:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'train_percentage', 'name': 'Size of training partition (in %)', 'type': int,
+        parameters.append({'id': 'train_percentage', 'name': 'Size of training partition (in %)', 'type': int, 'min': 1,
+                           'max': 100,
                            'description': 'The percentage of the data that will be used for training.'})
         parameters.append({'id': 'oversample', 'name': 'Oversample training partition', 'type': bool,
                            'description': 'If this is set the minority class will be oversampled, so that the class'

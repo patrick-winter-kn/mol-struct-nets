@@ -23,7 +23,7 @@ class SmilesMatrix:
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'max_length', 'name': 'Maximum length (default: automatic)', 'type': int,
-                           'default': None,
+                           'default': None, 'min': 1,
                            'description': 'Maximum number of characters of input SMILES string. If the limit is'
                                           ' exceeded the string will be shortened to fit into the matrix.'})
         parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,

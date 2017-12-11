@@ -20,14 +20,35 @@ class Experiment:
     def number_steps(self):
         return len(self._dict['steps'])
 
-    def get_step(self, n):
-        return copy.deepcopy(self._dict['steps'][n])
+    def get_step(self, index):
+        return copy.deepcopy(self._dict['steps'][index])
 
     def get_name(self):
         return file_util.get_filename(self._file_path, with_extension=False)
 
     def add_step(self, step):
         self._dict['steps'].append(step)
+
+    def set_step(self, step, index):
+        self._dict['steps'][index] = step
+
+    def remove_step(self, index):
+        steps = self._dict['steps']
+        if 0<= index < len(steps):
+            del steps[index]
+            return True
+        else:
+            return False
+
+    def swap_steps(self, index_1, index_2):
+        steps = self._dict['steps']
+        if 0 <= index_1 < len(steps) and 0<= index_2 < len(steps):
+            swap_step = steps[index_1]
+            steps[index_1] = steps[index_2]
+            steps[index_2] = swap_step
+            return True
+        else:
+            return False
 
     def set_random_seed(self, seed):
         if seed is not None:

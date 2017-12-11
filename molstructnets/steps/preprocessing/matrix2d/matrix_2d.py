@@ -27,6 +27,7 @@ class Matrix2D:
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'scale', 'name': 'Scale factor (default: 2)', 'type': float, 'default': 2.0,
+                           'min': 0.1,
                            'description': 'The scaling factor used to change the size of the resulting grid.'})
         parameters.append({'id': 'symbols', 'name': 'Force symbols (default: none)', 'type': str, 'default': None,
                            'description': 'Symbols in the given string will be added to the index in addition to'

@@ -20,13 +20,14 @@ class EnrichmentPlot:
         parameters.append({'id': 'method_name', 'name': 'Method name', 'type': str,
                            'description': 'Name of the evaluated method that will be shown in the plot.'})
         parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors (in %, default: 5,10)', 'type': str,
-                           'default': '5,10', 'description': 'List of enrichment factors in percent.'})
+                           'default': '5,10', 'regex': '([0-9]+(,[0-9]+)*)?',
+                           'description': 'List of enrichment factors in percent.'})
         parameters.append({'id': 'shuffle', 'name': 'Shuffle before evaluation (default: True)', 'type': bool,
                            'default': True, 'description': 'Shuffles the data before evaluation to counter sorted data'
                                                            ' sets, which can be a problem in cases where the'
                                                            ' probability is equal.'})
         parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: test)',
-                           'type': str, 'default': 'test',
+                           'type': str, 'default': 'test', 'options': ['train', 'test', 'both'],
                            'description': 'The enrichment plot will be generated for the specified partition. The test'
                                           ' partition will be used by default.'})
         return parameters

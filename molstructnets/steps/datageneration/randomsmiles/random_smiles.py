@@ -18,9 +18,9 @@ class RandomSmiles:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'n', 'name': 'Number of molecules', 'type': int,
+        parameters.append({'id': 'n', 'name': 'Number of molecules', 'type': int, 'min': 1,
                            'description': 'Number of generated SMILES strings.'})
-        parameters.append({'id': 'max_length', 'name': 'Maximum length', 'type': int,
+        parameters.append({'id': 'max_length', 'name': 'Maximum length', 'type': int, 'min': 1,
                            'description': 'Maximum length of a single SMILES string.'})
         return parameters
 

@@ -22,11 +22,11 @@ class ExtractAttentionSubstructures:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25,
-                           'description': 'The threshold used to decide which parts of the attention map are'
-                                          ' interpreted as part of the substructure.'})
+        parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25, 'min': 0.0,
+                           'max': 1.0, 'description': 'The threshold used to decide which parts of the attention map'
+                                                      ' are interpreted as part of the substructure.'})
         parameters.append({'id': 'partition', 'name': 'Partition (options: train or test, default: both)', 'type': str,
-                           'default': 'both',
+                           'default': 'both', 'options': ['train', 'test', 'both'],
                            'description': 'The partition that the substructures will be extracted from. By default both'
                                           ' the train and test partition will be used.'})
         return parameters

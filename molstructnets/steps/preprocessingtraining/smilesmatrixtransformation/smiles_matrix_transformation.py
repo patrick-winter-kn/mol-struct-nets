@@ -19,8 +19,8 @@ class SmilesMatrixTransformation:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each SMILES (default: none)',
-                           'type': int, 'default': 1,
+        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each SMILES (default: 1)',
+                           'type': int, 'default': 1, 'min': 0,
                            'description': 'The number of transformations done for each SMILES string in the training'
                                           ' data set.'})
         return parameters

@@ -22,7 +22,7 @@ class RenderAttentionMaps:
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'renderer', 'name': 'Renderer (smiles or 2d, default: automatic)', 'type': str,
-                           'default': None,
+                           'default': 'automatic', 'options': ['automatic', 'smiles', '2d'],
                            'description': 'The renderer that should be used. If automatic the smiles renderer is used '
                                           'for 1d data and the 2d renderer is used for 2d data.'})
         return parameters
@@ -42,7 +42,7 @@ class RenderAttentionMaps:
         preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
         symbols = preprocessed_h5[file_structure.Preprocessed.index]
         renderer = local_parameters['renderer']
-        if renderer is None:
+        if renderer == 'automatic':
             if len(global_parameters[constants.GlobalParameters.input_dimensions]) == 2:
                 renderer = 'smiles'
             elif len(global_parameters[constants.GlobalParameters.input_dimensions]) == 3:

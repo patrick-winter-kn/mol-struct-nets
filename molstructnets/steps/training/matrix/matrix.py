@@ -23,9 +23,9 @@ class Matrix:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int,
+        parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int, 'min': 1,
                            'description': 'The number of times the model will be trained on the whole data set.'})
-        parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 50)', 'type': int, 'default': 50,
+        parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 50)', 'type': int, 'default': 50, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory.'})
         parameters.append({'id': 'validation', 'name': 'Validation (default: False)', 'type': bool, 'default': False,

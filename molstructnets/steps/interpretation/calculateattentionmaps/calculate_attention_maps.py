@@ -23,7 +23,7 @@ class CalculateAttentionMaps:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'top_n', 'name': 'Top n (default: all)', 'type': int, 'default': None,
+        parameters.append({'id': 'top_n', 'name': 'Top n (default: all)', 'type': int, 'default': None, 'min': 1,
                            'description': 'An attention map for the n highest scored molecules will be generated.'})
         parameters.append({'id': 'actives', 'name': 'Active class (otherwise inactive, default: True)', 'type': bool,
                            'default': True,
@@ -33,7 +33,7 @@ class CalculateAttentionMaps:
                            'type': bool, 'default': False,
                            'description': 'If true only correct predictions will be considered.'})
         parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: both)',
-                           'type': str, 'default': 'both',
+                           'type': str, 'default': 'both', 'options': ['train', 'test', 'both'],
                            'description': 'Attention maps will be generated for the specified partition. By default'
                                           ' both the train and test partition will be used.'})
         return parameters
