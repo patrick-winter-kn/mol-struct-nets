@@ -22,13 +22,13 @@ class SmilesMatrix:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'max_length', 'name': 'Maximum length (default: automatic)', 'type': int,
-                           'default': None, 'min': 1,
+        parameters.append({'id': 'max_length', 'name': 'Maximum Length', 'type': int, 'default': None, 'min': 1,
                            'description': 'Maximum number of characters of input SMILES string. If the limit is'
-                                          ' exceeded the string will be shortened to fit into the matrix.'})
-        parameters.append({'id': 'characters', 'name': 'Force characters (default: none)', 'type': str,
-                           'default': None, 'description': 'Characters in the given string will be added to the index'
-                                                           ' in addition to characters found in the data set.'})
+                                          ' exceeded the string will be shortened to fit into the matrix. Default:'
+                                          ' automatic'})
+        parameters.append({'id': 'characters', 'name': 'Force Characters', 'type': str, 'default': None,
+                           'description': 'Characters in the given string will be added to the index in addition to'
+                                          ' characters found in the data set. Default: None'})
         return parameters
 
     @staticmethod

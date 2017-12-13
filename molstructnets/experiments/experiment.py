@@ -13,6 +13,9 @@ class Experiment:
         else:
             self._dict = {'steps': []}
 
+    def get_file_path(self):
+        return self._file_path
+
     def save(self):
         file_util.make_folders(self._file_path)
         json.dump(self._dict, open(self._file_path, 'w+'), sort_keys=True, indent=4, separators=(',', ': '))

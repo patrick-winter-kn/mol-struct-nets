@@ -17,14 +17,14 @@ class StratifiedSampling:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'train_percentage', 'name': 'Size of training partition (in %)', 'type': int, 'min': 1,
+        parameters.append({'id': 'train_percentage', 'name': 'Size of Training Partition', 'type': int, 'min': 1,
                            'max': 100,
                            'description': 'The percentage of the data that will be used for training.'})
-        parameters.append({'id': 'oversample', 'name': 'Oversample training partition', 'type': bool,
+        parameters.append({'id': 'oversample', 'name': 'Oversample Training Partition', 'type': bool, 'default': True,
                            'description': 'If this is set the minority class will be oversampled, so that the class'
-                                          ' distribution in the training set is equal.'})
-        parameters.append({'id': 'shuffle', 'name': 'Shuffle training partition', 'type': bool,
-                           'description': 'If this is set the training data will be shuffled.'})
+                                          ' distribution in the training set is equal. Default: True'})
+        parameters.append({'id': 'shuffle', 'name': 'Shuffle Training Partition', 'type': bool, 'default': True,
+                           'description': 'If this is set the training data will be shuffled. Default: True'})
         return parameters
 
     @staticmethod

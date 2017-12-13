@@ -17,10 +17,10 @@ class Calculate2DSubstructureAtoms:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'substructures', 'name': 'Substructures (default: use generated target)', 'type': str,
-                           'default': None, 'description': 'Semicolon separated list of substructure to search for. If'
-                                                           ' None then the substructures of the target generation step'
-                                                           ' are used.'})
+        parameters.append({'id': 'substructures', 'name': 'Substructures', 'type': str, 'default': None,
+                           'description': 'Semicolon separated list of substructure to search for. If None then the'
+                                          ' substructures of the target generation step are used. Default: Use'
+                                          ' generated target'})
         return parameters
 
     @staticmethod

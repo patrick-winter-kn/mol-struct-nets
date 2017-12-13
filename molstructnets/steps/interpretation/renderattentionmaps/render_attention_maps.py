@@ -21,10 +21,10 @@ class RenderAttentionMaps:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'renderer', 'name': 'Renderer (smiles or 2d, default: automatic)', 'type': str,
-                           'default': 'automatic', 'options': ['automatic', 'smiles', '2d'],
+        parameters.append({'id': 'renderer', 'name': 'Renderer', 'type': str, 'default': 'automatic',
+                           'options': ['automatic', 'smiles', '2d'],
                            'description': 'The renderer that should be used. If automatic the smiles renderer is used '
-                                          'for 1d data and the 2d renderer is used for 2d data.'})
+                                          'for 1d data and the 2d renderer is used for 2d data. Default: automatic'})
         return parameters
 
     @staticmethod

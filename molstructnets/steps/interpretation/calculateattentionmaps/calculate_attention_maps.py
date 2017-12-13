@@ -23,19 +23,19 @@ class CalculateAttentionMaps:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'top_n', 'name': 'Top n (default: all)', 'type': int, 'default': None, 'min': 1,
-                           'description': 'An attention map for the n highest scored molecules will be generated.'})
-        parameters.append({'id': 'actives', 'name': 'Active class (otherwise inactive, default: True)', 'type': bool,
-                           'default': True,
+        parameters.append({'id': 'top_n', 'name': 'Top n', 'type': int, 'default': None, 'min': 1,
+                           'description': 'An attention map for the n highest scored molecules will be generated.'
+                                          ' Default: All'})
+        parameters.append({'id': 'actives', 'name': 'Active Class', 'type': bool, 'default': True,
                            'description': 'If true the attention map will show the attention for the active class. If'
-                                          ' false it will be for the inactive class.'})
-        parameters.append({'id': 'correct_predictions', 'name': 'Only correct predictions (default: False)',
-                           'type': bool, 'default': False,
-                           'description': 'If true only correct predictions will be considered.'})
-        parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: both)',
-                           'type': str, 'default': 'both', 'options': ['train', 'test', 'both'],
-                           'description': 'Attention maps will be generated for the specified partition. By default'
-                                          ' both the train and test partition will be used.'})
+                                          ' false it will be for the inactive class. Default: True'})
+        parameters.append({'id': 'correct_predictions', 'name': 'Only Correct Predictions', 'type': bool,
+                           'default': False,
+                           'description': 'If true only correct predictions will be considered. Default: False'})
+        parameters.append({'id': 'partition', 'name': 'Partition', 'type': str, 'default': 'both',
+                           'options': ['train', 'test', 'both'],
+                           'description': 'Attention maps will be generated for the specified partition. Options are:'
+                                          ' train, test or both partitions. Default: both'})
         return parameters
 
     @staticmethod

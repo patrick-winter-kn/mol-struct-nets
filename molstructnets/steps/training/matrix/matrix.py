@@ -25,11 +25,12 @@ class Matrix:
         parameters = list()
         parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int, 'min': 1,
                            'description': 'The number of times the model will be trained on the whole data set.'})
-        parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 50)', 'type': int, 'default': 50, 'min': 1,
+        parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 50, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
-                                          ' to faster processing but needs more memory.'})
-        parameters.append({'id': 'validation', 'name': 'Validation (default: False)', 'type': bool, 'default': False,
-                           'description': 'Evaluate the model after each epoch using the test data set.'})
+                                          ' to faster processing but needs more memory. Default: 50'})
+        parameters.append({'id': 'validation', 'name': 'Validation', 'type': bool, 'default': False,
+                           'description': 'Evaluate the model after each epoch using the test data set. Default:'
+                                          ' False'})
         return parameters
 
     @staticmethod

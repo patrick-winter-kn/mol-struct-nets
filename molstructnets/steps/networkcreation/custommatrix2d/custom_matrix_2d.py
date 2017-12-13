@@ -19,23 +19,22 @@ class CustomMatrix2D:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'nr_blocks', 'name': 'Number blocks (default: 5)', 'type': int, 'default': 5, 'min': 0,
-                           'description': 'The number of blocks.'})
-        parameters.append({'id': 'nr_convolutions', 'name': 'Number convolutions per block (default: 3)', 'type': int,
-                           'default': 3, 'min': 0,
-                           'description': 'The number of convolutional layers per block.'})
-        parameters.append({'id': 'base_convolution_output', 'name': 'Number base convolution outputs (default: 16)',
-                           'type': int, 'default': 16, 'min': 1,
+        parameters.append({'id': 'nr_blocks', 'name': 'Number Blocks', 'type': int, 'default': 5, 'min': 0,
+                           'description': 'The number of blocks. Default: 5'})
+        parameters.append({'id': 'nr_convolutions', 'name': 'Number Convolutions per Block', 'type': int, 'default': 3,
+                           'min': 0, 'description': 'The number of convolutional layers per block. Default: 3'})
+        parameters.append({'id': 'base_convolution_output', 'name': 'Number Convolution Outputs', 'type': int,
+                           'default': 16, 'min': 1,
                            'description': 'The number of outputs in the first convolutional layers. It will be'
-                                          ' multiplied by 2 for each additional block.'})
-        parameters.append({'id': 'use_pooling', 'name': 'Use pooling (default: True)', 'type': bool, 'default': True,
-                           'description': 'If pooling layers should be used at the end of each block.'})
-        parameters.append({'id': 'dense_size', 'name': 'Number dense layer neurons (default: 128)', 'type': int,
-                           'default': 128, 'min': 1,
-                           'description': 'Number of neurons in the hidden dense layer.'})
-        parameters.append({'id': 'input_dropout', 'name': 'Input dropout (default: 0.3)', 'type': float, 'default': 0.3,
-                           'min': 0.0, 'max': 1.0,
-                           'description': 'Dropout on the input layer.'})
+                                          ' multiplied by 2 for each additional block. Default: 16'})
+        parameters.append({'id': 'use_pooling', 'name': 'Pooling Layers', 'type': bool, 'default': True,
+                           'description': 'If pooling layers should be used at the end of each block. Default: True'})
+        parameters.append({'id': 'dense_size', 'name': 'Number Dense Layer Neurons', 'type': int, 'default': 128,
+                           'min': 1,
+                           'description': 'Number of neurons in the hidden dense layer. Default: 128'})
+        parameters.append({'id': 'input_dropout', 'name': 'Input Dropout', 'type': float, 'default': 0.3, 'min': 0.0,
+                           'max': 1.0,
+                           'description': 'Dropout on the input layer. Default: 0.3'})
         return parameters
 
     @staticmethod

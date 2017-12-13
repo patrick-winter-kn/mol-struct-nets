@@ -26,10 +26,10 @@ class Matrix2DTransformed:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'transformations', 'name': 'Number of transformations for each matrix (default: 1)',
-                           'type': int, 'default': 1, 'min': 0,
+        parameters.append({'id': 'transformations', 'name': 'Number of Transformations', 'type': int, 'default': 1,
+                           'min': 0,
                            'description': 'The number of transformations done for each matrix in the training data'
-                                          ' set.'})
+                                          ' set. Default: 1'})
         return parameters
 
     @staticmethod

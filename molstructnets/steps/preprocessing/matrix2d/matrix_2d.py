@@ -26,17 +26,17 @@ class Matrix2D:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'scale', 'name': 'Scale factor (default: 2)', 'type': float, 'default': 2.0,
-                           'min': 0.1,
-                           'description': 'The scaling factor used to change the size of the resulting grid.'})
-        parameters.append({'id': 'symbols', 'name': 'Force symbols (default: none)', 'type': str, 'default': None,
+        parameters.append({'id': 'scale', 'name': 'Scale Factor', 'type': float, 'default': 2.0, 'min': 0.1,
+                           'description': 'The scaling factor used to change the size of the resulting grid. Default:'
+                                          ' 2.0'})
+        parameters.append({'id': 'symbols', 'name': 'Force Symbols', 'type': str, 'default': None,
                            'description': 'Symbols in the given string will be added to the index in addition to'
                                           ' symbols found in the data set. Multiple symbols are separated by a'
-                                          ' semicolon (e.g. \'F;Cl;S\').'})
-        parameters.append({'id': 'square', 'name': 'X and Y dimensions have the same size (default: True)',
-                           'type': bool, 'default': True,
+                                          ' semicolon (e.g. \'F;Cl;S\'). Default: None'})
+        parameters.append({'id': 'square', 'name': 'Same Size for X and Y Dimensions', 'type': bool, 'default': True,
                            'description': 'Make the size of the X and Y dimensions the same. This is important if the'
-                                          ' training data should be transformed (in order to fit rotated data).'})
+                                          ' training data should be transformed (in order to fit rotated data).'
+                                          ' Default: True'})
         return parameters
 
     @staticmethod

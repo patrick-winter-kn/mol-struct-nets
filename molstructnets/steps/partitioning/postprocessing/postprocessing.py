@@ -17,11 +17,12 @@ class Postprocessing:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'oversample', 'name': 'Oversample training partitioning', 'type': bool,
+        parameters.append({'id': 'oversample', 'name': 'Oversample Training Partitioning', 'type': bool,
+                           'default': True,
                            'description': 'If this is set the minority class will be oversampled, so that the class'
-                                          ' distribution in the training set is equal.'})
-        parameters.append({'id': 'shuffle', 'name': 'Shuffle training partitioning', 'type': bool,
-                           'description': 'If this is set the training data will be shuffled.'})
+                                          ' distribution in the training set is equal. Default: True'})
+        parameters.append({'id': 'shuffle', 'name': 'Shuffle Training Partitioning', 'type': bool, 'default': True,
+                           'description': 'If this is set the training data will be shuffled. Default: True'})
         return parameters
 
     @staticmethod

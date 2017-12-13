@@ -17,9 +17,9 @@ class Matrix:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'batch_size', 'name': 'Batch size (default: 50)', 'type': int, 'default': 50, 'min': 1,
+        parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 50, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
-                                          ' to faster processing but needs more memory.'})
+                                          ' to faster processing but needs more memory. Default: 50'})
         return parameters
 
     @staticmethod

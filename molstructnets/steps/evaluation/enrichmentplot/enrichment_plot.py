@@ -17,19 +17,19 @@ class EnrichmentPlot:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'method_name', 'name': 'Method name', 'type': str,
+        parameters.append({'id': 'method_name', 'name': 'Method Name', 'type': str,
                            'description': 'Name of the evaluated method that will be shown in the plot.'})
-        parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors (in %, default: 5,10)', 'type': str,
+        parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors', 'type': str,
                            'default': '5,10', 'regex': '([0-9]+(,[0-9]+)*)?',
-                           'description': 'List of enrichment factors in percent.'})
-        parameters.append({'id': 'shuffle', 'name': 'Shuffle before evaluation (default: True)', 'type': bool,
+                           'description': 'List of enrichment factors in percent. Default: 5%, 10%'})
+        parameters.append({'id': 'shuffle', 'name': 'Shuffle', 'type': bool,
                            'default': True, 'description': 'Shuffles the data before evaluation to counter sorted data'
                                                            ' sets, which can be a problem in cases where the'
-                                                           ' probability is equal.'})
-        parameters.append({'id': 'partition', 'name': 'Partition (options: train, test or both, default: test)',
-                           'type': str, 'default': 'test', 'options': ['train', 'test', 'both'],
-                           'description': 'The enrichment plot will be generated for the specified partition. The test'
-                                          ' partition will be used by default.'})
+                                                           ' probability is equal. Default: True'})
+        parameters.append({'id': 'partition', 'name': 'Partition', 'type': str, 'default': 'test',
+                           'options': ['train', 'test', 'both'],
+                           'description': 'The enrichment plot will be generated for the specified partition. Default:'
+                                          ' test'})
         return parameters
 
     @staticmethod

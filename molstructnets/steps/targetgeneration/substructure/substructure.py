@@ -20,14 +20,14 @@ class Substructure:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'substructures', 'name': 'Substructures (separated by ;)', 'type': str,
+        parameters.append({'id': 'substructures', 'name': 'Substructures', 'type': str,
                            'description': 'Substructures in SMILES format, separated by a semicolon.'})
-        parameters.append({'id': 'logic', 'name': 'Logic expression (e.g. a&(b|c))', 'type': str, 'default': None,
+        parameters.append({'id': 'logic', 'name': 'Logic Expression', 'type': str, 'default': None,
                            'description': 'If this logic expression is true, the molecule will be active. a will be'
-                                          ' true if the first substructure was found in the molecule. Default behaviour'
-                                          ' is a&b&c&... .'})
-        parameters.append({'id': 'name', 'name': 'Target name (default: None)', 'type': str, 'default': None,
-                           'description': 'Prefix to the filename of the generated target data set.'})
+                                          ' true if the first substructure was found in the molecule. Example: a&(b|c).'
+                                          ' Default behaviour is a&b&c&... .'})
+        parameters.append({'id': 'name', 'name': 'Target Name', 'type': str, 'default': None,
+                           'description': 'Prefix to the filename of the generated target data set. Default: None'})
         return parameters
 
     @staticmethod
