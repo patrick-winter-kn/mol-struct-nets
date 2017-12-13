@@ -83,9 +83,7 @@ class ParameterEditor(ttk.Frame):
         # Parameter info
         info_frame = ttk.Frame(self)
         info_frame.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH, expand=True)
-        info = tkinter.Text(info_frame, wrap=tkinter.WORD)
-        # TODO way to big
-        # TODO overlaps previous element
+        info = tkinter.Text(info_frame, wrap=tkinter.WORD, width=0, height=0)
         info.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         self.key_value = key_value
         self.text_frame = text_frame
