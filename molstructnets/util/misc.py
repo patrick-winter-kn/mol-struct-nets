@@ -63,17 +63,12 @@ def copy_into_memory(array, as_bool=False, use_swap=True):
                        + '. Data will not be copied into memory.')
             return array
         else:
-            # Hide messages for data < 1MiB
-            if necessary_size >= 1048576:
-                log_level = logger.LogLevel.INFO
-            else:
-                log_level = logger.LogLevel.DEBUG
             logger.log('Copying data with shape: ' + str(array.shape) + ', type: ' + str(target_type) + ' and size: '
-                       + humanize.naturalsize(necessary_size, binary=True) + ' into memory.', log_level)
+                       + humanize.naturalsize(necessary_size, binary=True) + ' into memory.')
             if isinstance(array, numpy.ndarray):
                 return array.astype(bool)
             else:
-                return copy_ndarray(array, as_bool, log_level=log_level)
+                return copy_ndarray(array, as_bool)
 
 
 def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO):
