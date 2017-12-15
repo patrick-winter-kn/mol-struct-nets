@@ -1,3 +1,6 @@
+import gzip
+
+
 def render(smiles, path, size_factor=1, heatmap=None):
     # We use a size of 6 per character and 2 for padding before and after the text
     width = (len(smiles) * 6 + 2) * size_factor
@@ -14,7 +17,7 @@ def render(smiles, path, size_factor=1, heatmap=None):
                     + ')">' + smiles[i] + '</tspan>\n'
     else:
         text = smiles
-    with open(path, 'w') as file:
+    with gzip.open(path, 'wt') as file:
         file.write('<svg viewBox="0 0 ' + str(width) + ' ' + str(height) + '">\n<text x="' + str(x) + '" y="' + str(y)
                    + '" fill="black" font-family="monospace" font-size="' + str(font_size) + '">\n' + text
                    + '</text>\n</svg>')

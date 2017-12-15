@@ -1,3 +1,6 @@
+import gzip
+
+
 def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatmap=None, background_heatmap=True):
     correction_x = 0.25 * render_factor
     correction_y = -0.125 * render_factor
@@ -50,5 +53,5 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
     text += '</text>\n'
     svg = '<svg viewBox="0 -' + str(render_factor) + ' ' + str(render_max_x) + ' ' + str(
         render_max_y) + '">\n' + background + grid + text + '</svg>\n'
-    with open(path, 'w') as file:
+    with gzip.open(path, 'wt') as file:
         file.write(svg)

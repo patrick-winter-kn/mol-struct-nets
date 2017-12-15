@@ -90,7 +90,7 @@ class RenderAttentionMaps:
     @staticmethod
     def render(preprocessed, data_set, indices, smiles, symbols, output_dir_path, renderer, start, end, progress):
             for i in indices[start:end+1]:
-                output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svg')
+                output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svgz')
                 if not file_util.file_exists(output_path):
                     smiles_string = smiles[i].decode('utf-8')
                     heatmap = attention_map.array_to_heatmap([data_set[i]])

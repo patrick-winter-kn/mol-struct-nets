@@ -43,7 +43,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     pyplot.tight_layout()
     if enrichment_plot_file:
         file_util.make_folders(enrichment_plot_file)
-        pyplot.savefig(enrichment_plot_file, format='svg', transparent=True)
+        pyplot.savefig(enrichment_plot_file, format='svgz', transparent=True)
     else:
         pyplot.show()
     pyplot.close('all')
