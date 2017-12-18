@@ -55,7 +55,7 @@ class CustomMatrix2D:
             layer = Dropout(local_parameters['input_dropout'], name='input_dropout')(layer)
             convolution_output_size = local_parameters['base_convolution_output']
             for i in range(local_parameters['nr_blocks']):
-                CustomMatrix2D.add_block(layer, local_parameters['nr_convolutions'], convolution_output_size,
+                layer = CustomMatrix2D.add_block(layer, local_parameters['nr_convolutions'], convolution_output_size,
                                          local_parameters['use_pooling'], i, initializer)
                 convolution_output_size *= 2
             layer = Flatten(name='flatten_1')(layer)
