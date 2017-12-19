@@ -38,7 +38,8 @@ def add_last_commit_hash(script_path, global_parameters):
     if misc.keys_in([constants.GlobalParameters.data_set, constants.GlobalParameters.target,
                      constants.GlobalParameters.partition_data], global_parameters):
         commit_hash_path = file_structure.get_commit_hash_file(global_parameters)
-        if not file_util.file_exists(commit_hash_path):
+        if file_util.file_exists(file_util.get_parent(commit_hash_path))\
+                and not file_util.file_exists(commit_hash_path):
             git_repo_path = file_util.get_parent(script_path)
             hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=git_repo_path).decode('utf-8')[:-1]
             with open(commit_hash_path, 'w') as commit_hash_file:
