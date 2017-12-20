@@ -11,7 +11,7 @@ class Experiment:
         if file_util.file_exists(self._file_path):
             self._dict = json.load(open(self._file_path))
         else:
-            self._dict = {'steps': []}
+            self._dict = {'seed': 42, 'steps': []}
 
     def get_file_path(self):
         return self._file_path
