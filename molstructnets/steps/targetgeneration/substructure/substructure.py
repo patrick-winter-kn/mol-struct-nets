@@ -45,6 +45,9 @@ class Substructure:
     @staticmethod
     def execute(global_parameters, local_parameters):
         target_path = Substructure.get_result_file(global_parameters, local_parameters)
+        if constants.GlobalParameters.target in global_parameters:
+            logger.log('Target has already been specified. Overwriting target parameter with generated target.',
+                       logger.LogLevel.WARNING)
         global_parameters[constants.GlobalParameters.target] = file_util.get_filename(target_path, False)
         if file_util.file_exists(target_path):
             logger.log('Skipping step: ' + target_path + ' already exists')

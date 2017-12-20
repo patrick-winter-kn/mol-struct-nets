@@ -39,6 +39,9 @@ class RandomSmiles:
     @staticmethod
     def execute(global_parameters, local_parameters):
         data_set_path = RandomSmiles.get_result_file(global_parameters, local_parameters)
+        if constants.GlobalParameters.data_set in global_parameters:
+            logger.log('Data set has already been specified. Overwriting data set parameter with generated data.',
+                       logger.LogLevel.WARNING)
         global_parameters[constants.GlobalParameters.data_set] = file_util.get_filename(data_set_path, False)
         if file_util.file_exists(data_set_path):
             logger.log('Skipping step: ' + data_set_path + ' already exists')

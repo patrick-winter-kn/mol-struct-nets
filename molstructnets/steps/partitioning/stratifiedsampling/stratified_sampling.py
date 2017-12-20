@@ -42,6 +42,9 @@ class StratifiedSampling:
     @staticmethod
     def execute(global_parameters, local_parameters):
         partition_path = StratifiedSampling.get_result_file(global_parameters, local_parameters)
+        if constants.GlobalParameters.partition_data in global_parameters:
+            logger.log('Partitioning has already been specified. Overwriting partition parameter with generated'
+                       ' partitions.', logger.LogLevel.WARNING)
         global_parameters[constants.GlobalParameters.partition_data] = file_util.get_filename(partition_path,
                                                                                               with_extension=False)
         if file_util.file_exists(partition_path):
