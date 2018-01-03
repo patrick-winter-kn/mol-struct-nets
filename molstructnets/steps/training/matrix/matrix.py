@@ -80,7 +80,11 @@ class Matrix:
                                              write_graph=True, write_images=False, embeddings_freq=1))
             input_ = misc.copy_into_memory(input_, as_bool=True)
             output = misc.copy_into_memory(output, as_bool=True)
-            model.fit(input_, output, epochs=local_parameters['epochs'], shuffle='batch',
+            if isinstance(input, numpy.ndarray) and isinstance(output, numpy.ndarray):
+                shuffle = True
+            else:
+                shuffle = 'batch'
+            model.fit(input_, output, epochs=local_parameters['epochs'], shuffle=shuffle,
                       batch_size=local_parameters['batch_size'], callbacks=callback_list, initial_epoch=epoch)
             target_h5.close()
             preprocessed_h5.close()
