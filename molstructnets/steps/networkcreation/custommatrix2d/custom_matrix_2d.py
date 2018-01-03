@@ -3,7 +3,7 @@ from keras.models import Model
 from keras.layers import Input
 from keras.layers.core import Dense, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras import initializers
+from keras import initializers, optimizers
 
 
 class CustomMatrix2D:
@@ -63,7 +63,8 @@ class CustomMatrix2D:
                           kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
-            model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
+            optimizer = optimizers.Adam(lr=0.0005)
+            model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['binary_accuracy'])
             file_util.make_folders(network_path)
             model.save(network_path)
 
