@@ -63,7 +63,7 @@ class CustomMatrix2D:
                           kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
-            optimizer = optimizers.Adam(lr=0.0005)
+            optimizer = optimizers.Adam(lr=0.0001)
             model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['binary_accuracy'])
             file_util.make_folders(network_path)
             model.save(network_path)
