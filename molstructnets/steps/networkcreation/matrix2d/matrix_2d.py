@@ -3,7 +3,7 @@ from keras.models import Model
 from keras.layers import Input
 from keras.layers.core import Dense, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras import initializers
+from keras import initializers, optimizers
 
 
 class Matrix2D:
@@ -39,39 +39,35 @@ class Matrix2D:
             layer = Dropout(0.3, name='input_dropout')(layer)
 
             # Block 1
-            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(16, 3, activation='relu', padding='same', name='convolution_1_3', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_1',
+                                  kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_1')(layer)
 
             # Block 2
-            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_2_3', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_2',
+                                  kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_2')(layer)
 
             # Block 3
-            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_3_3', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_3',
+                                  kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_3')(layer)
 
             # Block 4
-            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_4_3', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_4',
+                                  kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_4')(layer)
 
             # Block 5
-            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_1', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_2', kernel_initializer=initializer)(layer)
-            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_5_3', kernel_initializer=initializer)(layer)
+            layer = Convolution2D(512, 3, activation='relu', padding='same', name='convolution_5',
+                                  kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
 
             layer = Flatten(name='flatten_1')(layer)
-            layer = Dense(128, activation='relu', name='dense_1', kernel_initializer=initializer)(layer)
+            layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
-            model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
+            optimizer = optimizers.Adam(lr=0.0001)
+            model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['binary_accuracy'])
             file_util.make_folders(network_path)
             model.save(network_path)
