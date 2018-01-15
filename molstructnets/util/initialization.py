@@ -5,6 +5,7 @@ import numpy
 import json
 import matplotlib
 
+silent_loading = True
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['PYTHONHASHSEED'] = '0'
@@ -18,6 +19,11 @@ random.seed(seed)
 numpy.random.seed(seed)
 matplotlib.use('Agg')
 
+if silent_loading:
+    stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+    stderr = sys.stderr
+    sys.stderr = open(os.devnull, 'w')
 
 import tensorflow
 config = tensorflow.ConfigProto()
@@ -26,3 +32,8 @@ config.gpu_options.allow_growth = True
 session = tensorflow.Session(config=config)
 from keras.backend import tensorflow_backend
 tensorflow_backend.set_session(session)
+
+if silent_loading:
+    sys.stdout = stdout
+    sys.stderr = stderr
+    
