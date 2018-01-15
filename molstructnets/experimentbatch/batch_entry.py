@@ -18,13 +18,15 @@ class BatchEntry:
             arguments.append(file_util.resolve_subpath(self.experiment_location, self.experiment))
         else:
             arguments.append(file_util.resolve_path(self.experiment))
-        arguments.append(self.experiment)
         if self.data_set is not None:
-            arguments.append('--data_set ' + self.data_set)
+            arguments.append('--data_set')
+            arguments.append(self.data_set)
         if self.target is not None:
-            arguments.append('--target ' + self.target)
+            arguments.append('--target')
+            arguments.append(self.target)
         if self.partition is not None:
-            arguments.append('--partition' + self.partition)
+            arguments.append('--partition')
+            arguments.append(self.partition)
         return arguments
 
     @staticmethod

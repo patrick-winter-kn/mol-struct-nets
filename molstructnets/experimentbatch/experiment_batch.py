@@ -8,7 +8,7 @@ def load_entries_from_csv(csv_path):
     experiment_location = None
     if csv.startswith('#'):
         experiment_location = csv[1:csv.find('\n')]
-        csv = csv[csv.find('\n'):]
+        csv = csv[csv.find('\n') + 1:]
         if experiment_location == 'same':
             experiment_location = csv_path[:csv_path.rfind('/')]
     entries = list()
