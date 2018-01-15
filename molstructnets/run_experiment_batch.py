@@ -30,3 +30,4 @@ for i in range(results.size()):
             else:
                 results.set_status(i, execution_results.Status.success)
                 break
+    results.save()
