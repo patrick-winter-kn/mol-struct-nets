@@ -1,7 +1,7 @@
 import h5py
 import numpy
 from steps.evaluation.shared import enrichment
-from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants
+from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants, csv_file
 
 
 class EnrichmentPlot:
@@ -71,9 +71,18 @@ class EnrichmentPlot:
                 ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
                 predictions = reference_data_set.ReferenceDataSet(partition,
                                                                   prediction_h5[file_structure.Predictions.prediction])
-            enrichment.plot([predictions], [local_parameters['method_name']], ground_truth, enrichment_factors,
-                            enrichment_plot_path, local_parameters['shuffle'],
-                            global_parameters[constants.GlobalParameters.seed])
+            auc_list, efs_list = enrichment.plot([predictions], [local_parameters['method_name']], ground_truth,
+                                                 enrichment_factors, enrichment_plot_path, local_parameters['shuffle'],
+                                                 global_parameters[constants.GlobalParameters.seed])
+            csv_path = file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), 'enrichment.csv')
+            csv = csv_file.CsvFile(csv_path)
+            row = dict()
+            row['name'] = local_parameters['method_name']
+            row['auc'] = auc_list[0]
+            for ef in efs_list[0].keys():
+                row['ef' + str(ef)] = efs_list[0][ef]
+            csv.add_row(row)
+            csv.save()
             partition_h5.close()
             target_h5.close()
             prediction_h5.close()
