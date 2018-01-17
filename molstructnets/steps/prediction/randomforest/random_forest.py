@@ -41,7 +41,7 @@ class RandomForest:
         else:
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            temp_prediction_path = file_util.get_temporary_file_path('matrix_prediction')
+            temp_prediction_path = file_util.get_temporary_file_path('random_forest_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
                                                    (len(preprocessed), 2))
@@ -57,8 +57,6 @@ class RandomForest:
                     start = i * batch_size
                     end = min(len(preprocessed), (i + 1) * batch_size)
                     results = random_forest.predict(preprocessed[start:end], model)
-                    print('src shape: ' + str(results.shape))
-                    print('dest shape: ' + str(predictions[start:end].shape))
                     predictions[start:end] = results[:]
                     progress.increment(end - start)
             preprocessed_h5.close()
