@@ -2,12 +2,15 @@ from sklearn import ensemble
 from sklearn.externals import joblib
 import numpy
 from util import file_util
+import math
 
 
-def train(train_data_input, train_data_output, model_path, nr_trees=1000):
+def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=None):
     # TODO convert input data to shape (nr_rows, nr_features)
-    train_data_output = train_data_output[:,0]
-    random_forest = ensemble.RandomForestClassifier(n_estimators=nr_trees, min_samples_leaf=1000, n_jobs=-1,
+    if min_samples_leaf is None:
+        min_samples_leaf = math.ceil(len(train_data_input) / nr_trees)
+    train_data_output = train_data_output[:,1]
+    random_forest = ensemble.RandomForestClassifier(n_estimators=nr_trees, min_samples_leaf=min_samples_leaf, n_jobs=-1,
                                                     class_weight='balanced', verbose=1, criterion='gini')
     random_forest.fit(train_data_input, train_data_output)
     file_util.make_folders(model_path)

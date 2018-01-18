@@ -17,11 +17,7 @@ class RandomForest:
 
     @staticmethod
     def get_parameters():
-        parameters = list()
-        parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': None, 'min': 1,
-                           'description': 'Number of data points that will be processed together. A higher number leads'
-                                          ' to faster processing but needs more memory. Default: all'})
-        return parameters
+        return list()
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
@@ -48,17 +44,7 @@ class RandomForest:
             model_path = file_util.resolve_subpath(file_structure.get_result_folder(global_parameters),
                                                        'randomforest.pkl.gz')
             model = joblib.load(model_path)
-            logger.log('Predicting data')
-            batch_size = local_parameters['batch_size']
-            if batch_size is None:
-                batch_size = len(preprocessed)
-            with progressbar.ProgressBar(len(preprocessed)) as progress:
-                for i in range(int(math.ceil(len(preprocessed) / batch_size))):
-                    start = i * batch_size
-                    end = min(len(preprocessed), (i + 1) * batch_size)
-                    results = random_forest.predict(preprocessed[start:end], model)
-                    predictions[start:end] = results[:]
-                    progress.increment(end - start)
+            predictions[:] = random_forest.predict(preprocessed, model)[:]
             preprocessed_h5.close()
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)

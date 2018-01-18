@@ -18,6 +18,9 @@ class RandomForest:
         parameters = list()
         parameters.append({'id': 'nr_trees', 'name': 'Number of Trees', 'type': int, 'min': 1, 'default': 1000,
                            'description': 'The number of trees in the random forest. Default: 1000'})
+        parameters.append({'id': 'min_samples_leaf', 'name': 'Minimum Samples per Leaf', 'type': int, 'min': 1,
+                           'default': None,
+                           'description': 'The minimum number of samples contained in a leaf. Default: automatic'})
         return parameters
 
     @staticmethod
@@ -53,7 +56,8 @@ class RandomForest:
             output = reference_data_set.ReferenceDataSet(train, classes)
             input_ = misc.copy_into_memory(input_, as_bool=True)
             output = misc.copy_into_memory(output, as_bool=True)
-            random_forest.train(input_, output, model_path, local_parameters['nr_trees'])
+            random_forest.train(input_, output, model_path, local_parameters['nr_trees'],
+                                local_parameters['min_samples_leaf'])
             target_h5.close()
             preprocessed_h5.close()
             if preprocessed_training_h5 is not None:
