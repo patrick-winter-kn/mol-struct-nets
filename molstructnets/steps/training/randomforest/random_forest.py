@@ -57,7 +57,8 @@ class RandomForest:
             input_ = misc.copy_into_memory(input_, as_bool=True)
             output = misc.copy_into_memory(output, as_bool=True)
             random_forest.train(input_, output, model_path, local_parameters['nr_trees'],
-                                local_parameters['min_samples_leaf'])
+                                local_parameters['min_samples_leaf'],
+                                global_parameters[constants.GlobalParameters.seed])
             target_h5.close()
             preprocessed_h5.close()
             if preprocessed_training_h5 is not None:
