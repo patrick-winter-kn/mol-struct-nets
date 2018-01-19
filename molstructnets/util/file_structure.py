@@ -108,6 +108,7 @@ def get_preprocessed_folder(global_parameters):
 
 def get_preprocessed_training_folder(global_parameters):
     partition = file_util.get_filename(global_parameters[constants.GlobalParameters.partition_data], False)
+    preprocessed = global_parameters[constants.GlobalParameters.preprocessed_data]
     return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
                                      'data_sets',
                                      global_parameters[constants.GlobalParameters.data_set],
@@ -115,7 +116,8 @@ def get_preprocessed_training_folder(global_parameters):
                                      global_parameters[constants.GlobalParameters.target],
                                      'partitions',
                                      partition,
-                                     'preprocessed')
+                                     'preprocessed',
+                                     preprocessed[preprocessed.rfind('/') + 1:preprocessed.rfind('.')])
 
 
 def get_network_file(global_parameters):
