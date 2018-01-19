@@ -27,7 +27,8 @@ class Substructure:
                                           ' true if the first substructure was found in the molecule. Example: a&(b|c).'
                                           ' Default behaviour is a&b&c&... .'})
         parameters.append({'id': 'name', 'name': 'Target Name', 'type': str, 'default': None,
-                           'description': 'Prefix to the filename of the generated target data set. Default: None'})
+                           'description': 'Prefix to the filename of the generated target data set. Default: same as'
+                                          ' substructures'})
         return parameters
 
     @staticmethod
@@ -39,7 +40,11 @@ class Substructure:
         hash_parameters = misc.copy_dict_from_keys(local_parameters, ['substructures', 'logic'])
         file_name = misc.hash_parameters(hash_parameters) + '.h5'
         if local_parameters['name'] is not None:
-            file_name = local_parameters['name'] + '_' + file_name
+            substructure_name = local_parameters['name']
+        else:
+            substructure_name = local_parameters['substructures']
+        substructure_name = substructure_name.replace('/', '')
+        file_name = substructure_name + '_' + file_name
         return file_util.resolve_subpath(file_structure.get_target_folder(global_parameters), file_name)
 
     @staticmethod
