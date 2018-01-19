@@ -22,6 +22,10 @@ class SmilesMatrix:
     @staticmethod
     def get_parameters():
         parameters = list()
+        parameters.append({'id': 'min_length', 'name': 'Minimum Length', 'type': int, 'default': 1, 'min': 1,
+                           'description': 'Minimum number of characters of input SMILES string. If a SMILES string is'
+                                          ' below this value it will be padded with spaces. This value can overwrite'
+                                          ' the Maximum Length parameter. Default: 1'})
         parameters.append({'id': 'max_length', 'name': 'Maximum Length', 'type': int, 'default': None, 'min': 1,
                            'description': 'Maximum number of characters of input SMILES string. If the limit is'
                                           ' exceeded the string will be shortened to fit into the matrix. Default:'
@@ -37,7 +41,7 @@ class SmilesMatrix:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['max_length', 'characters'])
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['min_length', 'max_length', 'characters'])
         file_name = 'smiles_matrix_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -78,17 +82,18 @@ class SmilesMatrix:
             for i in range(len(characters)):
                 index_lookup[characters[i]] = i
                 index[i] = characters[i].encode('utf-8')
-            global_parameters[constants.GlobalParameters.input_dimensions] = (max_length.get_max(), len(index))
+            length = max(max_length.get_max(), local_parameters['min_length'])
+            global_parameters[constants.GlobalParameters.input_dimensions] = (length, len(index))
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
-                                                    (len(smiles_data), max_length.get_max(), len(index)), dtype='I',
-                                                    chunks=(1, max_length.get_max(), len(index)))
+                                                    (len(smiles_data), length, len(index)), dtype='I',
+                                                    chunks=(1, length, len(index)))
             logger.log('Writing matrices')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
                         pool.submit(SmilesMatrix.write_smiles_matrices, preprocessed,
-                                    smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, max_length.get_max(),
-                                    chunk['start'], progress)
+                                    smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, length, chunk['start'],
+                                    progress)
                     pool.wait()
             data_h5.close()
             preprocessed_h5.close()
