@@ -20,7 +20,8 @@ experiments = experiment_batch.load_entries_from_csv(args.batch_csv)
 results = execution_results.ExecutionResults(result_path, len(experiments))
 run_experiment = [sys.executable, sys.argv[0][:sys.argv[0].rfind('/') + 1] + 'run_experiment.py']
 logger.log('\n')
-for i in range(results.size()):
+i = 0
+while i < len(experiments):
     if results.get_status(i) != execution_results.Status.success:
         params = run_experiment + experiments[i].get_execution_arguments()
         retry_text = ''
@@ -38,3 +39,6 @@ for i in range(results.size()):
                 results.set_status(i, execution_results.Status.success)
                 break
         results.save()
+    experiments = experiment_batch.load_entries_from_csv(args.batch_csv)
+    results.update_number_experiments(len(experiments))
+    i += 1

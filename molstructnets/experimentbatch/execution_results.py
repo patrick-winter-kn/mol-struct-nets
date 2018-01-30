@@ -39,3 +39,13 @@ class ExecutionResults:
 
     def set_status(self, index, status):
         self.status[index] = status
+
+    def update_number_experiments(self, number_experiments):
+        if number_experiments != len(self.status):
+            old_status = self.status
+            self.status = list()
+            for i in range(number_experiments):
+                if i < len(old_status):
+                    self.status.append(old_status[i])
+                else:
+                    self.status.append(Status.queued)
