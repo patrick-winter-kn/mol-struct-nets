@@ -17,8 +17,9 @@ class RocCurvePlot:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'method_name', 'name': 'Method Name', 'type': str,
-                           'description': 'Name of the evaluated method that will be shown in the plot.'})
+        parameters.append({'id': 'method_name', 'name': 'Method Name', 'type': str, 'default': None,
+                           'description': 'Name of the evaluated method that will be shown in the plot. Default:'
+                                          ' Partition name'})
         parameters.append({'id': 'shuffle', 'name': 'Shuffle', 'type': bool,
                            'default': True, 'description': 'Shuffles the data before evaluation to counter sorted data'
                                                            ' sets, which can be a problem in cases where the'
@@ -48,6 +49,9 @@ class RocCurvePlot:
         if file_util.file_exists(roc_curve_plot_path):
             logger.log('Skipping step: ' + roc_curve_plot_path + ' already exists')
         else:
+            method_name = local_parameters['method_name']
+            if method_name is None:
+                method_name = local_parameters['partition'].title()
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
@@ -65,13 +69,13 @@ class RocCurvePlot:
                 ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
                 predictions = reference_data_set.ReferenceDataSet(partition,
                                                                   prediction_h5[file_structure.Predictions.prediction])
-            auc_list = roc_curve.plot([predictions], [local_parameters['method_name']], ground_truth,
+            auc_list = roc_curve.plot([predictions], [method_name], ground_truth,
                                                  roc_curve_plot_path, local_parameters['shuffle'],
                                                  global_parameters[constants.GlobalParameters.seed])
             csv_path = file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), 'roc_curve.csv')
             csv = csv_file.CsvFile(csv_path)
             row = dict()
-            row['name'] = local_parameters['method_name']
+            row['name'] = method_name
             row['auc'] = auc_list[0]
             csv.add_row(row)
             csv.save()

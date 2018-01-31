@@ -17,8 +17,9 @@ class EnrichmentPlot:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'method_name', 'name': 'Method Name', 'type': str,
-                           'description': 'Name of the evaluated method that will be shown in the plot.'})
+        parameters.append({'id': 'method_name', 'name': 'Method Name', 'type': str, 'default': None,
+                           'description': 'Name of the evaluated method that will be shown in the plot. Default:'
+                                          ' Partition name'})
         parameters.append({'id': 'enrichment_factors', 'name': 'Enrichment Factors', 'type': str,
                            'default': '5,10', 'regex': '([0-9]+(,[0-9]+)*)?',
                            'description': 'List of enrichment factors in percent. Default: 5%, 10%'})
@@ -51,6 +52,9 @@ class EnrichmentPlot:
         if file_util.file_exists(enrichment_plot_path):
             logger.log('Skipping step: ' + enrichment_plot_path + ' already exists')
         else:
+            method_name = local_parameters['method_name']
+            if method_name is None:
+                method_name = local_parameters['partition'].title()
             enrichment_factors = []
             for enrichment_factor in local_parameters['enrichment_factors'].split(','):
                 enrichment_factors.append(int(enrichment_factor))
@@ -71,13 +75,13 @@ class EnrichmentPlot:
                 ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
                 predictions = reference_data_set.ReferenceDataSet(partition,
                                                                   prediction_h5[file_structure.Predictions.prediction])
-            auc_list, efs_list = enrichment.plot([predictions], [local_parameters['method_name']], ground_truth,
+            auc_list, efs_list = enrichment.plot([predictions], [method_name], ground_truth,
                                                  enrichment_factors, enrichment_plot_path, local_parameters['shuffle'],
                                                  global_parameters[constants.GlobalParameters.seed])
             csv_path = file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), 'enrichment.csv')
             csv = csv_file.CsvFile(csv_path)
             row = dict()
-            row['name'] = local_parameters['method_name']
+            row['name'] = method_name
             row['auc'] = auc_list[0]
             for ef in efs_list[0].keys():
                 row['ef' + str(ef)] = efs_list[0][ef]
