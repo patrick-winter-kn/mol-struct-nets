@@ -135,6 +135,11 @@ def get_evaluation_folder(global_parameters):
                                      'evaluation')
 
 
+def get_evaluation_stats_file(global_parameters):
+    return file_util.resolve_subpath(get_evaluation_folder(global_parameters),
+                                     'stats.csv')
+
+
 def get_interpretation_folder(global_parameters):
     return file_util.resolve_subpath(get_result_folder(global_parameters),
                                      'interpretation')

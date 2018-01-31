@@ -78,14 +78,13 @@ class EnrichmentPlot:
             auc_list, efs_list = enrichment.plot([predictions], [method_name], ground_truth,
                                                  enrichment_factors, enrichment_plot_path, local_parameters['shuffle'],
                                                  global_parameters[constants.GlobalParameters.seed])
-            csv_path = file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), 'enrichment.csv')
+            csv_path = file_structure.get_evaluation_stats_file(global_parameters)
             csv = csv_file.CsvFile(csv_path)
             row = dict()
-            row['name'] = method_name
-            row['auc'] = auc_list[0]
+            row['enrichment_auc'] = auc_list[0]
             for ef in efs_list[0].keys():
                 row['ef' + str(ef)] = efs_list[0][ef]
-            csv.add_row(row)
+            csv.add_row(method_name, row)
             csv.save()
             partition_h5.close()
             target_h5.close()

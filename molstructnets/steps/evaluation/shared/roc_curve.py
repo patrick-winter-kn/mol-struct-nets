@@ -26,7 +26,8 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
     pyplot.plot((0, 1), (0, actives[-1]), ls='-', c='0.75')
     # Plot actives
     for i in range(len(predictions_list)):
-        pyplot.plot(inactives_list[i], actives_list[i], label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
+        pyplot.plot(inactives_list[i], actives_list[i],
+                    label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
     pyplot.ylabel('True Positive Rate')
     pyplot.xlabel('False Positive Rate')
     pyplot.legend(loc='lower right', fancybox=True)

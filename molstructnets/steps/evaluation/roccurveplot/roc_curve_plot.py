@@ -72,12 +72,11 @@ class RocCurvePlot:
             auc_list = roc_curve.plot([predictions], [method_name], ground_truth,
                                                  roc_curve_plot_path, local_parameters['shuffle'],
                                                  global_parameters[constants.GlobalParameters.seed])
-            csv_path = file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), 'roc_curve.csv')
+            csv_path = file_structure.get_evaluation_stats_file(global_parameters)
             csv = csv_file.CsvFile(csv_path)
             row = dict()
-            row['name'] = method_name
-            row['auc'] = auc_list[0]
-            csv.add_row(row)
+            row['roc_curve_auc'] = auc_list[0]
+            csv.add_row(method_name, row)
             csv.save()
             partition_h5.close()
             target_h5.close()
