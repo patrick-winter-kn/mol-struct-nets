@@ -1,5 +1,6 @@
 from steps import repository
 from steps.evaluation.enrichmentplot import enrichment_plot
+from steps.evaluation.roccurveplot import roc_curve_plot
 
 
 class DataGenerationRepository(repository.Repository):
@@ -15,3 +16,4 @@ class DataGenerationRepository(repository.Repository):
 
 instance = DataGenerationRepository()
 instance.add_implementation(enrichment_plot.EnrichmentPlot)
+instance.add_implementation(roc_curve_plot.RocCurvePlot)
