@@ -5,9 +5,6 @@ from util import logger, progressbar, file_util, misc
 import random
 
 
-# TODO change scale from [0,n] to [0,1]
-# TODO different point calculation
-
 def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuffle=True, seed=42):
     actives_list = []
     inactives_list = []
