@@ -23,8 +23,8 @@ class Fingerprint:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 2, 'min': 1,
-                           'description': 'The radius of the fingerprint. Default: 2'})
+        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 4, 'min': 1,
+                           'description': 'The radius of the fingerprint. Default: 4'})
         parameters.append({'id': 'nr_bits', 'name': 'Number of bits', 'type': int, 'default': 1024, 'min': 2,
                            'description': 'The number of bits of the fingerprint. Default: 1024'})
         return parameters
