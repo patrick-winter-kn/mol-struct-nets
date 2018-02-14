@@ -121,3 +121,10 @@ def to_int(string):
         return int(string)
     except:
         return None
+
+
+def normalize(values):
+    offset = -values.min()
+    factor = 1 / (values.max() + offset)
+    for i in range(len(values)):
+        values[i] = (values[i] + offset) * factor

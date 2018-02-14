@@ -81,6 +81,7 @@ class ExtractAttentionSubstructures:
             substructures_occurrences_dataset_name = 'active_substructures_occurrences'
             substructures_value_dataset_name = 'active_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'active_substructures_number_heavy_atoms'
+            substructures_score_dataset_name = 'active_substructures_score'
         else:
             log_message = 'Extracting inactive attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
@@ -89,6 +90,7 @@ class ExtractAttentionSubstructures:
             substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
             substructures_value_dataset_name = 'inactive_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'inactive_substructures_number_heavy_atoms'
+            substructures_score_dataset_name = 'inactive_substructures_score'
         attention_map = attention_map_h5[attention_map_dataset_name]
         if attention_map_indices_dataset_name in attention_map_h5.keys():
             indices = attention_map_h5[attention_map_indices_dataset_name]
@@ -113,7 +115,7 @@ class ExtractAttentionSubstructures:
                                 local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations)
                 pool.wait()
         substructures_dict = substructures.get_dict()
-        substructures = sorted(substructures_dict.keys())
+        substructures = list(substructures_dict.keys())
         max_length = 0
         for smiles_string in substructures:
             max_length = max(max_length, len(smiles_string))
@@ -128,12 +130,33 @@ class ExtractAttentionSubstructures:
         substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_number_heavy_atoms_dataset_name,
                                                                (len(substructures),), dtype='I')
+        substructures_score_dataset = hdf5_util.create_dataset(attention_substructures_h5,
+                                                               substructures_score_dataset_name, (len(substructures),))
+        occurences = numpy.zeros(len(substructures))
+        values = numpy.zeros(len(substructures))
+        number_heavy_atoms = numpy.zeros(len(substructures))
         for i in range(len(substructures)):
-            substructures_dataset[i] = substructures[i].encode()
             substructure = substructures_dict[substructures[i]]
+            occurences[i] = substructure.get_occurrences()
+            values[i] = substructure.get_mean_value()
+            number_heavy_atoms[i] = substructure.get_number_heavy_atoms()
+        misc.normalize(occurences)
+        misc.normalize(values)
+        misc.normalize(number_heavy_atoms)
+        scores = numpy.zeros(len(substructures))
+        for i in range(len(substructures)):
+            scores[i] = occurences[i] * values[i] * number_heavy_atoms[i]
+        misc.normalize(scores)
+        sorted_indices = scores.argsort()[::-1]
+        i = 0
+        for j in sorted_indices:
+            substructures_dataset[i] = substructures[j].encode()
+            substructure = substructures_dict[substructures[j]]
             substructures_occurrences_dataset[i] = substructure.get_occurrences()
             substructures_value_dataset[i] = substructure.get_mean_value()
             substructures_number_heavy_atoms_dataset[i] = substructure.get_number_heavy_atoms()
+            substructures_score_dataset[i] = scores[j]
+            i += 1
 
     @staticmethod
     def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None):
