@@ -80,7 +80,7 @@ class ExtractAttentionSubstructures:
             substructures_dataset_name = 'active_substructures'
             substructures_occurrences_dataset_name = 'active_substructures_occurrences'
             substructures_value_dataset_name = 'active_substructures_value'
-            substructures_score_dataset_name = 'active_substructures_score'
+            substructures_number_heavy_atoms_dataset_name = 'active_substructures_number_heavy_atoms'
         else:
             log_message = 'Extracting inactive attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
@@ -88,7 +88,7 @@ class ExtractAttentionSubstructures:
             substructures_dataset_name = 'inactive_substructures'
             substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
             substructures_value_dataset_name = 'inactive_substructures_value'
-            substructures_score_dataset_name = 'inactive_substructures_score'
+            substructures_number_heavy_atoms_dataset_name = 'inactive_substructures_number_heavy_atoms'
         attention_map = attention_map_h5[attention_map_dataset_name]
         if attention_map_indices_dataset_name in attention_map_h5.keys():
             indices = attention_map_h5[attention_map_indices_dataset_name]
@@ -125,14 +125,15 @@ class ExtractAttentionSubstructures:
                                                                      (len(substructures),), dtype='I')
         substructures_value_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_value_dataset_name, (len(substructures),))
-        substructures_score_dataset = hdf5_util.create_dataset(attention_substructures_h5,
-                                                               substructures_score_dataset_name, (len(substructures),))
+        substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(attention_substructures_h5,
+                                                               substructures_number_heavy_atoms_dataset_name,
+                                                               (len(substructures),), dtype='I')
         for i in range(len(substructures)):
             substructures_dataset[i] = substructures[i].encode()
             substructure = substructures_dict[substructures[i]]
             substructures_occurrences_dataset[i] = substructure.get_occurrences()
             substructures_value_dataset[i] = substructure.get_mean_value()
-            substructures_score_dataset[i] = substructure.get_score()
+            substructures_number_heavy_atoms_dataset[i] = substructure.get_number_heavy_atoms()
 
     @staticmethod
     def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None):

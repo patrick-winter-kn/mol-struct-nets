@@ -1,4 +1,5 @@
 import threading
+from rdkit import Chem
 
 
 class SubstructureSet:
@@ -25,6 +26,7 @@ class Substructure:
         self.smiles = smiles
         self.value_sum = value
         self.occurrences = 1
+        self.number_heavy_atoms = Chem.MolFromSmiles(smiles, sanitize=False).GetNumHeavyAtoms()
 
     def add_occurrence(self, value):
         self.occurrences += 1
@@ -39,6 +41,5 @@ class Substructure:
     def get_mean_value(self):
         return self.value_sum / self.occurrences
 
-    def get_score(self):
-        # occurrences * mean_value, which is the same as value_sum
-        return self.value_sum
+    def get_number_heavy_atoms(self):
+        return self.number_heavy_atoms
