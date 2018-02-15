@@ -41,7 +41,7 @@ class Substructure:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['substructures', 'logic'])
+        hash_parameters = misc.copy_dict_from_keys(local_parameters, ['substructures', 'logic', 'error'])
         file_name = misc.hash_parameters(hash_parameters) + '.h5'
         if local_parameters['name'] is not None:
             substructure_name = local_parameters['name']
