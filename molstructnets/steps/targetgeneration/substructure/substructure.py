@@ -2,6 +2,7 @@ from util import data_validation, file_structure, file_util, misc, progressbar, 
     hdf5_util
 from rdkit import Chem
 import h5py
+import random
 
 
 number_threads = 1
@@ -29,6 +30,9 @@ class Substructure:
         parameters.append({'id': 'name', 'name': 'Target Name', 'type': str, 'default': None,
                            'description': 'Prefix to the filename of the generated target data set. Default: same as'
                                           ' substructures'})
+        parameters.append({'id': 'error', 'name': 'Error probability', 'type': int, 'default': 0,
+                           'description': 'Probability in percent that a molecule is assigned to the wrong class.'
+                                          ' Default: 0%'})
         return parameters
 
     @staticmethod
@@ -71,12 +75,15 @@ class Substructure:
                 for i in range(1, len(substructures)):
                     logic += '&' + chr(ord('a')+i)
             chunks = misc.chunk(len(smiles_data), number_threads)
+            error = local_parameters['error'] * 0.01
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
-                    for chunk in chunks:
+                    for i in range(len(chunks)):
+                        chunk = chunks[i]
                         pool.submit(Substructure._generate_activities,
                                     smiles_data[chunk['start']:chunk['end'] + 1], substructures, logic, classes,
-                                    chunk['start'], progress)
+                                    chunk['start'], error, global_parameters[constants.GlobalParameters.seed] + i,
+                                    progress)
                     pool.wait()
             data_h5.close()
             target_h5.close()
@@ -85,7 +92,8 @@ class Substructure:
             file_util.move_file(temp_target_path, target_path)
 
     @staticmethod
-    def _generate_activities(smiles_data, substructures, logic, classes, offset, progress):
+    def _generate_activities(smiles_data, substructures, logic, classes, offset, error, random_seed, progress):
+        random_ = random.Random(random_seed)
         for i in range(len(smiles_data)):
             structure = Chem.MolFromSmiles(smiles_data[i].decode('utf-8'), sanitize=False)
             evals = []
@@ -98,7 +106,10 @@ class Substructure:
                     expression += str(evals[index])
                 else:
                     expression += character
-            if eval(expression):
+            active = eval(expression)
+            if random_.random() < error:
+                active = not active
+            if active:
                 classes[i + offset, 0] = 1.0
                 classes[i + offset, 1] = 0.0
             else:
