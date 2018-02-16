@@ -253,5 +253,5 @@ class ExtractAttentionSubstructures:
             for substructure_smiles in substructures_dict.keys():
                 substructure = Chem.MolFromSmiles(substructure_smiles, sanitize=False)
                 found = len(molecule.GetSubstructMatches(substructure))
-                substructures_dict[substructure_smiles].add_possible_occurrences(found)
+                substructures_dict[substructure_smiles].add_possible_occurrence(found)
             progress.increment()
