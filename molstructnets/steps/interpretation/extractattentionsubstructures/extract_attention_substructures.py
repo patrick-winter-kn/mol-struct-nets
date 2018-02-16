@@ -146,17 +146,19 @@ class ExtractAttentionSubstructures:
         substructures_score_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_score_dataset_name, (len(substructures),))
         occurences = numpy.zeros(len(substructures))
-        possible_occurences = numpy.zeros(len(substructures))
         values = numpy.zeros(len(substructures))
+        number_heavy_atoms = numpy.zeros(len(substructures))
         for i in range(len(substructures)):
             substructure = substructures_dict[substructures[i]]
             occurences[i] = substructure.get_occurrences()
-            possible_occurences[i] = substructure.get_possible_occurrences()
             values[i] = substructure.get_mean_value()
+            number_heavy_atoms[i] = substructure.get_number_heavy_atoms()
+        misc.normalize(occurences)
         misc.normalize(values)
+        misc.normalize(number_heavy_atoms)
         scores = numpy.zeros(len(substructures))
         for i in range(len(substructures)):
-            scores[i] = (occurences[i] / possible_occurences[i]) * values[i]
+            scores[i] = occurences[i] * values[i] * number_heavy_atoms[i]
         misc.normalize(scores)
         sorted_indices = scores.argsort()[::-1]
         i = 0
