@@ -79,7 +79,6 @@ class ExtractAttentionSubstructures:
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_active_indices
             substructures_dataset_name = 'active_substructures'
             substructures_occurrences_dataset_name = 'active_substructures_occurrences'
-            substructures_possible_occurrences_dataset_name = 'active_substructures_possible_occurrences'
             substructures_value_dataset_name = 'active_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'active_substructures_number_heavy_atoms'
             substructures_score_dataset_name = 'active_substructures_score'
@@ -89,7 +88,6 @@ class ExtractAttentionSubstructures:
             attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_inactive_indices
             substructures_dataset_name = 'inactive_substructures'
             substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
-            substructures_possible_occurrences_dataset_name = 'inactive_substructures_possible_occurrences'
             substructures_value_dataset_name = 'inactive_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'inactive_substructures_number_heavy_atoms'
             substructures_score_dataset_name = 'inactive_substructures_score'
@@ -110,19 +108,11 @@ class ExtractAttentionSubstructures:
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = substructure_set.SubstructureSet()
         chunks = misc.chunk(len(smiles), number_threads)
-        logger.log('Extracting substructures')
         with progressbar.ProgressBar(len(indices)) as progress:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
                     pool.submit(ExtractAttentionSubstructures.extract, attention_map, indices, smiles, substructures,
                                 local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations)
-                pool.wait()
-        logger.log('Counting possible occurrences')
-        with progressbar.ProgressBar(len(indices)) as progress:
-            with thread_pool.ThreadPool(number_threads) as pool:
-                for chunk in chunks:
-                    pool.submit(ExtractAttentionSubstructures.extract_possible_occurrences, attention_map, indices,
-                                smiles, substructures, chunk['start'], chunk['end'], progress)
                 pool.wait()
         substructures_dict = substructures.get_dict()
         substructures = list(substructures_dict.keys())
@@ -134,9 +124,6 @@ class ExtractAttentionSubstructures:
                                                          (len(substructures),), dtype=dtype)
         substructures_occurrences_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                      substructures_occurrences_dataset_name,
-                                                                     (len(substructures),), dtype='I')
-        substructures_possible_occurrences_dataset = hdf5_util.create_dataset(attention_substructures_h5,
-                                                                     substructures_possible_occurrences_dataset_name,
                                                                      (len(substructures),), dtype='I')
         substructures_value_dataset = hdf5_util.create_dataset(attention_substructures_h5,
                                                                substructures_value_dataset_name, (len(substructures),))
@@ -166,7 +153,6 @@ class ExtractAttentionSubstructures:
             substructures_dataset[i] = substructures[j].encode()
             substructure = substructures_dict[substructures[j]]
             substructures_occurrences_dataset[i] = substructure.get_occurrences()
-            substructures_possible_occurrences_dataset[i] = substructure.get_possible_occurrences()
             substructures_value_dataset[i] = substructure.get_mean_value()
             substructures_number_heavy_atoms_dataset[i] = substructure.get_number_heavy_atoms()
             substructures_score_dataset[i] = scores[j]
@@ -245,15 +231,3 @@ class ExtractAttentionSubstructures:
             value_mean = value_sum/len(indices)
             smiles = Chem.MolFragmentToSmiles(molecule, indices)
             substructure.add_substructure(smiles, value_mean)
-
-    @staticmethod
-    def extract_possible_occurrences(attention_map, indices, smiles, substructures, start, end, progress):
-        substructures_dict = substructures.get_dict()
-        for i in indices[start:end+1]:
-            smiles_string = smiles[i].decode('utf-8')
-            molecule = Chem.MolFromSmiles(smiles_string)
-            for substructure_smiles in substructures_dict.keys():
-                substructure = Chem.MolFromSmiles(substructure_smiles, sanitize=False)
-                found = len(molecule.GetSubstructMatches(substructure))
-                substructures_dict[substructure_smiles].add_possible_occurrence(found)
-            progress.increment()

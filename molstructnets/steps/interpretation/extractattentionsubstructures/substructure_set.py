@@ -27,26 +27,16 @@ class Substructure:
         self.value_sum = value
         self.occurrences = 1
         self.number_heavy_atoms = Chem.MolFromSmiles(smiles, sanitize=False).GetNumHeavyAtoms()
-        self.possible_occurrences = 0
-        self.lock = threading.Lock()
 
     def add_occurrence(self, value):
         self.occurrences += 1
         self.value_sum += value
-
-    def add_possible_occurrence(self, n=1):
-        self.lock.acquire()
-        self.possible_occurrences += n
-        self.lock.release()
 
     def get_smiles(self):
         return self.smiles
 
     def get_occurrences(self):
         return self.occurrences
-
-    def get_possible_occurrences(self):
-        return self.possible_occurrences
 
     def get_mean_value(self):
         return self.value_sum / self.occurrences
