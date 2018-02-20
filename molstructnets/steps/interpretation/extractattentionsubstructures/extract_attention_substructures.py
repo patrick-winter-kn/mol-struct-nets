@@ -6,7 +6,7 @@ from rdkit import Chem
 import numpy
 
 
-number_threads = thread_pool.default_number_threads
+number_threads = 1
 
 
 class ExtractAttentionSubstructures:
