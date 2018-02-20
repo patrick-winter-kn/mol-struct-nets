@@ -68,7 +68,7 @@ class SmilesMatrix:
                     characters.add(character)
             max_length = concurrent_max.ConcurrentMax()
             if local_parameters['max_length'] is not None:
-                max_length.add_value(local_parameters['max_length'])
+                max_length.add(local_parameters['max_length'])
             logger.log('Analyzing SMILES')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
@@ -104,7 +104,7 @@ class SmilesMatrix:
         characters.add(' ')
         for string in smiles_data:
             string = string.decode('utf-8')
-            max_length.add_value(len(string))
+            max_length.add(len(string))
             for character in string:
                 characters.add(character)
             progress.increment()

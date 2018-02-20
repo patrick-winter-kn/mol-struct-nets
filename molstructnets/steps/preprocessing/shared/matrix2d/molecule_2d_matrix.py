@@ -26,7 +26,7 @@ def get_bond_symbol(bond_type):
 
 
 def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
-                          transformer_=None, random_=None):
+                          transformer_=None, random_=None, flip=False, rotation=0):
     # We redo this if the transformation size does not fit
     while True:
         preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
@@ -45,7 +45,7 @@ def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shap
             position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
             x = position.x
             y = position.y
-            if transformer_ is not None and random_ is not None:
+            if transformer_ is not None:
                 x, y = transformer_.apply(x, y, flip, rotation)
             x, y = rasterizer_.apply(x, y)
             # Check if coordinates fit into the shape

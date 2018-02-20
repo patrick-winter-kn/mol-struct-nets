@@ -8,7 +8,7 @@ class ConcurrentMin:
         self.min = None
         self.lock = threading.Lock()
 
-    def add_value(self, value):
+    def add(self, value):
         if value is not None and self.min is None or value < self.min:
             self.lock.acquire()
             self.min = misc.minimum(self.min, value)

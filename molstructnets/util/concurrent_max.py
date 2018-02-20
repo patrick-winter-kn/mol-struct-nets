@@ -8,7 +8,7 @@ class ConcurrentMax:
         self.max = None
         self.lock = threading.Lock()
 
-    def add_value(self, value):
+    def add(self, value):
         if value is not None and self.max is None or value > self.max:
             self.lock.acquire()
             self.max = misc.maximum(self.max, value)

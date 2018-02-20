@@ -137,7 +137,7 @@ class Matrix2D:
             smiles = smiles.decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             AllChem.Compute2DCoords(molecule)
-            max_nr_atoms.add_value(len(molecule.GetAtoms()))
+            max_nr_atoms.add(len(molecule.GetAtoms()))
             for atom in molecule.GetAtoms():
                 symbols.add(atom.GetSymbol())
                 position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
@@ -147,17 +147,18 @@ class Matrix2D:
                 local_max_x = misc.maximum(local_max_x, x)
                 local_min_y = misc.minimum(local_min_y, y)
                 local_max_y = misc.maximum(local_max_y, y)
-            min_x.add_value(local_min_x)
-            max_x.add_value(local_max_x)
-            min_y.add_value(local_min_y)
-            max_y.add_value(local_max_y)
+            min_x.add(local_min_x)
+            max_x.add(local_max_x)
+            min_y.add(local_min_y)
+            max_y.add(local_max_y)
             # Warn about very big molecules
             size_x = local_max_x - local_min_x
             size_y = local_max_y - local_min_y
             if size_x > soft_limit or size_y > soft_limit:
                 logger.log('Encountered big molecule with size ' + str(size_x) + '×' + str(size_y) + ': '
                            + smiles, logger.LogLevel.WARNING)
-            progress.increment()
+            if progress is not None:
+                progress.increment()
 
     @staticmethod
     def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer_, offset, progress):
