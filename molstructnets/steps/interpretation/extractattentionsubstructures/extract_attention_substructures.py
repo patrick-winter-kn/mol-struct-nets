@@ -6,7 +6,7 @@ from rdkit import Chem
 import numpy
 
 
-number_threads = 1
+number_threads = thread_pool.default_number_threads
 
 
 class ExtractAttentionSubstructures:
@@ -29,6 +29,9 @@ class ExtractAttentionSubstructures:
                            'options': ['train', 'test', 'both'],
                            'description': 'The partition that the substructures will be extracted from. Options are:'
                                           ' train, test or both partitions. Default: both'})
+        parameters.append({'id': 'weighted', 'name': 'Weighted by Probability', 'type': bool, 'default': False,
+                           'description': 'If enabled the activation value will be weighted by the probability before'
+                                          ' the threshold is applied. Default: False'})
         return parameters
 
     @staticmethod
@@ -48,6 +51,11 @@ class ExtractAttentionSubstructures:
         else:
             attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+            if local_parameters['weighted']:
+                predictions_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
+                predictions = predictions_h5[file_structure.Predictions.prediction]
+            else:
+                predictions = None
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             if file_structure.Preprocessed.atom_locations in preprocessed_h5.keys():
                 atom_locations = preprocessed_h5[file_structure.Preprocessed.atom_locations]
@@ -60,19 +68,21 @@ class ExtractAttentionSubstructures:
             if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
                 ExtractAttentionSubstructures.extract_attention_map_substructures(
                     attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
-                    True, atom_locations)
+                    True, atom_locations, predictions)
             if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
                 ExtractAttentionSubstructures.extract_attention_map_substructures(
                     attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
-                    False, atom_locations)
+                    False, atom_locations, predictions)
             attention_substructures_h5.close()
             file_util.move_file(temp_attention_substructures_path, attention_substructures_path)
             attention_map_h5.close()
             data_h5.close()
+            if predictions_h5 is not None:
+                predictions_h5.close()
 
     @staticmethod
     def extract_attention_map_substructures(attention_map_h5, smiles, global_parameters, local_parameters,
-                                            attention_substructures_h5, active, atom_locations=None):
+                                            attention_substructures_h5, active, atom_locations=None, predictions=None):
         if active:
             log_message = 'Extracting active attention substructures'
             attention_map_dataset_name = file_structure.AttentionMap.attention_map_active
@@ -108,11 +118,19 @@ class ExtractAttentionSubstructures:
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = substructure_set.SubstructureSet()
         chunks = misc.chunk(len(smiles), number_threads)
+        if predictions is not None:
+            if active:
+                probabilities = predictions[:,0]
+            else:
+                probabilities = predictions[:,1]
+        else:
+            probabilities = None
         with progressbar.ProgressBar(len(indices)) as progress:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
                     pool.submit(ExtractAttentionSubstructures.extract, attention_map, indices, smiles, substructures,
-                                local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations)
+                                local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations,
+                                probabilities)
                 pool.wait()
         substructures_dict = substructures.get_dict()
         substructures = list(substructures_dict.keys())
@@ -159,15 +177,20 @@ class ExtractAttentionSubstructures:
             i += 1
 
     @staticmethod
-    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None):
+    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None,
+                probabilities=None):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
             if atom_locations is not None:
                 locations = atom_locations[i]
             else:
                 locations = None
+            if probabilities is not None:
+                probability = probabilities[i]
+            else:
+                probability = None
             atom_indices, values = ExtractAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold,
-                                                                            locations)
+                                                                            locations, probability)
             if len(atom_indices) > 0:
                 molecule = Chem.MolFromSmiles(smiles_string)
                 ExtractAttentionSubstructures.add_substructures(molecule, atom_indices, values, substructures)
@@ -191,7 +214,7 @@ class ExtractAttentionSubstructures:
         return picked_indices, values
 
     @staticmethod
-    def pick_atoms(attention_map, smiles_string, threshold, atom_locations=None):
+    def pick_atoms(attention_map, smiles_string, threshold, atom_locations=None, probability=None):
         if atom_locations is None:
             return ExtractAttentionSubstructures.pick_atoms_smiles(attention_map, smiles_string, threshold)
         else:
@@ -202,6 +225,8 @@ class ExtractAttentionSubstructures:
                     break
                 location = tuple(atom_locations[i])
                 value = attention_map[location]
+                if probability is not None:
+                    value *= probability
                 if value >= threshold:
                     picked_indices.append(i)
                     values.append(value)
