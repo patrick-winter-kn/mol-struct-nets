@@ -12,10 +12,11 @@ def get_arguments():
     parser.add_argument('smiles', type=str, help='The SMILES string')
     parser.add_argument('path', type=str, help='The path to the output file')
     parser.add_argument('--scale', type=float, default=2.0, help='Scaling factor')
-    parser.add_argument('--square', type=bool, default=True, help='If high should equal width')
+    parser.add_argument('--not_square', default=False, action='store_true',
+                        help='If enabled hight will not equal width')
     parser.add_argument('--padding', type=int, default=molecule_2d_matrix.padding, help='Padding around the edges')
     parser.add_argument('--rotation', type=int, default=0, help='Angle for rotation')
-    parser.add_argument('--flip', type=bool, default=False, help='If the layout should be flipped')
+    parser.add_argument('--flip', default=False, action='store_true', help='If the layout should be flipped')
     return parser.parse_args()
 
 args = get_arguments()
@@ -38,7 +39,7 @@ min_x = min(min_x)
 min_y = min(min_y)
 max_x = max(max_x)
 max_y = max(max_y)
-rasterizer_ = rasterizer.Rasterizer(args.scale, args.padding, min_x, max_x, min_y, max_y, args.square)
+rasterizer_ = rasterizer.Rasterizer(args.scale, args.padding, min_x, max_x, min_y, max_y, not args.not_square)
 transformer_ = transformer.Transformer(min_x, max_x, min_y, max_y)
 preprocessed_shape = (1, rasterizer_.size_x, rasterizer_.size_y, len(index_lookup))
 preprocessed_row =\
