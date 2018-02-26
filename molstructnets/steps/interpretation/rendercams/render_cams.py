@@ -1,22 +1,22 @@
 import h5py
 
 from steps.interpretation.shared import matrix_2d_renderer, smiles_renderer
-from steps.interpretation.shared.kerasviz import attention_map
+from steps.interpretation.shared.kerasviz import cam
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, constants
 
 
 number_threads = thread_pool.default_number_threads
 
 
-class RenderAttentionMaps:
+class RenderCams:
 
     @staticmethod
     def get_id():
-        return 'render_attention_maps'
+        return 'render_cams'
 
     @staticmethod
     def get_name():
-        return 'Render Attention Maps'
+        return 'Render CAMs'
 
     @staticmethod
     def get_parameters():
@@ -31,11 +31,11 @@ class RenderAttentionMaps:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_preprocessed(global_parameters)
-        data_validation.validate_attention_map(global_parameters)
+        data_validation.validate_cam(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
+        cam_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
         smiles = data_h5[file_structure.DataSet.smiles]
         preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
@@ -49,41 +49,41 @@ class RenderAttentionMaps:
                 renderer = '2d'
             else:
                 raise ValueError('Unsupported dimensionality for rendering')
-        if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
+        if file_structure.Cam.cam_active in cam_h5.keys():
             active_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
-                                                        'rendered_attention_active')
+                                                        'rendered_cams_active')
             file_util.make_folders(active_dir_path, True)
-            attention_map_active = attention_map_h5[file_structure.AttentionMap.attention_map_active]
-            if file_structure.AttentionMap.attention_map_active_indices in attention_map_h5.keys():
-                indices = attention_map_h5[file_structure.AttentionMap.attention_map_active_indices]
+            cam_active = cam_h5[file_structure.Cam.cam_active]
+            if file_structure.Cam.cam_active_indices in cam_h5.keys():
+                indices = cam_h5[file_structure.Cam.cam_active_indices]
             else:
-                indices = range(len(attention_map_active))
-            logger.log('Rendering active attention maps', logger.LogLevel.INFO)
+                indices = range(len(cam_active))
+            logger.log('Rendering active CAMs', logger.LogLevel.INFO)
             chunks = misc.chunk(len(preprocessed), number_threads)
             with progressbar.ProgressBar(len(indices)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(RenderAttentionMaps.render, preprocessed, attention_map_active, indices, smiles,
+                        pool.submit(RenderCams.render, preprocessed, cam_active, indices, smiles,
                                     symbols, active_dir_path, renderer, chunk['start'], chunk['end'], progress)
                     pool.wait()
-        if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
+        if file_structure.Cam.cam_inactive in cam_h5.keys():
             inactive_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
-                                                          'rendered_attention_inactive')
+                                                          'rendered_cams_inactive')
             file_util.make_folders(inactive_dir_path, True)
-            attention_map_inactive = attention_map_h5[file_structure.AttentionMap.attention_map_inactive]
-            if file_structure.AttentionMap.attention_map_inactive_indices in attention_map_h5.keys():
-                indices = attention_map_h5[file_structure.AttentionMap.attention_map_inactive_indices]
+            cam_inactive = cam_h5[file_structure.Cam.cam_inactive]
+            if file_structure.Cam.cam_inactive_indices in cam_h5.keys():
+                indices = cam_h5[file_structure.Cam.cam_inactive_indices]
             else:
-                indices = range(attention_map_inactive)
-            logger.log('Rendering inactive attention maps', logger.LogLevel.INFO)
+                indices = range(cam_inactive)
+            logger.log('Rendering inactive CAMs', logger.LogLevel.INFO)
             chunks = misc.chunk(len(preprocessed), number_threads)
             with progressbar.ProgressBar(len(indices)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(RenderAttentionMaps.render, preprocessed, attention_map_inactive, indices, smiles,
+                        pool.submit(RenderCams.render, preprocessed, cam_inactive, indices, smiles,
                                     symbols, inactive_dir_path, renderer, chunk['start'], chunk['end'], progress)
                     pool.wait()
-        attention_map_h5.close()
+        cam_h5.close()
         preprocessed_h5.close()
         data_h5.close()
 
@@ -93,7 +93,7 @@ class RenderAttentionMaps:
                 output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svgz')
                 if not file_util.file_exists(output_path):
                     smiles_string = smiles[i].decode('utf-8')
-                    heatmap = attention_map.array_to_heatmap([data_set[i]])
+                    heatmap = cam.array_to_heatmap([data_set[i]])
                     if renderer == 'smiles':
                         smiles_renderer.render(smiles_string, output_path, 5, heatmap)
                     elif renderer == '2d':

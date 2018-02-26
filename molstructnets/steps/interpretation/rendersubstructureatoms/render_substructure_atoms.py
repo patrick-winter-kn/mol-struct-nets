@@ -33,11 +33,11 @@ class RenderSubstructureAtoms:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_preprocessed(global_parameters)
-        data_validation.validate_attention_map(global_parameters)
+        data_validation.validate_cam(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
+        attention_map_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
         data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
         smiles = data_h5[file_structure.DataSet.smiles]
         preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
@@ -54,7 +54,7 @@ class RenderSubstructureAtoms:
         active_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
                                                     'rendered_substructure_atoms')
         file_util.make_folders(active_dir_path, True)
-        substructure_atoms = attention_map_h5[file_structure.AttentionMap.substructure_atoms]
+        substructure_atoms = attention_map_h5[file_structure.Cam.substructure_atoms]
         indices = range(len(substructure_atoms))
         logger.log('Rendering substructure atoms', logger.LogLevel.INFO)
         chunks = misc.chunk(len(preprocessed), number_threads)

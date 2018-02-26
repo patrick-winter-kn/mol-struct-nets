@@ -1,5 +1,5 @@
 import h5py
-from steps.interpretation.extractattentionsubstructures import substructure_set
+from steps.interpretation.extractcamsubstructures import substructure_set
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
     smiles_analyzer, constants
 from rdkit import Chem
@@ -9,21 +9,21 @@ import numpy
 number_threads = 1
 
 
-class ExtractAttentionSubstructures:
+class ExtractCamSubstructures:
 
     @staticmethod
     def get_id():
-        return 'extract_attention_substructures'
+        return 'extract_cam_substructures'
 
     @staticmethod
     def get_name():
-        return 'Extract Attention Substructures'
+        return 'Extract CAM Substructures'
 
     @staticmethod
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25, 'min': 0.0,
-                           'max': 1.0, 'description': 'The threshold used to decide which parts of the attention map'
+                           'max': 1.0, 'description': 'The threshold used to decide which parts of the CAM'
                                                       ' are interpreted as part of the substructure.'})
         parameters.append({'id': 'partition', 'name': 'Partition', 'type': str, 'default': 'both',
                            'options': ['train', 'test', 'both'],
@@ -38,18 +38,18 @@ class ExtractAttentionSubstructures:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_preprocessed(global_parameters)
-        data_validation.validate_attention_map(global_parameters)
+        data_validation.validate_cam(global_parameters)
         if local_parameters['partition'] != 'both':
             data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_substructures_path = file_util.resolve_subpath(
-            file_structure.get_interpretation_folder(global_parameters), 'attention_substructures.h5')
-        if file_util.file_exists(attention_substructures_path):
-            logger.log('Skipping step: ' + attention_substructures_path + ' already exists')
+        cam_substructures_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'cam_substructures.h5')
+        if file_util.file_exists(cam_substructures_path):
+            logger.log('Skipping step: ' + cam_substructures_path + ' already exists')
         else:
-            attention_map_h5 = h5py.File(file_structure.get_attentionmap_file(global_parameters), 'r')
+            cam_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             if local_parameters['weighted']:
                 predictions_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
@@ -62,50 +62,50 @@ class ExtractAttentionSubstructures:
             else:
                 atom_locations = None
             smiles = data_h5[file_structure.DataSet.smiles]
-            temp_attention_substructures_path = file_util.get_temporary_file_path(
-                'attention_substructures')
-            attention_substructures_h5 = h5py.File(temp_attention_substructures_path, 'w')
-            if file_structure.AttentionMap.attention_map_active in attention_map_h5.keys():
-                ExtractAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
+            temp_cam_substructures_path = file_util.get_temporary_file_path(
+                'cam_substructures')
+            cam_substructures_h5 = h5py.File(temp_cam_substructures_path, 'w')
+            if file_structure.Cam.cam_active in cam_h5.keys():
+                ExtractCamSubstructures.extract_cam_substructures(
+                    cam_h5, smiles, global_parameters, local_parameters, cam_substructures_h5,
                     True, atom_locations, predictions)
-            if file_structure.AttentionMap.attention_map_inactive in attention_map_h5.keys():
-                ExtractAttentionSubstructures.extract_attention_map_substructures(
-                    attention_map_h5, smiles, global_parameters, local_parameters, attention_substructures_h5,
+            if file_structure.Cam.cam_inactive in cam_h5.keys():
+                ExtractCamSubstructures.extract_cam_substructures(
+                    cam_h5, smiles, global_parameters, local_parameters, cam_substructures_h5,
                     False, atom_locations, predictions)
-            attention_substructures_h5.close()
-            file_util.move_file(temp_attention_substructures_path, attention_substructures_path)
-            attention_map_h5.close()
+            cam_substructures_h5.close()
+            file_util.move_file(temp_cam_substructures_path, cam_substructures_path)
+            cam_h5.close()
             data_h5.close()
             if predictions_h5 is not None:
                 predictions_h5.close()
 
     @staticmethod
-    def extract_attention_map_substructures(attention_map_h5, smiles, global_parameters, local_parameters,
-                                            attention_substructures_h5, active, atom_locations=None, predictions=None):
+    def extract_cam_substructures(cam_h5, smiles, global_parameters, local_parameters,
+                                  cam_substructures_h5, active, atom_locations=None, predictions=None):
         if active:
-            log_message = 'Extracting active attention substructures'
-            attention_map_dataset_name = file_structure.AttentionMap.attention_map_active
-            attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_active_indices
+            log_message = 'Extracting active CAM substructures'
+            cam_dataset_name = file_structure.Cam.cam_active
+            cam_indices_dataset_name = file_structure.Cam.cam_active_indices
             substructures_dataset_name = 'active_substructures'
             substructures_occurrences_dataset_name = 'active_substructures_occurrences'
             substructures_value_dataset_name = 'active_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'active_substructures_number_heavy_atoms'
             substructures_score_dataset_name = 'active_substructures_score'
         else:
-            log_message = 'Extracting inactive attention substructures'
-            attention_map_dataset_name = file_structure.AttentionMap.attention_map_inactive
-            attention_map_indices_dataset_name = file_structure.AttentionMap.attention_map_inactive_indices
+            log_message = 'Extracting inactive CAM substructures'
+            cam_dataset_name = file_structure.Cam.cam_inactive
+            cam_indices_dataset_name = file_structure.Cam.cam_inactive_indices
             substructures_dataset_name = 'inactive_substructures'
             substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
             substructures_value_dataset_name = 'inactive_substructures_value'
             substructures_number_heavy_atoms_dataset_name = 'inactive_substructures_number_heavy_atoms'
             substructures_score_dataset_name = 'inactive_substructures_score'
-        attention_map = attention_map_h5[attention_map_dataset_name]
-        if attention_map_indices_dataset_name in attention_map_h5.keys():
-            indices = attention_map_h5[attention_map_indices_dataset_name]
+        cam = cam_h5[cam_dataset_name]
+        if cam_indices_dataset_name in cam_h5.keys():
+            indices = cam_h5[cam_indices_dataset_name]
         else:
-            indices = range(len(attention_map))
+            indices = range(len(cam))
         if local_parameters['partition'] != 'both':
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
@@ -128,7 +128,7 @@ class ExtractAttentionSubstructures:
         with progressbar.ProgressBar(len(indices)) as progress:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
-                    pool.submit(ExtractAttentionSubstructures.extract, attention_map, indices, smiles, substructures,
+                    pool.submit(ExtractCamSubstructures.extract, cam, indices, smiles, substructures,
                                 local_parameters['threshold'], chunk['start'], chunk['end'], progress, atom_locations,
                                 probabilities)
                 pool.wait()
@@ -138,17 +138,17 @@ class ExtractAttentionSubstructures:
         for smiles_string in substructures:
             max_length = max(max_length, len(smiles_string))
         dtype = 'S' + str(max(max_length, 1))
-        substructures_dataset = hdf5_util.create_dataset(attention_substructures_h5, substructures_dataset_name,
+        substructures_dataset = hdf5_util.create_dataset(cam_substructures_h5, substructures_dataset_name,
                                                          (len(substructures),), dtype=dtype)
-        substructures_occurrences_dataset = hdf5_util.create_dataset(attention_substructures_h5,
+        substructures_occurrences_dataset = hdf5_util.create_dataset(cam_substructures_h5,
                                                                      substructures_occurrences_dataset_name,
                                                                      (len(substructures),), dtype='I')
-        substructures_value_dataset = hdf5_util.create_dataset(attention_substructures_h5,
+        substructures_value_dataset = hdf5_util.create_dataset(cam_substructures_h5,
                                                                substructures_value_dataset_name, (len(substructures),))
-        substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(attention_substructures_h5,
-                                                               substructures_number_heavy_atoms_dataset_name,
-                                                               (len(substructures),), dtype='I')
-        substructures_score_dataset = hdf5_util.create_dataset(attention_substructures_h5,
+        substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(cam_substructures_h5,
+                                                                            substructures_number_heavy_atoms_dataset_name,
+                                                                            (len(substructures),), dtype='I')
+        substructures_score_dataset = hdf5_util.create_dataset(cam_substructures_h5,
                                                                substructures_score_dataset_name, (len(substructures),))
         occurences = numpy.zeros(len(substructures))
         values = numpy.zeros(len(substructures))
@@ -177,7 +177,7 @@ class ExtractAttentionSubstructures:
             i += 1
 
     @staticmethod
-    def extract(attention_map, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None,
+    def extract(cam, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None,
                 probabilities=None):
         for i in indices[start:end+1]:
             smiles_string = smiles[i].decode('utf-8')
@@ -189,15 +189,15 @@ class ExtractAttentionSubstructures:
                 probability = probabilities[i]
             else:
                 probability = None
-            atom_indices, values = ExtractAttentionSubstructures.pick_atoms(attention_map[i], smiles_string, threshold,
-                                                                            locations, probability)
+            atom_indices, values = ExtractCamSubstructures.pick_atoms(cam[i], smiles_string, threshold,
+                                                                      locations, probability)
             if len(atom_indices) > 0:
                 molecule = Chem.MolFromSmiles(smiles_string)
-                ExtractAttentionSubstructures.add_substructures(molecule, atom_indices, values, substructures)
+                ExtractCamSubstructures.add_substructures(molecule, atom_indices, values, substructures)
             progress.increment()
 
     @staticmethod
-    def pick_atoms_smiles(attention_map, smiles_string, threshold):
+    def pick_atoms_smiles(cam, smiles_string, threshold):
         atom_positions = smiles_analyzer.atom_positions(smiles_string)
         picked_indices = list()
         values = list()
@@ -206,7 +206,7 @@ class ExtractAttentionSubstructures:
             mean = 0
             position_range = range(position[0], position[1] + 1)
             for j in position_range:
-                mean += attention_map[j]
+                mean += cam[j]
             mean /= len(position_range)
             if mean >= threshold:
                 picked_indices.append(i)
@@ -214,9 +214,9 @@ class ExtractAttentionSubstructures:
         return picked_indices, values
 
     @staticmethod
-    def pick_atoms(attention_map, smiles_string, threshold, atom_locations=None, probability=None):
+    def pick_atoms(cam, smiles_string, threshold, atom_locations=None, probability=None):
         if atom_locations is None:
-            return ExtractAttentionSubstructures.pick_atoms_smiles(attention_map, smiles_string, threshold)
+            return ExtractCamSubstructures.pick_atoms_smiles(cam, smiles_string, threshold)
         else:
             picked_indices = list()
             values = list()
@@ -224,7 +224,7 @@ class ExtractAttentionSubstructures:
                 if atom_locations[i][0] < 0:
                     break
                 location = tuple(atom_locations[i])
-                value = attention_map[location]
+                value = cam[location]
                 if probability is not None:
                     value *= probability
                 if value >= threshold:

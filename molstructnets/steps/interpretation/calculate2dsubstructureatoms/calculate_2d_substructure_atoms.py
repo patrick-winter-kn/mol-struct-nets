@@ -31,12 +31,12 @@ class Calculate2DSubstructureAtoms:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_map_path = file_structure.get_attentionmap_file(global_parameters)
+        attention_map_path = file_structure.get_cam_file(global_parameters)
         file_existed = file_util.file_exists(attention_map_path)
         file_util.make_folders(attention_map_path)
         attention_map_h5 = h5py.File(attention_map_path, 'a')
-        if file_structure.AttentionMap.substructure_atoms in attention_map_h5.keys():
-            logger.log('Skipping step: ' + file_structure.AttentionMap.substructure_atoms + ' in ' + attention_map_path
+        if file_structure.Cam.substructure_atoms in attention_map_h5.keys():
+            logger.log('Skipping step: ' + file_structure.Cam.substructure_atoms + ' in ' + attention_map_path
                        + ' already exists')
             attention_map_h5.close()
         else:
@@ -59,7 +59,7 @@ class Calculate2DSubstructureAtoms:
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             atom_locations = preprocessed_h5[file_structure.Preprocessed.atom_locations]
             substructure_atoms = hdf5_util.create_dataset(attention_map_h5,
-                                                          file_structure.AttentionMap.substructure_atoms,
+                                                          file_structure.Cam.substructure_atoms,
                                                           (len(smiles), preprocessed.shape[1], preprocessed.shape[2]))
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)

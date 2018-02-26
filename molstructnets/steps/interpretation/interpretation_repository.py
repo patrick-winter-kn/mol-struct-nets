@@ -1,11 +1,11 @@
 from steps import repository
-from steps.interpretation.calculateattentionmaps import calculate_attention_maps
+from steps.interpretation.calculatecams import calculate_cams
 from steps.interpretation.calculatesmilessubstructureatoms import calculate_smiles_substructure_atoms
 from steps.interpretation.calculate2dsubstructureatoms import calculate_2d_substructure_atoms
-from steps.interpretation.renderattentionmaps import render_attention_maps
+from steps.interpretation.rendercams import render_cams
 from steps.interpretation.rendersubstructureatoms import render_substructure_atoms
-from steps.interpretation.attentionevaluation import attention_evaluation
-from steps.interpretation.extractattentionsubstructures import extract_attention_substructures
+from steps.interpretation.camevaluation import cam_evaluation
+from steps.interpretation.extractcamsubstructures import extract_cam_substructures
 
 
 class DataGenerationRepository(repository.Repository):
@@ -20,10 +20,10 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
-instance.add_implementation(calculate_attention_maps.CalculateAttentionMaps)
+instance.add_implementation(calculate_cams.CalculateCams)
 instance.add_implementation(calculate_smiles_substructure_atoms.CalculateSmilesSubstructureAtoms)
 instance.add_implementation(calculate_2d_substructure_atoms.Calculate2DSubstructureAtoms)
-instance.add_implementation(render_attention_maps.RenderAttentionMaps)
+instance.add_implementation(render_cams.RenderCams)
 instance.add_implementation(render_substructure_atoms.RenderSubstructureAtoms)
-instance.add_implementation(attention_evaluation.AttentionEvaluation)
-instance.add_implementation(extract_attention_substructures.ExtractAttentionSubstructures)
+instance.add_implementation(cam_evaluation.CamEvaluation)
+instance.add_implementation(extract_cam_substructures.ExtractCamSubstructures)
