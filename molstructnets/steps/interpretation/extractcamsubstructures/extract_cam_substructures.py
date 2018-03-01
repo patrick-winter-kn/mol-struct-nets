@@ -24,7 +24,7 @@ class ExtractCamSubstructures:
         parameters = list()
         parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25, 'min': 0.0,
                            'max': 1.0, 'description': 'The threshold used to decide which parts of the CAM'
-                                                      ' are interpreted as part of the substructure.'})
+                                                      ' are interpreted as part of the substructure. Default: 0.25'})
         parameters.append({'id': 'partition', 'name': 'Partition', 'type': str, 'default': 'both',
                            'options': ['train', 'test', 'both'],
                            'description': 'The partition that the substructures will be extracted from. Options are:'
