@@ -1,3 +1,4 @@
+from util import initialization
 import argparse
 from experiments import experiment
 from util import file_util, file_structure, input_util

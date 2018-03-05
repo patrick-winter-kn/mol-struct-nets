@@ -1,3 +1,4 @@
+from util import initialization
 import tkinter
 from util import logger
 from experiments import experiment
