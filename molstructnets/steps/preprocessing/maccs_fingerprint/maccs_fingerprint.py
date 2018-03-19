@@ -66,5 +66,5 @@ class MaccsFingerprint:
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             fingerprint = MACCSkeys.GenMACCSKeys(molecule)
-            preprocessed[i + offset, :] = fingerprint[1:]
+            preprocessed[i + offset, :] = list(fingerprint)[1:]
             progress.increment()
