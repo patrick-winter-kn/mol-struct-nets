@@ -30,7 +30,7 @@ class MaccsFingerprint:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        file_name = 'maccs_fingerprint.h5'
+        file_name = 'maccsfingerprint.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
@@ -43,7 +43,7 @@ class MaccsFingerprint:
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
-            temp_preprocessed_path = file_util.get_temporary_file_path('maccs_fingerprint')
+            temp_preprocessed_path = file_util.get_temporary_file_path('maccsfingerprint')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
             global_parameters[constants.GlobalParameters.input_dimensions] = (166)
