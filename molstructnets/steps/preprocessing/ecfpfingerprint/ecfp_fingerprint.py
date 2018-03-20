@@ -80,7 +80,10 @@ class EcfpFingerprint:
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             if count:
-                fingerprint = numpy.array(AllChem.GetMorganFingerprint(molecule, radius, nr_values))
+                elements = AllChem.GetMorganFingerprint(molecule, radius).GetNonzeroElements()
+                fingerprint = numpy.zeros(nr_values)
+                for element in elements:
+                    fingerprint[element % nr_values] += elements[element]
             else:
                 fingerprint = numpy.array(AllChem.GetMorganFingerprintAsBitVect(molecule, radius, nr_values))
             preprocessed[i + offset, :] = fingerprint[:]
