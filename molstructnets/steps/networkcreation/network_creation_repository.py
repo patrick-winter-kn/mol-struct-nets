@@ -1,9 +1,9 @@
 from steps import repository
-from steps.networkcreation.smilesmatrix import smiles_matrix
-from steps.networkcreation.matrix2d import matrix_2d
+from steps.networkcreation.tensorsmiles import tensor_smiles
+from steps.networkcreation.tensor2d import tensor_2d
 from steps.networkcreation.image import image
 from steps.networkcreation.vgg19 import vgg19
-from steps.networkcreation.custommatrix2d import custom_matrix_2d
+from steps.networkcreation.customtensor2d import custom_tensor_2d
 
 
 class DataGenerationRepository(repository.Repository):
@@ -18,8 +18,8 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
-instance.add_implementation(smiles_matrix.SmilesMatrix)
-instance.add_implementation(matrix_2d.Matrix2D)
+instance.add_implementation(tensor_smiles.TensorSmiles)
+instance.add_implementation(tensor_2d.Tensor2D)
+instance.add_implementation(custom_tensor_2d.CustomTensor2D)
 instance.add_implementation(image.Image)
 instance.add_implementation(vgg19.Vgg19)
-instance.add_implementation(custom_matrix_2d.CustomMatrix2D)

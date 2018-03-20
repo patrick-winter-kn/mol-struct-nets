@@ -6,15 +6,15 @@ from rdkit import Chem
 import random
 
 
-class SmilesMatrixTransformation:
+class TensorSmilesTransformation:
 
     @staticmethod
     def get_id():
-        return 'smiles_matrix_transformation'
+        return 'tensor_smiles_transformation'
 
     @staticmethod
     def get_name():
-        return 'Transformed SMILES Matrix'
+        return 'Transformed SMILES Tensor'
 
     @staticmethod
     def get_parameters():
@@ -37,13 +37,13 @@ class SmilesMatrixTransformation:
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         scale = hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data], 'scale')
         hash_parameters['scale'] = scale
-        file_name = 'smiles_matrix_transformation_' + str(local_parameters['transformations']) + '_'\
+        file_name = 'tensor_smiles_transformation_' + str(local_parameters['transformations']) + '_'\
                     + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_training_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        preprocessed_training_path = SmilesMatrixTransformation.get_result_file(global_parameters, local_parameters)
+        preprocessed_training_path = TensorSmilesTransformation.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_training_data] = preprocessed_training_path
         if file_util.file_exists(preprocessed_training_path):
             logger.log('Skipping step: ' + preprocessed_training_path + ' already exists')
@@ -56,7 +56,7 @@ class SmilesMatrixTransformation:
                 index_lookup[index[i].decode('utf-8')] = i
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
-            temp_preprocessed_training_path = file_util.get_temporary_file_path('smiles_matrix_transformation')
+            temp_preprocessed_training_path = file_util.get_temporary_file_path('tensor_smiles_transformation')
             preprocessed_training_h5 = h5py.File(temp_preprocessed_training_path, 'w')
             logger.log('Writing transformed training data')
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
@@ -79,7 +79,7 @@ class SmilesMatrixTransformation:
             with progressbar.ProgressBar(len(preprocessed_training)) as progress:
                 with thread_pool.ThreadPool(len(chunks)) as pool:
                     for chunk in chunks:
-                        pool.submit(SmilesMatrixTransformation.write_transformed_smiles_matrices, preprocessed_training,
+                        pool.submit(TensorSmilesTransformation.write_transformed_smiles_tensors, preprocessed_training,
                                     preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end'] + 1],
                                     index_lookup, preprocessed.shape[1], chunk['start'], progress,
                                     local_parameters['transformations'], len(train_smiles_data),
@@ -96,16 +96,16 @@ class SmilesMatrixTransformation:
         return string + (' ' * (length - len(string)))
 
     @staticmethod
-    def string_to_matrix(string, index_lookup):
-        matrix = numpy.zeros((len(string), len(index_lookup)))
+    def string_to_tensor(string, index_lookup):
+        tensor = numpy.zeros((len(string), len(index_lookup)))
         for i in range(len(string)):
-            matrix[i][index_lookup[string[i]]] = 1
-        return matrix
+            tensor[i][index_lookup[string[i]]] = 1
+        return tensor
 
     @staticmethod
-    def write_transformed_smiles_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
-                                          max_length, offset, progress, number_transformations,
-                                          offset_per_transformation, random_, train_ref, originals_set):
+    def write_transformed_smiles_tensors(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
+                                         max_length, offset, progress, number_transformations,
+                                         offset_per_transformation, random_, train_ref, originals_set):
         for i in range(len(smiles_data)):
             original_index = train_ref[i + offset]
             original_smiles = smiles_data[i].decode('utf-8')
@@ -114,8 +114,8 @@ class SmilesMatrixTransformation:
             start = 0
             if originals_set.add(original_smiles):
                 # Add original smiles first
-                string = SmilesMatrixTransformation.pad_string(original_smiles, max_length)
-                preprocessed_training[i + offset] = SmilesMatrixTransformation.string_to_matrix(string, index_lookup)
+                string = TensorSmilesTransformation.pad_string(original_smiles, max_length)
+                preprocessed_training[i + offset] = TensorSmilesTransformation.string_to_tensor(string, index_lookup)
                 preprocessed_training_ref[i + offset] = original_index
                 start += 1
                 progress.increment()
@@ -124,11 +124,11 @@ class SmilesMatrixTransformation:
                 while invalid:
                     random_.shuffle(atom_indices)
                     smiles = Chem.MolToSmiles(Chem.RenumberAtoms(molecule, atom_indices), canonical=False)
-                    invalid = len(smiles) > max_length or SmilesMatrixTransformation.invalid_characters(smiles,
+                    invalid = len(smiles) > max_length or TensorSmilesTransformation.invalid_characters(smiles,
                                                                                                         index_lookup)
                 index = i + offset + offset_per_transformation * j
-                string = SmilesMatrixTransformation.pad_string(smiles, max_length)
-                preprocessed_training[index] = SmilesMatrixTransformation.string_to_matrix(string, index_lookup)
+                string = TensorSmilesTransformation.pad_string(smiles, max_length)
+                preprocessed_training[index] = TensorSmilesTransformation.string_to_tensor(string, index_lookup)
                 preprocessed_training_ref[index] = original_index
                 progress.increment()
 

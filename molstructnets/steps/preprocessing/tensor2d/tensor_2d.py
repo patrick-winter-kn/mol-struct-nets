@@ -2,26 +2,26 @@ import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from steps.preprocessing.shared.matrix2d import rasterizer, molecule_2d_matrix
+from steps.preprocessing.shared.tensor2d import rasterizer, molecule_2d_tensor
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max,\
     concurrent_set, thread_pool, constants, hdf5_util, concurrent_min
 
 
 number_threads = thread_pool.default_number_threads
 fixed_symbols = {'-', '=', '#', '$', ':'}
-if molecule_2d_matrix.with_empty_bits:
+if molecule_2d_tensor.with_empty_bits:
     fixed_symbols.add(' ')
 
 
-class Matrix2D:
+class Tensor2D:
 
     @staticmethod
     def get_id():
-        return 'matrix_2d'
+        return 'tensor_2d'
 
     @staticmethod
     def get_name():
-        return '2D Matrix'
+        return '2D Tensor'
 
     @staticmethod
     def get_parameters():
@@ -46,12 +46,12 @@ class Matrix2D:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters, ['scale', 'symbols', 'square'])
-        file_name = 'matrix_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
+        file_name = 'tensor_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        preprocessed_path = Matrix2D.get_result_file(global_parameters, local_parameters)
+        preprocessed_path = Tensor2D.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
@@ -64,7 +64,7 @@ class Matrix2D:
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
-            temp_preprocessed_path = file_util.get_temporary_file_path('matrix_2d')
+            temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
             symbols = concurrent_set.ConcurrentSet()
@@ -80,7 +80,7 @@ class Matrix2D:
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(Matrix2D.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1], symbols,
+                        pool.submit(Tensor2D.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1], symbols,
                                     max_nr_atoms, min_x, min_y, max_x, max_y, progress)
                     pool.wait()
             max_nr_atoms = max_nr_atoms.get_max()
@@ -98,7 +98,7 @@ class Matrix2D:
             for i in range(len(symbols)):
                 index_lookup[symbols[i]] = i
                 index[i] = symbols[i].encode('utf-8')
-            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_matrix.padding, min_x, max_x,
+            rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_tensor.padding, min_x, max_x,
                                                 min_y, max_y, local_parameters['square'])
             global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x, rasterizer_.size_y,
                                                                               len(index))
@@ -109,11 +109,11 @@ class Matrix2D:
             atom_locations = hdf5_util.create_dataset(preprocessed_h5, 'atom_locations',
                                                       (len(smiles_data), max_nr_atoms, 2), dtype='int16',
                                                       chunks=(1, max_nr_atoms, 2))
-            logger.log('Writing matrices')
+            logger.log('Writing tensors')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(Matrix2D.write_2d_matrices, preprocessed, atom_locations,
+                        pool.submit(Tensor2D.write_2d_tensors, preprocessed, atom_locations,
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, rasterizer_,
                                     chunk['start'], progress)
                     pool.wait()
@@ -161,12 +161,12 @@ class Matrix2D:
                 progress.increment()
 
     @staticmethod
-    def write_2d_matrices(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer_, offset, progress):
+    def write_2d_tensors(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer_, offset, progress):
         for i in range(len(smiles_data)):
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             preprocessed_row, atom_locations_row =\
-                molecule_2d_matrix.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed.shape,
+                molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed.shape,
                                                          atom_locations_shape=atom_locations.shape)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]

@@ -6,15 +6,15 @@ from keras.layers.convolutional import Convolution1D
 from keras import initializers
 
 
-class SmilesMatrix:
+class TensorSmiles:
 
     @staticmethod
     def get_id():
-        return 'smiles_matrix'
+        return 'tensor_smiles'
 
     @staticmethod
     def get_name():
-        return 'SMILES Matrix'
+        return 'SMILES Tensor'
 
     @staticmethod
     def get_parameters():

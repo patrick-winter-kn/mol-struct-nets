@@ -1,23 +1,21 @@
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
-    thread_pool, constants, hdf5_util, reference_data_set
+    thread_pool, constants, hdf5_util
 import numpy
 import h5py
-from rdkit import Chem
-import random
 
 
 number_threads = thread_pool.default_number_threads
 
 
-class SmilesMatrix:
+class TensorSmiles:
 
     @staticmethod
     def get_id():
-        return 'smiles_matrix'
+        return 'tensor_smiles'
 
     @staticmethod
     def get_name():
-        return 'SMILES Matrix'
+        return 'SMILES Tensor'
 
     @staticmethod
     def get_parameters():
@@ -28,7 +26,7 @@ class SmilesMatrix:
                                           ' the Maximum Length parameter. Default: 1'})
         parameters.append({'id': 'max_length', 'name': 'Maximum Length', 'type': int, 'default': None, 'min': 1,
                            'description': 'Maximum number of characters of input SMILES string. If the limit is'
-                                          ' exceeded the string will be shortened to fit into the matrix. Default:'
+                                          ' exceeded the string will be shortened to fit into the tensor. Default:'
                                           ' automatic'})
         parameters.append({'id': 'characters', 'name': 'Force Characters', 'type': str, 'default': None,
                            'description': 'Characters in the given string will be added to the index in addition to'
@@ -42,12 +40,12 @@ class SmilesMatrix:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters, ['min_length', 'max_length', 'characters'])
-        file_name = 'smiles_matrix_' + misc.hash_parameters(hash_parameters) + '.h5'
+        file_name = 'tensor_smiles_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        preprocessed_path = SmilesMatrix.get_result_file(global_parameters, local_parameters)
+        preprocessed_path = TensorSmiles.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
@@ -59,7 +57,7 @@ class SmilesMatrix:
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
-            temp_preprocessed_path = file_util.get_temporary_file_path('smiles_matrix')
+            temp_preprocessed_path = file_util.get_temporary_file_path('tensor_smiles')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
             characters = concurrent_set.ConcurrentSet()
@@ -73,7 +71,7 @@ class SmilesMatrix:
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(SmilesMatrix.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1],
+                        pool.submit(TensorSmiles.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1],
                                     characters, max_length, progress)
                     pool.wait()
             characters = sorted(characters.get_set_copy())
@@ -87,11 +85,11 @@ class SmilesMatrix:
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                     (len(smiles_data), length, len(index)), dtype='I',
                                                     chunks=(1, length, len(index)))
-            logger.log('Writing matrices')
+            logger.log('Writing tensors')
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(SmilesMatrix.write_smiles_matrices, preprocessed,
+                        pool.submit(TensorSmiles.write_smiles_tensors, preprocessed,
                                     smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, length, chunk['start'],
                                     progress)
                     pool.wait()
@@ -114,15 +112,15 @@ class SmilesMatrix:
         return string + (' ' * (length - len(string)))
 
     @staticmethod
-    def string_to_matrix(string, index_lookup):
-        matrix = numpy.zeros((len(string), len(index_lookup)))
+    def string_to_tensor(string, index_lookup):
+        tensor = numpy.zeros((len(string), len(index_lookup)))
         for i in range(len(string)):
-            matrix[i][index_lookup[string[i]]] = 1
-        return matrix
+            tensor[i][index_lookup[string[i]]] = 1
+        return tensor
 
     @staticmethod
-    def write_smiles_matrices(preprocessed, smiles_data, index_lookup, max_length, offset, progress):
+    def write_smiles_tensors(preprocessed, smiles_data, index_lookup, max_length, offset, progress):
         for i in range(len(smiles_data)):
-            string = SmilesMatrix.pad_string(smiles_data[i].decode('utf-8'), max_length)
-            preprocessed[i + offset] = SmilesMatrix.string_to_matrix(string, index_lookup)
+            string = TensorSmiles.pad_string(smiles_data[i].decode('utf-8'), max_length)
+            preprocessed[i + offset] = TensorSmiles.string_to_tensor(string, index_lookup)
             progress.increment()

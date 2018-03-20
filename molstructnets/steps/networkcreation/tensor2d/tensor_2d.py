@@ -6,15 +6,15 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras import initializers, optimizers
 
 
-class Matrix2D:
+class Tensor2D:
 
     @staticmethod
     def get_id():
-        return 'matrix_2d'
+        return 'tensor_2d'
 
     @staticmethod
     def get_name():
-        return '2D Matrix'
+        return '2D Tensor'
 
     @staticmethod
     def get_parameters():

@@ -2,7 +2,7 @@ import numpy
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdchem import BondType
 
-from steps.preprocessing.shared.matrix2d import bond_positions
+from steps.preprocessing.shared.tensor2d import bond_positions
 
 with_empty_bits = False
 padding = 2
@@ -25,7 +25,7 @@ def get_bond_symbol(bond_type):
         return '-'
 
 
-def molecule_to_2d_matrix(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
+def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
                           transformer_=None, random_=None, flip=False, rotation=0):
     # We redo this if the transformation size does not fit
     while True:

@@ -10,15 +10,15 @@ from util import data_validation, file_structure, reference_data_set, hdf5_util,
     progressbar, misc
 
 
-class Matrix:
+class Tensor:
 
     @staticmethod
     def get_id():
-        return 'matrix'
+        return 'tensor'
 
     @staticmethod
     def get_name():
-        return 'Matrix'
+        return 'Tensor'
 
     @staticmethod
     def get_parameters():

@@ -135,10 +135,10 @@ class CalculateCams:
             with progressbar.ProgressBar(len(cam_indices_list)) as progress:
                 for i in range(len(cam_indices_list)):
                     index = cam_indices_list[i]
-                    matrix = preprocessed[index]
+                    tensor = preprocessed[index]
                     grads = cam.calculate_saliency(model, out_layer_index,
                                                    filter_indices=[class_index],
-                                                   seed_input=matrix)
+                                                   seed_input=tensor)
                     cam_[index] = grads[:]
                     if i % CalculateCams.iterations_per_clear == 0:
                         backend.clear_session()

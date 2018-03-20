@@ -2,33 +2,33 @@ import random
 
 import h5py
 from rdkit import Chem
-from steps.preprocessing.shared.matrix2d import rasterizer
-from steps.preprocessingtraining.matrix2dtransformation import transformer
+from steps.preprocessing.shared.tensor2d import rasterizer
+from steps.preprocessingtraining.tensor2dtransformation import transformer
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, constants,\
     hdf5_util, reference_data_set
-from steps.preprocessing.shared.matrix2d import molecule_2d_matrix
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor
 import math
 
 
 output_rows_per_chunk = 10000
 
 
-class Matrix2DTransformed:
+class Tensor2DTransformed:
 
     @staticmethod
     def get_id():
-        return 'matrix_2d_transformation'
+        return 'tensor_2d_transformation'
 
     @staticmethod
     def get_name():
-        return 'Transformed 2D Matrix'
+        return 'Transformed 2D Tensor'
 
     @staticmethod
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'transformations', 'name': 'Number of Transformations', 'type': int, 'default': 1,
                            'min': 0,
-                           'description': 'The number of transformations done for each matrix in the training data'
+                           'description': 'The number of transformations done for each tensor in the training data'
                                           ' set. Default: 1'})
         return parameters
 
@@ -41,13 +41,13 @@ class Matrix2DTransformed:
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         scale = hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data], 'scale')
         hash_parameters['scale'] = scale
-        file_name = 'matrix_2d_transformation_' + str(local_parameters['transformations']) + '_'\
+        file_name = 'tensor_2d_transformation_' + str(local_parameters['transformations']) + '_'\
                     + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_training_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        preprocessed_training_path = Matrix2DTransformed.get_result_file(global_parameters, local_parameters)
+        preprocessed_training_path = Tensor2DTransformed.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_training_data] = preprocessed_training_path
         rows_done = hdf5_util.get_property(preprocessed_training_path, 'rows_done')
         if file_util.file_exists(preprocessed_training_path) and rows_done is None:
@@ -72,13 +72,13 @@ class Matrix2DTransformed:
             index_lookup = {}
             for i in range(len(index)):
                 index_lookup[index[i].decode('utf-8')] = i
-            rasterizer_ = rasterizer.Rasterizer(scale, molecule_2d_matrix.padding, min_x, max_x, min_y, max_y,
+            rasterizer_ = rasterizer.Rasterizer(scale, molecule_2d_tensor.padding, min_x, max_x, min_y, max_y,
                                                 preprocessed.shape[1] == preprocessed.shape[2])
             transformer_ = transformer.Transformer(min_x, max_x, min_y, max_y)
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             train = partition_h5[file_structure.Partitions.train]
             train_smiles_data = reference_data_set.ReferenceDataSet(train, smiles_data)
-            temp_preprocessed_training_path = file_util.get_temporary_file_path('matrix_2d_transformation')
+            temp_preprocessed_training_path = file_util.get_temporary_file_path('tensor_2d_transformation')
             if file_util.file_exists(preprocessed_training_path):
                 file_util.copy_file(preprocessed_training_path, temp_preprocessed_training_path)
             else:
@@ -108,13 +108,13 @@ class Matrix2DTransformed:
                     preprocessed_training_ref =\
                         preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training_references]
                     end = min(start + input_rows_per_chunk, len(train_smiles_data))
-                    Matrix2DTransformed.\
-                        write_transformed_2d_matrices(preprocessed_training, preprocessed_training_ref,
-                                                      train_smiles_data, index_lookup, rasterizer_, transformer_, start,
-                                                      end, originals_set, transformations,
-                                                      len(train_smiles_data),
-                                                      global_parameters[constants.GlobalParameters.seed], train,
-                                                      progress)
+                    Tensor2DTransformed.\
+                        write_transformed_2d_tensors(preprocessed_training, preprocessed_training_ref,
+                                                     train_smiles_data, index_lookup, rasterizer_, transformer_, start,
+                                                     end, originals_set, transformations,
+                                                     len(train_smiles_data),
+                                                     global_parameters[constants.GlobalParameters.seed], train,
+                                                     progress)
                     start = end
                     hdf5_util.set_property(temp_preprocessed_training_path, 'rows_done', end * transformations)
                     preprocessed_training_h5.close()
@@ -125,9 +125,9 @@ class Matrix2DTransformed:
             preprocessed_h5.close()
 
     @staticmethod
-    def write_transformed_2d_matrices(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
-                                      rasterizer_, transformer_, start, end, originals_set, number_transformations,
-                                      offset_per_transformation, seed, train_ref, progress):
+    def write_transformed_2d_tensors(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
+                                     rasterizer_, transformer_, start, end, originals_set, number_transformations,
+                                     offset_per_transformation, seed, train_ref, progress):
         random_ = random.Random()
         for i in range(start, end):
             random_.seed(seed + i)
@@ -137,10 +137,10 @@ class Matrix2DTransformed:
             for j in range(number_transformations):
                 index = i + offset_per_transformation * j
                 if originals_set.add(smiles):
-                    preprocessed_row = molecule_2d_matrix.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_,
+                    preprocessed_row = molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                                 preprocessed_training.shape)[0]
                 else:
-                    preprocessed_row = molecule_2d_matrix.molecule_to_2d_matrix(molecule, index_lookup, rasterizer_,
+                    preprocessed_row = molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                                 preprocessed_training.shape,
                                                                                 transformer_=transformer_,
                                                                                 random_=random_)[0]

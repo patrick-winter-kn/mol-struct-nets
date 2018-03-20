@@ -1,6 +1,6 @@
 import h5py
 
-from steps.interpretation.shared import matrix_2d_renderer, smiles_renderer
+from steps.interpretation.shared import tensor_2d_renderer, tensor_smiles_renderer
 from steps.interpretation.shared.kerasviz import cam
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, constants
 
@@ -95,7 +95,7 @@ class RenderCams:
                     smiles_string = smiles[i].decode('utf-8')
                     heatmap = cam.array_to_heatmap([data_set[i]])
                     if renderer == 'smiles':
-                        smiles_renderer.render(smiles_string, output_path, 5, heatmap)
+                        tensor_smiles_renderer.render(smiles_string, output_path, 5, heatmap)
                     elif renderer == '2d':
-                        matrix_2d_renderer.render(output_path, preprocessed[i], symbols, heatmap=heatmap)
+                        tensor_2d_renderer.render(output_path, preprocessed[i], symbols, heatmap=heatmap)
                 progress.increment()

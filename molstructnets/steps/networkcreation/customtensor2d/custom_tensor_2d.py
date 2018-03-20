@@ -6,15 +6,15 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras import initializers, optimizers
 
 
-class CustomMatrix2D:
+class CustomTensor2D:
 
     @staticmethod
     def get_id():
-        return 'custom_matrix_2d'
+        return 'custom_tensor_2d'
 
     @staticmethod
     def get_name():
-        return 'Custom 2D Matrix'
+        return 'Custom 2D Tensor'
 
     @staticmethod
     def get_parameters():
@@ -55,8 +55,8 @@ class CustomMatrix2D:
             layer = Dropout(local_parameters['input_dropout'], name='input_dropout')(layer)
             convolution_output_size = local_parameters['base_convolution_output']
             for i in range(local_parameters['nr_blocks']):
-                layer = CustomMatrix2D.add_block(layer, local_parameters['nr_convolutions'], convolution_output_size,
-                                         local_parameters['use_pooling'], i, initializer)
+                layer = CustomTensor2D.add_block(layer, local_parameters['nr_convolutions'], convolution_output_size,
+                                                 local_parameters['use_pooling'], i, initializer)
                 convolution_output_size *= 2
             layer = Flatten(name='flatten_1')(layer)
             layer = Dense(local_parameters['dense_size'], activation='relu', name='dense_1',

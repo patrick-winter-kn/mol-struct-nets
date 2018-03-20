@@ -1,6 +1,6 @@
 from steps import repository
-from steps.preprocessingtraining.smilesmatrixtransformation import smiles_matrix_transformation
-from steps.preprocessingtraining.matrix2dtransformation import matrix_2d_transformation
+from steps.preprocessingtraining.tensorsmilestransformation import tensor_smiles_transformation
+from steps.preprocessingtraining.tensor2dtransformation import tensor_2d_transformation
 
 
 class DataGenerationRepository(repository.Repository):
@@ -15,5 +15,5 @@ class DataGenerationRepository(repository.Repository):
 
 
 instance = DataGenerationRepository()
-instance.add_implementation(smiles_matrix_transformation.SmilesMatrixTransformation)
-instance.add_implementation(matrix_2d_transformation.Matrix2DTransformed)
+instance.add_implementation(tensor_smiles_transformation.TensorSmilesTransformation)
+instance.add_implementation(tensor_2d_transformation.Tensor2DTransformed)

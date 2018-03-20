@@ -4,15 +4,15 @@ import h5py
 import math
 
 
-class Matrix:
+class Tensor:
 
     @staticmethod
     def get_id():
-        return 'matrix'
+        return 'tensor'
 
     @staticmethod
     def get_name():
-        return 'Matrix'
+        return 'Tensor'
 
     @staticmethod
     def get_parameters():
@@ -37,7 +37,7 @@ class Matrix:
         else:
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            temp_prediction_path = file_util.get_temporary_file_path('matrix_prediction')
+            temp_prediction_path = file_util.get_temporary_file_path('tensor_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
                                                    (len(preprocessed), 2))
