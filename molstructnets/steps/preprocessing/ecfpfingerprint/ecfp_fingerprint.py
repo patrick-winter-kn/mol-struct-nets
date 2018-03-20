@@ -23,7 +23,7 @@ class EcfpFingerprint:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 4, 'min': 1,
+        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 4, 'min': 0,
                            'description': 'The radius of the fingerprint. Default: 4'})
         parameters.append({'id': 'nr_values', 'name': 'Number of values', 'type': int, 'default': 1024, 'min': 2,
                            'description': 'The number of values of the fingerprint. Default: 1024'})
