@@ -23,6 +23,7 @@ class Preprocessed:
     atom_locations = 'atom_locations'
     index = 'index'
     preprocessed = 'preprocessed'
+    preprocessed_normalization_stats = 'preprocessed_normalization_stats'
 
 
 class PreprocessedTraining:

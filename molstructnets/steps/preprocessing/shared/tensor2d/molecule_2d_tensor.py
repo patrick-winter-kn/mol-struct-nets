@@ -3,6 +3,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem.rdchem import BondType
 
 from steps.preprocessing.shared.tensor2d import bond_positions
+from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 with_empty_bits = False
 padding = 2
@@ -26,11 +27,14 @@ def get_bond_symbol(bond_type):
 
 
 def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
-                          transformer_=None, random_=None, flip=False, rotation=0):
+                          transformer_=None, random_=None, flip=False, rotation=0, with_chemical_properties=False):
     # We redo this if the transformation size does not fit
     while True:
+        data_type = 'int16'
+        if with_chemical_properties:
+            data_type = 'float'
         preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
-                                       dtype='int16')
+                                       dtype=data_type)
         if atom_locations_shape is None:
             atom_locations_row = None
         else:
@@ -53,6 +57,8 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                 # Redo everything hoping for a better fitting transformation
                 continue
             preprocessed_row[x, y, symbol_index] = 1
+            if with_chemical_properties:
+                preprocessed_row[x, y, len(index_lookup):] = chemical_properties.get_chemical_properties(atom)[:]
             if atom_locations_row is not None:
                 atom_locations_row[atom.GetIdx(), 0] = x
                 atom_locations_row[atom.GetIdx(), 1] = y
@@ -65,15 +71,15 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                 for position in bond_positions_[bond.GetIdx()]:
                     preprocessed_row[position[0], position[1], bond_symbol_index] = 1
         if with_empty_bits:
-            set_empty_bits(preprocessed_row, index_lookup[' '])
+            set_empty_bits(preprocessed_row, len(index_lookup), index_lookup[' '])
         return preprocessed_row, atom_locations_row
 
 
-def set_empty_bits(preprocessed_row, empty_symbol_index):
+def set_empty_bits(preprocessed_row, number_symbols, empty_symbol_index):
     for x in range(preprocessed_row.shape[0]):
         for y in range(preprocessed_row.shape[1]):
             value_sum = 0
-            for symbol in range(preprocessed_row.shape[2]):
+            for symbol in range(number_symbols):
                 value_sum += preprocessed_row[x, y, symbol]
             if value_sum == 0:
                 preprocessed_row[x, y, empty_symbol_index] = 1

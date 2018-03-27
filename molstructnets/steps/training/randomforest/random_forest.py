@@ -54,7 +54,7 @@ class RandomForest:
                 train = partition_h5[file_structure.Partitions.train]
                 input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
             output = reference_data_set.ReferenceDataSet(train, classes)
-            input_ = misc.copy_into_memory(input_, as_bool=True)
+            input_ = misc.copy_into_memory(input_)
             output = misc.copy_into_memory(output, as_bool=True)
             random_forest.train(input_, output, model_path, local_parameters['nr_trees'],
                                 local_parameters['min_samples_leaf'],

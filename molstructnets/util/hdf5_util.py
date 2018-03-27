@@ -27,5 +27,14 @@ def get_property(file_path, key):
     return value
 
 
+def has_data_set(file_path, name):
+    if not file_util.file_exists(file_path):
+        return None
+    data_h5 = h5py.File(file_util.resolve_path(file_path), 'r')
+    value = name in data_h5
+    data_h5.close()
+    return value
+
+
 def create_dataset(file, name, shape, dtype='f', chunks=True):
     return file.create_dataset(name, shape, dtype=dtype, chunks=chunks, compression='gzip')
