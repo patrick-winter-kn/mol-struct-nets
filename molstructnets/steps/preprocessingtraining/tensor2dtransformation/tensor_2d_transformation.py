@@ -64,7 +64,6 @@ class Tensor2DTransformed:
         if file_exists and needs_normalization:
             if hdf5_util.get_property(preprocessed_training_path, 'needs_normalization') is None:
                 needs_normalization = False
-        logger.log('needs normalization: ' + str(needs_normalization))
         if file_exists and rows_done is None and not needs_normalization:
             logger.log('Skipping step: ' + preprocessed_training_path + ' already exists')
         else:
