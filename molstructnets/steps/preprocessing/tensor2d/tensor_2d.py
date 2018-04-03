@@ -39,9 +39,9 @@ class Tensor2D:
                                           ' training data should be transformed (in order to fit rotated data).'
                                           ' Default: True'})
         parameters.append({'id': 'chemical_properties', 'name': 'With chemical properties', 'type': bool,
-                           'default': False, 'description': 'Adds chemical properties to the data'})
+                           'default': False, 'description': 'Adds chemical properties to the data. Default: False'})
         parameters.append({'id': 'normalize', 'name': 'Normalize values', 'type': bool, 'default': False,
-                           'description': 'Normalize input values'})
+                           'description': 'Normalize input values. Default: False'})
         return parameters
 
     @staticmethod
