@@ -61,7 +61,7 @@ class Tensor2D:
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         file_exists = file_util.file_exists(preprocessed_path)
         needs_normalization = local_parameters['normalize']
-        if file_exists and needs_normalization:
+        if file_exists:
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1],
@@ -114,7 +114,7 @@ class Tensor2D:
                                                     min_y, max_y, local_parameters['square'])
                 feature_vector_size = len(index)
                 if local_parameters['chemical_properties']:
-                    feature_vector_size += len(chemical_properties.Properties.all)
+                    feature_vector_size += len(chemical_properties.Properties.selected)
                 global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x,
                                                                                   rasterizer_.size_y,
                                                                                   feature_vector_size)
