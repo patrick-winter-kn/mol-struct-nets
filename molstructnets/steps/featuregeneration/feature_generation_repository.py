@@ -15,7 +15,7 @@ class FeatureGenerationRepository(repository.Repository):
         return 'Feature Generation'
 
 
-instance = DataGenerationRepository()
+instance = FeatureGenerationRepository()
 instance.add_implementation(learned_feature_generation.LearnedFeatureGeneration)
 instance.add_implementation(ecfp_fingerprint.EcfpFingerprint)
 instance.add_implementation(maccs_fingerprint.MaccsFingerprint)
