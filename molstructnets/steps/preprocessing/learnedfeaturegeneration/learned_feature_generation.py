@@ -39,24 +39,12 @@ class LearnedFeatureGeneration:
         learned_features_path = LearnedFeatureGeneration.get_result_file(global_parameters, local_parameters)
         model_path = file_structure.get_network_file(global_parameters)
         model = models.load_model(model_path)
-        input_layer = None
-        feature_layer = None
-        for layer in model.layers:
-            if layer.name == 'input':
-                input_layer = layer
-            if layer.name == 'features':
-                feature_layer = layer
-            if input_layer is not None and feature_layer is not None:
-                break
-        if input_layer is None:
-            raise ValueError(model_path + ' does not contain \'input\' layer')
-        if feature_layer is None:
-            raise ValueError(model_path + ' does not contain \'features\' layer')
+        feature_layer = model.get_layer('features')
         feature_dimensions = (int(numpy.prod(list(feature_layer.input.shape)[1:])),)
         if file_util.file_exists(learned_features_path):
             logger.log('Skipping step: ' + learned_features_path + ' already exists')
         else:
-            feature_model = models.Model(inputs=input_layer, outputs=feature_layer)
+            feature_model = models.Model(inputs=model.input, outputs=feature_layer.output)
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             temp_learned_features_path = file_util.get_temporary_file_path('learned_features')
