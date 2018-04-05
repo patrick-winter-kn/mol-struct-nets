@@ -58,7 +58,7 @@ class CustomTensor2D:
                 layer = CustomTensor2D.add_block(layer, local_parameters['nr_convolutions'], convolution_output_size,
                                                  local_parameters['use_pooling'], i, initializer)
                 convolution_output_size *= 2
-            layer = Flatten(name='flatten_1')(layer)
+            layer = Flatten(name='features')(layer)
             layer = Dense(local_parameters['dense_size'], activation='relu', name='dense_1',
                           kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)

@@ -63,7 +63,7 @@ class Tensor2D:
                                   kernel_initializer=initializer)(layer)
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
 
-            layer = Flatten(name='flatten_1')(layer)
+            layer = Flatten(name='features')(layer)
             layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
