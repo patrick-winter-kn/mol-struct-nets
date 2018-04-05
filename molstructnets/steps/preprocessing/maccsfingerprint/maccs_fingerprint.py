@@ -39,14 +39,14 @@ class MaccsFingerprint:
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
-            global_parameters[constants.GlobalParameters.input_dimensions] = (166)
+            global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_preprocessed_path = file_util.get_temporary_file_path('maccsfingerprint')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
-            global_parameters[constants.GlobalParameters.input_dimensions] = (166)
+            global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                     (len(smiles_data), 166), dtype='I', chunks=(1, 166))
             logger.log('Writing fingerprints')

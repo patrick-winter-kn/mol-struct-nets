@@ -35,7 +35,8 @@ class MLP:
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
             layer = Dropout(0.3, name='input_dropout')(layer)
-            layer = Flatten(name='flatten_1')(layer)
+            if len(global_parameters[constants.GlobalParameters.input_dimensions]) > 1:
+                layer = Flatten(name='flatten_1')(layer)
             layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)

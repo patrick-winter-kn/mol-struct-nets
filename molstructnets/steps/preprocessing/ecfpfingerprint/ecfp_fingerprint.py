@@ -23,8 +23,8 @@ class EcfpFingerprint:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 4, 'min': 0,
-                           'description': 'The radius of the fingerprint. Default: 4'})
+        parameters.append({'id': 'radius', 'name': 'Radius', 'type': int, 'default': 2, 'min': 0,
+                           'description': 'The radius of the fingerprint. Default: 2'})
         parameters.append({'id': 'nr_values', 'name': 'Number of values', 'type': int, 'default': 1024, 'min': 2,
                            'description': 'The number of values of the fingerprint. Default: 1024'})
         parameters.append({'id': 'count', 'name': 'Use counts', 'type': bool, 'default': False,
@@ -49,7 +49,7 @@ class EcfpFingerprint:
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1])
+            global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1],)
             preprocessed_h5.close()
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
@@ -57,7 +57,7 @@ class EcfpFingerprint:
             temp_preprocessed_path = file_util.get_temporary_file_path('ecfpfingerprint')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             chunks = misc.chunk(len(smiles_data), number_threads)
-            global_parameters[constants.GlobalParameters.input_dimensions] = (local_parameters['nr_values'])
+            global_parameters[constants.GlobalParameters.input_dimensions] = (local_parameters['nr_values'],)
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                     (len(smiles_data), local_parameters['nr_values']), dtype='I',
                                                     chunks=(1, local_parameters['nr_values']))
