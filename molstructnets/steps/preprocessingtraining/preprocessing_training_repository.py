@@ -3,7 +3,7 @@ from steps.preprocessingtraining.tensorsmilestransformation import tensor_smiles
 from steps.preprocessingtraining.tensor2dtransformation import tensor_2d_transformation
 
 
-class DataGenerationRepository(repository.Repository):
+class PreprocessingTrainingRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -14,6 +14,6 @@ class DataGenerationRepository(repository.Repository):
         return 'Preprocessing (Training)'
 
 
-instance = DataGenerationRepository()
+instance = PreprocessingTrainingRepository()
 instance.add_implementation(tensor_smiles_transformation.TensorSmilesTransformation)
 instance.add_implementation(tensor_2d_transformation.Tensor2DTransformed)

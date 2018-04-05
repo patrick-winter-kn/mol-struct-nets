@@ -3,7 +3,7 @@ from steps.partitioning.stratifiedsampling import stratified_sampling
 from steps.partitioning.postprocessing import postprocessing
 
 
-class DataGenerationRepository(repository.Repository):
+class PartitioningRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -14,6 +14,6 @@ class DataGenerationRepository(repository.Repository):
         return 'Partitioning'
 
 
-instance = DataGenerationRepository()
+instance = PartitioningRepository()
 instance.add_implementation(stratified_sampling.StratifiedSampling)
 instance.add_implementation(postprocessing.Postprocessing)

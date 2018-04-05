@@ -8,7 +8,7 @@ from steps.interpretation.camevaluation import cam_evaluation
 from steps.interpretation.extractcamsubstructures import extract_cam_substructures
 
 
-class DataGenerationRepository(repository.Repository):
+class InterpretationRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -19,7 +19,7 @@ class DataGenerationRepository(repository.Repository):
         return 'Interpretation'
 
 
-instance = DataGenerationRepository()
+instance = InterpretationRepository()
 instance.add_implementation(calculate_cams.CalculateCams)
 instance.add_implementation(render_cams.RenderCams)
 instance.add_implementation(extract_cam_substructures.ExtractCamSubstructures)

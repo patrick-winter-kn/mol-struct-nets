@@ -4,7 +4,7 @@ from steps.training.image import image
 from steps.training.randomforest import random_forest
 
 
-class DataGenerationRepository(repository.Repository):
+class TrainingRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -15,7 +15,7 @@ class DataGenerationRepository(repository.Repository):
         return 'Training'
 
 
-instance = DataGenerationRepository()
+instance = TrainingRepository()
 instance.add_implementation(tensor.Tensor)
 instance.add_implementation(image.Image)
 instance.add_implementation(random_forest.RandomForest)

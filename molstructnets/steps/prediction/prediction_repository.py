@@ -4,7 +4,7 @@ from steps.prediction.image import image
 from steps.prediction.randomforest import random_forest
 
 
-class DataGenerationRepository(repository.Repository):
+class PredictionRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -15,7 +15,7 @@ class DataGenerationRepository(repository.Repository):
         return 'Prediction'
 
 
-instance = DataGenerationRepository()
+instance = PredictionRepository()
 instance.add_implementation(tensor.Tensor)
 instance.add_implementation(image.Image)
 instance.add_implementation(random_forest.RandomForest)

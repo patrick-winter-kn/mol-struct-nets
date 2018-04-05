@@ -2,7 +2,7 @@ from steps import repository
 from steps.targetgeneration.substructure import substructure
 
 
-class DataGenerationRepository(repository.Repository):
+class TargetGenerationRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -13,5 +13,5 @@ class DataGenerationRepository(repository.Repository):
         return 'Target Generation'
 
 
-instance = DataGenerationRepository()
+instance = TargetGenerationRepository()
 instance.add_implementation(substructure.Substructure)

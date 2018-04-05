@@ -7,7 +7,7 @@ from steps.networkcreation.customtensor2d import custom_tensor_2d
 from steps.networkcreation.mlp import mlp
 
 
-class DataGenerationRepository(repository.Repository):
+class NetworkCreationRepository(repository.Repository):
 
     @staticmethod
     def get_id():
@@ -18,7 +18,7 @@ class DataGenerationRepository(repository.Repository):
         return 'Network Creation'
 
 
-instance = DataGenerationRepository()
+instance = NetworkCreationRepository()
 instance.add_implementation(mlp.MLP)
 instance.add_implementation(tensor_smiles.TensorSmiles)
 instance.add_implementation(tensor_2d.Tensor2D)
