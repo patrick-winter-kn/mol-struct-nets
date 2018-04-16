@@ -109,7 +109,7 @@ class Tensor2D:
                 if not local_parameters['chemical_properties']:
                     new_symbols |= symbols.get_set_copy()
                 symbols = sorted(new_symbols)
-                max_symbol_length = 0
+                max_symbol_length = 1
                 for symbol in symbols:
                     max_symbol_length = max(max_symbol_length, len(symbol))
                 index = hdf5_util.create_dataset(preprocessed_h5, 'index', (len(symbols),),
@@ -129,7 +129,8 @@ class Tensor2D:
                 preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                         (len(smiles_data), rasterizer_.size_x, rasterizer_.size_y,
                                                          feature_vector_size), dtype='f',
-                                                        chunks=(1, rasterizer_.size_x, rasterizer_.size_y, len(index)))
+                                                        chunks=(1, rasterizer_.size_x, rasterizer_.size_y,
+                                                                feature_vector_size))
                 atom_locations = hdf5_util.create_dataset(preprocessed_h5, 'atom_locations',
                                                           (len(smiles_data), max_nr_atoms, 2), dtype='int16',
                                                           chunks=(1, max_nr_atoms, 2))
