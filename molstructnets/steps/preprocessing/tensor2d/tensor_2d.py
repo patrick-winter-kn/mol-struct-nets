@@ -38,6 +38,8 @@ class Tensor2D:
                            'description': 'Make the size of the X and Y dimensions the same. This is important if the'
                                           ' training data should be transformed (in order to fit rotated data).'
                                           ' Default: True'})
+        parameters.append({'id': 'bonds', 'name': 'With bonds', 'type': bool, 'default': True,
+                           'description': 'Add symbols for the bonds. Default: True'})
         parameters.append({'id': 'chemical_properties', 'name': 'With chemical properties', 'type': bool,
                            'default': False, 'description': 'Adds chemical properties to the data. Default: False'})
         parameters.append({'id': 'normalize', 'name': 'Normalize values', 'type': bool, 'default': False,
@@ -100,7 +102,12 @@ class Tensor2D:
                 min_y = min_y.get_min()
                 max_x = max_x.get_max()
                 max_y = max_y.get_max()
-                symbols = sorted(symbols.get_set_copy() | fixed_symbols)
+                new_symbols = set()
+                if local_parameters['bonds']:
+                    new_symbols |= fixed_symbols
+                if not local_parameters['chemical_properties']:
+                    new_symbols |= symbols.get_set_copy()
+                symbols = sorted(new_symbols)
                 max_symbol_length = 0
                 for symbol in symbols:
                     max_symbol_length = max(max_symbol_length, len(symbol))
