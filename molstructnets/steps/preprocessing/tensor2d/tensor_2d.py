@@ -53,7 +53,8 @@ class Tensor2D:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
-                                                   ['scale', 'symbols', 'square', 'chemical_properties', 'normalize'])
+                                                   ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
+                                                    'normalize'])
         file_name = 'tensor_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
