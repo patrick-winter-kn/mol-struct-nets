@@ -42,8 +42,12 @@ class Tensor2D:
                            'description': 'Add symbols for the bonds. Default: True'})
         parameters.append({'id': 'chemical_properties', 'name': 'With chemical properties', 'type': bool,
                            'default': False, 'description': 'Adds chemical properties to the data. Default: False'})
-        parameters.append({'id': 'normalize', 'name': 'Normalize values', 'type': bool, 'default': False,
-                           'description': 'Normalize input values. Default: False'})
+        parameters.append({'id': 'normalization', 'name': 'Normalization type', 'type': str, 'default': 'None',
+                           'options': ['None',
+                                       normalization.NormalizationTypes.min_max_1,
+                                       normalization.NormalizationTypes.min_max_2,
+                                       normalization.NormalizationTypes.z_score],
+                           'description': 'Normalization type. Default: None'})
         return parameters
 
     @staticmethod
@@ -54,7 +58,7 @@ class Tensor2D:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
                                                    ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
-                                                    'normalize'])
+                                                    'normalization'])
         file_name = 'tensor_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -63,7 +67,7 @@ class Tensor2D:
         preprocessed_path = Tensor2D.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         file_exists = file_util.file_exists(preprocessed_path)
-        needs_normalization = local_parameters['normalize']
+        needs_normalization = local_parameters['normalization'] != 'None'
         if file_exists:
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
@@ -153,7 +157,8 @@ class Tensor2D:
                                        local_parameters['chemical_properties'])
                 file_util.move_file(temp_preprocessed_path, preprocessed_path)
             if needs_normalization:
-                normalization.normalize_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed)
+                normalization.normalize_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed,
+                                                 type_=local_parameters['normalization'])
 
 
     @staticmethod
