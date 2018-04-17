@@ -1,12 +1,16 @@
 from sklearn import ensemble
 from sklearn.externals import joblib
 import numpy
-from util import file_util
+from util import file_util, misc
 import math
 
 
 def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=None, seed=None):
-    # TODO convert input data to shape (nr_rows, nr_features)
+    if len(train_data_input.shape) > 2:
+        # This does not work if data is to big for memory
+        train_data_input = misc.copy_into_memory(train_data_input)
+        nr_features = numpy.prod(train_data_input.shape[1:])
+        train_data_input = train_data_input.reshape((train_data_input.shape[0], nr_features))
     if min_samples_leaf is None:
         min_samples_leaf = math.ceil(len(train_data_input) / nr_trees)
     train_data_output = train_data_output[:,1]
@@ -19,7 +23,11 @@ def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_sa
 
 
 def predict(test_data_input, model):
-    # TODO convert input data to shape (nr_rows, nr_features)
+    if len(test_data_input.shape) > 2:
+        # This does not work if data is to big for memory
+        test_data_input = misc.copy_into_memory(test_data_input)
+        nr_features = numpy.prod(test_data_input.shape[1:])
+        test_data_input = test_data_input.reshape((test_data_input.shape[0], nr_features))
     if isinstance(model, str):
         model = joblib.load(model)
     probabilities = model.predict_proba(test_data_input)
