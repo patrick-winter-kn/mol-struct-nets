@@ -79,8 +79,12 @@ class ParameterEditor(ttk.Frame):
         list_label = ttk.Label(list_frame, text='Value')
         list_label.pack(side=tkinter.LEFT)
         list_value = tkinter.StringVar()
+        listbox_scrollbar = ttk.Scrollbar(list_frame)
+        listbox_scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         listbox = tkinter.Listbox(list_frame, selectmode=tkinter.MULTIPLE, listvariable=list_value)
         listbox.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        listbox.config(yscrollcommand=listbox_scrollbar.set)
+        listbox_scrollbar.config(command=listbox.yview)
         # Save / discard
         bottom_frame = ttk.Frame(self)
         bottom_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
