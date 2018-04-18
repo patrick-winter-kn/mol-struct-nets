@@ -157,7 +157,7 @@ class Tensor2D:
                 hdf5_util.set_property(temp_preprocessed_path, 'min_y', min_y)
                 hdf5_util.set_property(temp_preprocessed_path, 'max_y', max_y)
                 hdf5_util.set_property(temp_preprocessed_path, 'chemical_properties',
-                                       local_parameters['chemical_properties'])
+                                       str(local_parameters['chemical_properties']))
                 file_util.move_file(temp_preprocessed_path, preprocessed_path)
             if needs_normalization:
                 normalization.normalize_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed,

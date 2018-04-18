@@ -70,8 +70,8 @@ class Tensor2DTransformed:
             if not file_exists or rows_done is not None:
                 transformations = local_parameters['transformations']
                 chemical_properties =\
-                    hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data],
-                                           'chemical_properties')
+                    eval(hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data],
+                                           'chemical_properties'))
                 start = 0
                 if rows_done is not None:
                     start = int(rows_done / transformations)
