@@ -5,14 +5,12 @@ from util import file_util, misc
 import math
 
 
-def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=None, seed=None):
+def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=1, seed=None):
     if len(train_data_input.shape) > 2:
         # This does not work if data is to big for memory
         train_data_input = misc.copy_into_memory(train_data_input)
         nr_features = numpy.prod(train_data_input.shape[1:])
         train_data_input = train_data_input.reshape((train_data_input.shape[0], nr_features))
-    if min_samples_leaf is None:
-        min_samples_leaf = math.ceil(len(train_data_input) / nr_trees)
     train_data_output = train_data_output[:,1]
     random_forest = ensemble.RandomForestClassifier(n_estimators=nr_trees, min_samples_leaf=min_samples_leaf, n_jobs=-1,
                                                     class_weight='balanced', verbose=1, criterion='gini',

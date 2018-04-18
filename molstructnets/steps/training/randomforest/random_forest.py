@@ -19,8 +19,8 @@ class RandomForest:
         parameters.append({'id': 'nr_trees', 'name': 'Number of Trees', 'type': int, 'min': 1, 'default': 10000,
                            'description': 'The number of trees in the random forest. Default: 10000'})
         parameters.append({'id': 'min_samples_leaf', 'name': 'Minimum Samples per Leaf', 'type': int, 'min': 1,
-                           'default': None,
-                           'description': 'The minimum number of samples contained in a leaf. Default: automatic'})
+                           'default': 10,
+                           'description': 'The minimum number of samples contained in a leaf. Default: 10'})
         return parameters
 
     @staticmethod
