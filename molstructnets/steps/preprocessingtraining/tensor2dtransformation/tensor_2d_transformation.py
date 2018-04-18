@@ -167,13 +167,13 @@ class Tensor2DTransformed:
                     preprocessed_row =\
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape,
-                                                                 chemical_properties=chemical_properties)[0]
+                                                                 chemical_properties_=chemical_properties)[0]
                 else:
                     preprocessed_row =\
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape, transformer_=transformer_,
                                                                  random_=random_,
-                                                                 chemical_properties=chemical_properties)[0]
+                                                                 chemical_properties_=chemical_properties)[0]
                 preprocessed_training[index, :] = preprocessed_row[:]
                 preprocessed_training_ref[index] = original_index
                 progress.increment()

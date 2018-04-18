@@ -207,7 +207,7 @@ class Tensor2D:
             preprocessed_row, atom_locations_row =\
                 molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed.shape,
                                                          atom_locations_shape=atom_locations.shape,
-                                                         chemical_properties=chemical_properties)
+                                                         chemical_properties_=chemical_properties)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
