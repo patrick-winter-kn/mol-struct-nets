@@ -1,6 +1,5 @@
 import numpy
-from rdkit import Chem
-from rdkit.Chem import Crippen, rdMolDescriptors, rdPartialCharges
+from rdkit.Chem import rdMolDescriptors, rdPartialCharges
 
 
 class Properties:

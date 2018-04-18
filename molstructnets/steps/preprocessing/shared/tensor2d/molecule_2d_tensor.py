@@ -27,12 +27,12 @@ def get_bond_symbol(bond_type):
 
 
 def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
-                          transformer_=None, random_=None, flip=False, rotation=0, with_chemical_properties=False):
+                          transformer_=None, random_=None, flip=False, rotation=0, chemical_properties_=[]):
     # We redo this if the transformation size does not fit
     while True:
         try:
             data_type = 'int16'
-            if with_chemical_properties:
+            if len(chemical_properties_) > 0:
                 data_type = 'float'
             preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
                                            dtype=data_type)
@@ -59,8 +59,9 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                 if atom.GetSymbol() in index_lookup:
                     symbol_index = index_lookup[atom.GetSymbol()]
                     preprocessed_row[x, y, symbol_index] = 1
-                if with_chemical_properties:
-                    preprocessed_row[x, y, len(index_lookup):] = chemical_properties.get_chemical_properties(atom)[:]
+                if len(chemical_properties_) > 0:
+                    preprocessed_row[x, y, len(index_lookup):] =\
+                        chemical_properties.get_chemical_properties(atom, chemical_properties_)[:]
                 if atom_locations_row is not None:
                     atom_locations_row[atom.GetIdx(), 0] = x
                     atom_locations_row[atom.GetIdx(), 1] = y

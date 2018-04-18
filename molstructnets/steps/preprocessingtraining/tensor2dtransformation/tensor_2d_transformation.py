@@ -154,7 +154,7 @@ class Tensor2DTransformed:
     @staticmethod
     def write_transformed_2d_tensors(preprocessed_training, preprocessed_training_ref, smiles_data, index_lookup,
                                      rasterizer_, transformer_, start, end, originals_set, number_transformations,
-                                     offset_per_transformation, seed, train_ref, with_chemical_properties, progress):
+                                     offset_per_transformation, seed, train_ref, chemical_properties, progress):
         random_ = random.Random()
         for i in range(start, end):
             random_.seed(seed + i)
@@ -167,13 +167,13 @@ class Tensor2DTransformed:
                     preprocessed_row =\
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape,
-                                                                 with_chemical_properties=with_chemical_properties)[0]
+                                                                 chemical_properties=chemical_properties)[0]
                 else:
                     preprocessed_row =\
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape, transformer_=transformer_,
                                                                  random_=random_,
-                                                                 with_chemical_properties=with_chemical_properties)[0]
+                                                                 chemical_properties=chemical_properties)[0]
                 preprocessed_training[index, :] = preprocessed_row[:]
                 preprocessed_training_ref[index] = original_index
                 progress.increment()

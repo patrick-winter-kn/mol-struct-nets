@@ -73,6 +73,14 @@ class ParameterEditor(ttk.Frame):
         spinner_value = tkinter.StringVar()
         spinner = tkinter.Spinbox(spinner_frame, textvariable=spinner_value)
         spinner.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        # Listbox
+        list_frame = ttk.Frame(self)
+        list_frame.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+        list_label = ttk.Label(list_frame, text='Value')
+        list_label.pack(side=tkinter.LEFT)
+        list_value = tkinter.StringVar()
+        listbox = tkinter.Listbox(list_frame, selectmode=tkinter.MULTIPLE, listvariable=list_value)
+        listbox.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         # Save / discard
         bottom_frame = ttk.Frame(self)
         bottom_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
@@ -83,19 +91,22 @@ class ParameterEditor(ttk.Frame):
         # Parameter info
         info_frame = ttk.Frame(self)
         info_frame.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH, expand=True)
-        info = tkinter.Text(info_frame, wrap=tkinter.WORD, width=0, height=0)
+        info = tkinter.Text(info_frame, wrap=tkinter.WORD, width=40, height=6)
         info.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         self.key_value = key_value
         self.text_frame = text_frame
         self.options_frame = options_frame
         self.binary_frame = binary_frame
         self.spinner_frame = spinner_frame
+        self.list_frame = list_frame
         self.options = options
         self.options_value = options_value
         self.spinner = spinner
+        self.listbox = listbox
         self.text_value = text_value
         self.binary_value = binary_value
         self.spinner_value = spinner_value
+        self.list_value = list_value
         self.info = info
         self.master.minsize(width=300, height=150)
         self.update_value_fields()
@@ -112,6 +123,7 @@ class ParameterEditor(ttk.Frame):
         self.top.destroy()
 
     def key_changed(self, *args):
+        self.parameter = (self.parameter[0], None)
         self.update_value_fields()
 
     def update_value_fields(self):
@@ -122,6 +134,7 @@ class ParameterEditor(ttk.Frame):
             self.options_frame.pack_forget()
             self.binary_frame.pack_forget()
             self.spinner_frame.pack_forget()
+            self.list_frame.pack_forget()
             self.info.config(state=tkinter.NORMAL)
             self.info.delete(1.0, tkinter.END)
             if 'description' in param:
@@ -174,6 +187,17 @@ class ParameterEditor(ttk.Frame):
                     self.spinner_value.set(str(param['default']))
                 else:
                     self.spinner_value.set(str(max(minimum, 1)))
+            elif param['type'] == list:
+                self.list_value.set(param['options'])
+                self.listbox.selection_clear(0, self.listbox.size() - 1)
+                if self.parameter[1] is not None:
+                    for item in self.parameter[1]:
+                        self.listbox.selection_set(param['options'].index(item))
+                elif 'default' in param:
+                    for item in param['default']:
+                        self.listbox.selection_set(param['options'].index(item))
+                self.list_frame.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+            self.pack(fill=tkinter.BOTH, expand=True)
 
     def get_selected_key(self):
         return self.key_value.get()
@@ -203,6 +227,11 @@ class ParameterEditor(ttk.Frame):
                 return float(self.spinner_value.get())
             except:
                 return None
+        elif param['type'] == list:
+            try:
+                return [self.listbox.get(index) for index in self.listbox.curselection()]
+            except:
+                return None
 
     def update_parameter(self):
         param = self.get_selected_parameter()
@@ -218,9 +247,21 @@ class ParameterEditor(ttk.Frame):
         elif 'max' in param and value > param['max']:
             valid = False
             message = str(value) + ' is bigger than the allowed maximum of ' + str(param['max'])
-        elif 'options' in param and value not in param['options']:
-            valid = False
-            message = value + ' is not among the allowed options'
+        elif 'options' in param:
+            if param['type'] == str and value not in param['options']:
+                valid = False
+                message = value + ' is not among the allowed options'
+            if param['type'] == list:
+                invalid_values = []
+                for val in value:
+                    if val not in param['options']:
+                        invalid_values.append(val)
+                if len(invalid_values) == 1:
+                    valid = False
+                    message = invalid_values[0] + ' is not among the allowed options'
+                elif len(invalid_values) > 1:
+                    valid = False
+                    message = ','.join(invalid_values) + ' are not among the allowed options'
         if valid:
             self.parameter = (param['id'], value)
         return valid, message

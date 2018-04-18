@@ -38,11 +38,14 @@ class Tensor2D:
                            'description': 'Make the size of the X and Y dimensions the same. This is important if the'
                                           ' training data should be transformed (in order to fit rotated data).'
                                           ' Default: True'})
-        parameters.append({'id': 'bonds', 'name': 'With bonds', 'type': bool, 'default': True,
+        parameters.append({'id': 'bonds', 'name': 'With Bonds', 'type': bool, 'default': True,
                            'description': 'Add symbols for the bonds. Default: True'})
-        parameters.append({'id': 'chemical_properties', 'name': 'With chemical properties', 'type': bool,
-                           'default': False, 'description': 'Adds chemical properties to the data. Default: False'})
-        parameters.append({'id': 'normalization', 'name': 'Normalization type', 'type': str, 'default': 'None',
+        parameters.append({'id': 'atom_symbols', 'name': 'With Atom Symbols', 'type': bool,
+                           'default': True, 'description': 'Adds atom symbols to the data. Default: True'})
+        parameters.append({'id': 'chemical_properties', 'name': 'Chemical Properties', 'type': list,
+                           'default': [], 'options': chemical_properties.Properties.all,
+                           'description': 'The chemical properties that will be used. Default: None'})
+        parameters.append({'id': 'normalization', 'name': 'Normalization Type', 'type': str, 'default': 'None',
                            'options': ['None',
                                        normalization.NormalizationTypes.min_max_1,
                                        normalization.NormalizationTypes.min_max_2,
@@ -110,7 +113,7 @@ class Tensor2D:
                 new_symbols = set()
                 if local_parameters['bonds']:
                     new_symbols |= fixed_symbols
-                if not local_parameters['chemical_properties']:
+                if local_parameters['atom_symbols']:
                     new_symbols |= symbols.get_set_copy()
                 symbols = sorted(new_symbols)
                 max_symbol_length = 1
@@ -126,7 +129,7 @@ class Tensor2D:
                                                     min_y, max_y, local_parameters['square'])
                 feature_vector_size = len(index)
                 if local_parameters['chemical_properties']:
-                    feature_vector_size += len(chemical_properties.Properties.selected)
+                    feature_vector_size += len(local_parameters['chemical_properties'])
                 global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x,
                                                                                   rasterizer_.size_y,
                                                                                   feature_vector_size)
@@ -197,14 +200,14 @@ class Tensor2D:
 
     @staticmethod
     def write_2d_tensors(preprocessed, atom_locations, smiles_data, index_lookup, rasterizer_, offset,
-                         with_chemical_properties, progress):
+                         chemical_properties, progress):
         for i in range(len(smiles_data)):
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             preprocessed_row, atom_locations_row =\
                 molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed.shape,
                                                          atom_locations_shape=atom_locations.shape,
-                                                         with_chemical_properties=with_chemical_properties)
+                                                         chemical_properties=chemical_properties)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
