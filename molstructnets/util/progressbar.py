@@ -12,6 +12,8 @@ class ProgressBar:
             self.progress = None
         self.lock = threading.Lock()
         self.counter = 0
+        if self.progress is not None:
+            self.progress.update(self.counter)
 
     def increment(self, value=1):
         self.lock.acquire()
