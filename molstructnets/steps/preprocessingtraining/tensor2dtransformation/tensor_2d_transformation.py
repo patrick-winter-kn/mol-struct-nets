@@ -5,7 +5,7 @@ from rdkit import Chem
 from steps.preprocessing.shared.tensor2d import rasterizer
 from steps.preprocessingtraining.tensor2dtransformation import transformer
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, constants,\
-    hdf5_util, reference_data_set, normalization
+    hdf5_util, reference_data_set, normalization, gauss
 from steps.preprocessing.shared.tensor2d import molecule_2d_tensor
 import math
 
@@ -59,12 +59,18 @@ class Tensor2DTransformed:
         rows_done = hdf5_util.get_property(preprocessed_training_path, 'rows_done')
         file_exists = file_util.file_exists(preprocessed_training_path)
         preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
+        gauss_sigma = hdf5_util.get_property(preprocessed_path,
+                                             file_structure.Preprocessed.preprocessed + '_gauss_sigma')
+        needs_gauss = gauss_sigma is not None
         needs_normalization = hdf5_util.has_data_set(preprocessed_path,
                                                      file_structure.Preprocessed.preprocessed_normalization_stats)
+        if file_exists and needs_gauss:
+            if hdf5_util.get_property(preprocessed_training_path, 'needs_gauss') is None:
+                needs_gauss = False
         if file_exists and needs_normalization:
             if hdf5_util.get_property(preprocessed_training_path, 'needs_normalization') is None:
                 needs_normalization = False
-        if file_exists and rows_done is None and not needs_normalization:
+        if file_exists and rows_done is None and not needs_gauss and not needs_normalization:
             logger.log('Skipping step: ' + preprocessed_training_path + ' already exists')
         else:
             if not file_exists or rows_done is not None:
@@ -112,6 +118,8 @@ class Tensor2DTransformed:
                                              file_structure.PreprocessedTraining.preprocessed_training_references,
                                              (number_rows,), dtype='I')
                     preprocessed_training_h5.close()
+                    if needs_gauss:
+                        hdf5_util.set_property(temp_preprocessed_training_path, 'needs_gauss', True)
                     if needs_normalization:
                         hdf5_util.set_property(temp_preprocessed_training_path, 'needs_normalization', True)
                 originals_set = concurrent_set.ConcurrentSet()
@@ -142,6 +150,10 @@ class Tensor2DTransformed:
                 hdf5_util.delete_property(preprocessed_training_path, 'rows_done')
                 data_h5.close()
                 preprocessed_h5.close()
+            if needs_gauss:
+                gauss.apply_gauss(preprocessed_training_path, file_structure.PreprocessedTraining.preprocessed_training,
+                                  gauss_sigma)
+                hdf5_util.delete_property(preprocessed_training_path, 'needs_gauss')
             if needs_normalization:
                 type_ = hdf5_util.get_property(preprocessed_path, file_structure.Preprocessed.preprocessed
                                                + '_normalization_type')

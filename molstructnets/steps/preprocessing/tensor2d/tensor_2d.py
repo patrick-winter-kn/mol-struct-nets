@@ -4,7 +4,7 @@ from rdkit.Chem import AllChem
 
 from steps.preprocessing.shared.tensor2d import rasterizer, molecule_2d_tensor
 from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max,\
-    concurrent_set, thread_pool, constants, hdf5_util, concurrent_min, normalization
+    concurrent_set, thread_pool, constants, hdf5_util, concurrent_min, normalization, gauss
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 
@@ -45,6 +45,8 @@ class Tensor2D:
         parameters.append({'id': 'chemical_properties', 'name': 'Chemical Properties', 'type': list,
                            'default': [], 'options': chemical_properties.Properties.all,
                            'description': 'The chemical properties that will be used. Default: None'})
+        parameters.append({'id': 'gauss_sigma', 'name': 'Gauss sigma', 'type': float, 'default': None, 'min': 0,
+                           'description': 'Sigma for gauss filter. Default: No gauss filter'})
         parameters.append({'id': 'normalization', 'name': 'Normalization Type', 'type': str, 'default': 'None',
                            'options': ['None',
                                        normalization.NormalizationTypes.min_max_1,
@@ -61,7 +63,7 @@ class Tensor2D:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
                                                    ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
-                                                    'normalization'])
+                                                    'gauss_sigma', 'normalization'])
         file_name = 'tensor_2d_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -70,6 +72,7 @@ class Tensor2D:
         preprocessed_path = Tensor2D.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         file_exists = file_util.file_exists(preprocessed_path)
+        needs_gauss = local_parameters['gauss_sigma'] is not None
         needs_normalization = local_parameters['normalization'] != 'None'
         if file_exists:
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')
@@ -77,10 +80,13 @@ class Tensor2D:
             global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1],
                                                                               preprocessed.shape[2],
                                                                               preprocessed.shape[3])
+            if hdf5_util.get_property(preprocessed_path, file_structure.Preprocessed.preprocessed + '_gauss_sigma')\
+                    is not None:
+                needs_gauss = False
             if file_structure.Preprocessed.preprocessed_normalization_stats in preprocessed_h5:
                 needs_normalization = False
             preprocessed_h5.close()
-        if file_exists and not needs_normalization:
+        if file_exists and not needs_gauss and not needs_normalization:
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
             if not file_exists:
@@ -159,6 +165,9 @@ class Tensor2D:
                 hdf5_util.set_property(temp_preprocessed_path, 'chemical_properties',
                                        str(local_parameters['chemical_properties']))
                 file_util.move_file(temp_preprocessed_path, preprocessed_path)
+            if needs_gauss:
+                gauss.apply_gauss(preprocessed_path, file_structure.Preprocessed.preprocessed,
+                                  local_parameters['gauss_sigma'])
             if needs_normalization:
                 normalization.normalize_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed,
                                                  type_=local_parameters['normalization'])
