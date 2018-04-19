@@ -9,9 +9,7 @@ class NormalizationTypes:
     z_score = 'z-Score'
 
 
-def normalize_data_set(path, data_set_name, type_=None, stats=None):
-    if type_ is None:
-        type_ = hdf5_util.get_property(path, '_normalization_type')
+def normalize_data_set(path, data_set_name, type_, stats=None):
     temp_path = file_util.get_temporary_file_path('normalized')
     file_util.copy_file(path, temp_path)
     file_h5 = h5py.File(temp_path, 'r+')
@@ -27,7 +25,7 @@ def normalize_data_set(path, data_set_name, type_=None, stats=None):
         stats = hdf5_util.create_dataset(file_h5, data_set_name + '_normalization_stats', (len(stats_0), 2))
         stats[:, 0] = stats_0[:]
         stats[:, 1] = stats_1[:]
-        hdf5_util.set_property(temp_path, 'normalization_type', type_)
+        hdf5_util.set_property(temp_path, data_set_name + '_normalization_type', type_)
     slices = list()
     for length in data_set.shape[:-1]:
         slices.append(slice(0,length))

@@ -143,10 +143,12 @@ class Tensor2DTransformed:
                 data_h5.close()
                 preprocessed_h5.close()
             if needs_normalization:
+                type_ = hdf5_util.get_property(preprocessed_path, file_structure.Preprocessed.preprocessed
+                                               + '_normalization_type')
                 preprocessed_h5 = h5py.File(preprocessed_path, 'r')
                 normalization_stats = preprocessed_h5[file_structure.Preprocessed.preprocessed_normalization_stats]
                 normalization.normalize_data_set(preprocessed_training_path,
-                                                 file_structure.PreprocessedTraining.preprocessed_training,
+                                                 file_structure.PreprocessedTraining.preprocessed_training, type_,
                                                  stats=normalization_stats)
                 preprocessed_h5.close()
                 hdf5_util.delete_property(preprocessed_training_path, 'needs_normalization')
