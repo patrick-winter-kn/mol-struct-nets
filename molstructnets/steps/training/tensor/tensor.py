@@ -55,6 +55,7 @@ class Tensor:
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             preprocessed_training_h5 = None
+            only_boolean = len(preprocessed_h5[file_structure.Preprocessed.index]) == preprocessed.shape[-1]
             if constants.GlobalParameters.preprocessed_training_data in global_parameters:
                 preprocessed_training_h5 =\
                     h5py.File(global_parameters[constants.GlobalParameters.preprocessed_training_data], 'r')
@@ -69,7 +70,7 @@ class Tensor:
                 test = partition_h5[file_structure.Partitions.test]
                 validation_input = reference_data_set.ReferenceDataSet(test, preprocessed)
                 validation_output = reference_data_set.ReferenceDataSet(test, classes)
-                validation_input = misc.copy_into_memory(validation_input)
+                validation_input = misc.copy_into_memory(validation_input, as_bool=only_boolean)
                 validation_output = misc.copy_into_memory(validation_output, as_bool=True)
                 callback_list.append(DrugDiscoveryEval(validation_input, validation_output,
                                                        local_parameters['batch_size']))
@@ -78,7 +79,7 @@ class Tensor:
             callback_list.append(callbacks.CustomCheckpoint(model_path))
             callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
                                              write_graph=True, write_images=False, embeddings_freq=1))
-            input_ = misc.copy_into_memory(input_)
+            input_ = misc.copy_into_memory(input_, as_bool=only_boolean)
             output = misc.copy_into_memory(output, as_bool=True)
             if isinstance(input, numpy.ndarray) and isinstance(output, numpy.ndarray):
                 shuffle = True
