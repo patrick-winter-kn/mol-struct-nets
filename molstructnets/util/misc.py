@@ -26,6 +26,10 @@ def in_range(value, min_=None, max_=None):
     return True
 
 
+def is_active(probabilities):
+    return probabilities[0] > probabilities[1]
+
+
 def chunk(number, number_chunks):
     chunks = []
     chunk_size = math.ceil(number / number_chunks)
@@ -37,13 +41,43 @@ def chunk(number, number_chunks):
     return chunks
 
 
-def is_active(probabilities):
-    return probabilities[0] > probabilities[1]
+def chunk_by_size(number, max_chunk_size):
+    chunks = []
+    number_chunks = math.ceil(number / max_chunk_size)
+    for i in range(number_chunks):
+        start = max_chunk_size * i
+        end = min(start + max_chunk_size, number) - 1
+        size = end - start + 1
+        chunks.append({'size': size, 'start': start, 'end': end})
+    return chunks
 
 
-def copy_into_memory(array, as_bool=False, use_swap=True):
+def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, buffer=math.pow(1024,3)):
+    if as_bool:
+        target_type = numpy.dtype(bool)
+    else:
+        target_type = array.dtype
+    shape = list(array.shape)
+    shape[0] = 1
+    shape = tuple(shape)
+    single_size = numpy.zeros(shape, target_type).nbytes
+    available_memory = psutil.virtual_memory().available
+    if use_swap:
+        available_memory += psutil.swap_memory().free
+    available_memory -= buffer
+    if available_memory < single_size:
+        return 0
+    else:
+        return math.floor(available_memory/single_size)
+
+
+def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None):
+    if start is None:
+        start = 0
+    if end is None:
+        end = len(array) - 1
     if isinstance(array, numpy.ndarray) and (not as_bool or array.dtype.name == 'bool'):
-        return array
+        return array[start:end+1]
     else:
         if as_bool:
             target_type = numpy.dtype(bool)
@@ -53,34 +87,41 @@ def copy_into_memory(array, as_bool=False, use_swap=True):
         shape[0] = 1
         shape = tuple(shape)
         necessary_size = numpy.zeros(shape, target_type).nbytes
-        necessary_size *= len(array)
+        necessary_size *= end - start + 1
         available_memory = psutil.virtual_memory().available
         if use_swap:
             available_memory += psutil.swap_memory().free
         if available_memory < necessary_size:
             logger.log('Available memory is ' + humanize.naturalsize(available_memory, binary=True)
                        + ' but necessary memory is ' + humanize.naturalsize(necessary_size, binary=True)
-                       + '. Data will not be copied into memory.')
-            return array
+                       + '. Data will not be copied into memory.', logger.LogLevel.WARNING)
+            if start == 0 and end == len(array) - 1:
+                return array
+            else:
+                raise MemoryError('Out of memory')
         else:
             logger.log('Copying data with shape: ' + str(array.shape) + ', type: ' + str(target_type) + ' and size: '
                        + humanize.naturalsize(necessary_size, binary=True) + ' into memory.')
             if isinstance(array, numpy.ndarray):
-                return array.astype(bool)
+                return array.astype(bool)[start:end+1]
             else:
-                return copy_ndarray(array, as_bool)
+                return copy_ndarray(array, as_bool, start=start, end=end)
 
 
-def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO):
+def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO, start=None, end=None):
+    if start is None:
+        start = 0
+    if end is None:
+        end = len(array) - 1
     if as_bool:
         new_array = numpy.zeros(array.shape, dtype=bool)
         with progressbar.ProgressBar(len(array), log_level) as progress:
-            for i in range(len(array)):
+            for i in range(start, end+1):
                 new_array[i,:] = array[i,:].astype(bool)
                 progress.increment()
         return new_array
     else:
-        return array[:]
+        return array[start:end+1]
 
 
 def substring_cut_from_middle(string, slices):
