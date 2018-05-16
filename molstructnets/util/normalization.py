@@ -1,5 +1,5 @@
 import h5py
-from util import hdf5_util, file_util, logger, progressbar, misc
+from util import hdf5_util, file_util, logger, progressbar, misc, statistics
 
 
 class NormalizationTypes:
@@ -15,13 +15,18 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
     file_h5 = h5py.File(temp_path, 'r+')
     data_set = file_h5[data_set_name]
     if stats is None:
-        data_set_read = misc.copy_into_memory(data_set)
+        chunked_array = misc.get_chunked_array(data_set, fraction=0.5)
         if type_ == NormalizationTypes.min_max_1 or type_ == NormalizationTypes.min_max_2:
-            stats_0 = get_mins(data_set_read)
-            stats_1 = get_maxs(data_set_read)
+            stats = statistics.calculate_statistics(chunked_array, {statistics.Statistics.min,
+                                                                    statistics.Statistics.max})
+            stats_0 = stats[statistics.Statistics.min]
+            stats_1 = stats[statistics.Statistics.max]
         elif type_ == NormalizationTypes.z_score:
-            stats_0 = get_means(data_set_read)
-            stats_1 = get_stds(data_set_read)
+            stats = statistics.calculate_statistics(chunked_array, {statistics.Statistics.mean,
+                                                                    statistics.Statistics.std})
+            stats_0 = stats[statistics.Statistics.mean]
+            stats_1 = stats[statistics.Statistics.std]
+        chunked_array.close()
         stats = hdf5_util.create_dataset(file_h5, data_set_name + '_normalization_stats', (len(stats_0), 2))
         stats[:, 0] = stats_0[:]
         stats[:, 1] = stats_1[:]
@@ -51,19 +56,3 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
             progress.increment()
     file_h5.close()
     file_util.copy_file(temp_path, path)
-
-
-def get_mins(data_set):
-    return data_set.min(tuple(range(len(data_set.shape) - 1)))
-
-
-def get_maxs(data_set):
-    return data_set.max(tuple(range(len(data_set.shape) - 1)))
-
-
-def get_means(data_set):
-    return data_set.mean(tuple(range(len(data_set.shape) - 1)))
-
-
-def get_stds(data_set):
-    return data_set.std(tuple(range(len(data_set.shape) - 1)))

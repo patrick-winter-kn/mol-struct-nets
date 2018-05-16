@@ -1,7 +1,7 @@
 import hashlib
 import math
 import numpy
-from util import progressbar, logger
+from util import progressbar, logger, chunked_array
 import humanize
 import psutil
 
@@ -52,7 +52,7 @@ def chunk_by_size(number, max_chunk_size):
     return chunks
 
 
-def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, buffer=math.pow(1024,3)):
+def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, fraction=1, buffer=math.pow(1024,3)):
     if as_bool:
         target_type = numpy.dtype(bool)
     else:
@@ -65,10 +65,17 @@ def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, buffer=math.po
     if use_swap:
         available_memory += psutil.swap_memory().free
     available_memory -= buffer
+    available_memory *= fraction
     if available_memory < single_size:
         return 0
     else:
         return math.floor(available_memory/single_size)
+
+
+def get_chunked_array(array, as_bool=False, use_swap=False, fraction=1):
+    max_chunk_size = max_in_memory_chunk_size(array, as_bool=as_bool, use_swap=use_swap, fraction=fraction)
+    chunks = chunk_by_size(len(array), max_chunk_size)
+    return chunked_array.ChunkedArray(array, chunks, as_bool)
 
 
 def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None):
@@ -100,7 +107,10 @@ def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None):
             else:
                 raise MemoryError('Out of memory')
         else:
-            logger.log('Copying data with shape: ' + str(array.shape) + ', type: ' + str(target_type) + ' and size: '
+            new_shape = list(array.shape)
+            new_shape[0] = end - start + 1
+            new_shape = tuple(new_shape)
+            logger.log('Copying data with shape: ' + str(new_shape) + ', type: ' + str(target_type) + ' and size: '
                        + humanize.naturalsize(necessary_size, binary=True) + ' into memory.')
             if isinstance(array, numpy.ndarray):
                 return array.astype(bool)[start:end+1]
