@@ -15,59 +15,62 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
     file_h5 = h5py.File(temp_path, 'r+')
     data_set = file_h5[data_set_name]
     if stats is None:
-        chunked_array = misc.get_chunked_array(data_set, fraction=1)
         if type_ == NormalizationTypes.min_max_1 or type_ == NormalizationTypes.min_max_2:
-            stats = statistics.calculate_statistics(chunked_array, {statistics.Statistics.min,
-                                                                    statistics.Statistics.max})
+            stats_set = {statistics.Statistics.min, statistics.Statistics.max}
+            additional_percent = statistics.calculate_additional_memory(data_set.shape, stats_set)
+            fraction = 1 / (1 + additional_percent)
+            chunked_array = misc.get_chunked_array(data_set, fraction=fraction)
+            stats = statistics.calculate_statistics(chunked_array, stats_set)
             stats_0 = stats[statistics.Statistics.min]
             stats_1 = stats[statistics.Statistics.max]
         elif type_ == NormalizationTypes.z_score:
-            stats = statistics.calculate_statistics(chunked_array, {statistics.Statistics.mean,
-                                                                    statistics.Statistics.std})
+            stats_set = {statistics.Statistics.mean, statistics.Statistics.std}
+            additional_percent = statistics.calculate_additional_memory(data_set.shape, stats_set)
+            fraction = 1 / (1 + additional_percent)
+            chunked_array = misc.get_chunked_array(data_set, fraction=fraction)
+            stats = statistics.calculate_statistics(chunked_array, stats_set)
             stats_0 = stats[statistics.Statistics.mean]
             stats_1 = stats[statistics.Statistics.std]
-        chunked_array.unload()
         stats = hdf5_util.create_dataset(file_h5, data_set_name + '_normalization_stats', (len(stats_0), 2))
         stats[:, 0] = stats_0[:]
         stats[:, 1] = stats_1[:]
         hdf5_util.set_property(temp_path, data_set_name + '_normalization_type', type_)
-    slices = list()
-    for length in data_set.shape[:-1]:
-        slices.append(slice(0,length))
-    chunked_array = misc.get_chunked_array(data_set, fraction=1)
+    else:
+        chunked_array = misc.get_chunked_array(data_set, fraction=1)
     logger.log('Normalizing values of ' + str(stats.shape[0]) + ' features (in ' + str(len(chunked_array.get_chunks()))
                + ' chunks)')
-    with progressbar.ProgressBar(stats.shape[0] * chunked_array.number_chunks() + 2 * chunked_array.number_chunks()) as progress:
-        while chunked_array.has_next():
-            chunked_array.load_next_chunk()
+    with progressbar.ProgressBar(3 * chunked_array.number_chunks()) as progress:
+        for i in range(chunked_array.number_chunks()):
+            chunked_array.load_chunk(i)
             progress.increment()
             normalized = chunked_array[:]
-            chunked_array.unload()
-            for i in range(stats.shape[0]):
-                index = tuple(slices + [i])
+            slices = list()
+            for length in normalized.shape[:-1]:
+                slices.append(slice(0,length))
+            for j in range(stats.shape[0]):
+                index = tuple(slices + [j])
                 if type_ == NormalizationTypes.min_max_1:
-                    if stats[i, 1] - stats[i, 0] != 0:
-                        normalized[index] -= stats[i, 0]
-                        normalized[index] /= stats[i, 1] - stats[i, 0]
+                    if stats[j, 1] - stats[j, 0] != 0:
+                        normalized[index] -= stats[j, 0]
+                        normalized[index] /= stats[j, 1] - stats[j, 0]
                     else:
                         normalized[index] = 0
                 elif type_ == NormalizationTypes.min_max_2:
-                    if stats[i, 1] - stats[i, 0] != 0:
-                        normalized[index] -= stats[i, 0]
+                    if stats[j, 1] - stats[j, 0] != 0:
+                        normalized[index] -= stats[j, 0]
                         normalized[index] *= 2
-                        normalized[index] /= stats[i, 1] - stats[i, 0]
+                        normalized[index] /= stats[j, 1] - stats[j, 0]
                         normalized[index] -= 1
                     else:
                         normalized[index] = 0
                 elif type_ == NormalizationTypes.z_score:
-                    if stats[i, 1] != 0:
-                        normalized[index] -= stats[i, 0]
-                        normalized[index] /= stats[i, 1]
+                    if stats[j, 1] != 0:
+                        normalized[index] -= stats[j, 0]
+                        normalized[index] /= stats[j, 1]
                     else:
                         normalized[index] = 0
-                progress.increment()
-            misc.save_chunk_to_data_set(normalized, data_set,
-                                        chunked_array.get_chunks()[chunked_array.get_current_chunk_number()])
+            progress.increment()
+            chunked_array.write_current_chunk()
             progress.increment()
             normalized = None
     file_h5.close()

@@ -10,17 +10,21 @@ class ChunkedArray():
         self.current_chunk_number = -1
         self.current_chunk = None
 
-    def load_next_chunk(self):
-        self.current_chunk = None
-        self.current_chunk_number += 1
-        self.current_chunk = misc.copy_into_memory(self.data_set, self.as_bool, False,
-                                                   self.chunks[self.current_chunk_number]['start'],
-                                                   self.chunks[self.current_chunk_number]['end'],
-                                                   log_level=logger.LogLevel.DEBUG)
+    def load_chunk(self, chunk_number):
+        if self.current_chunk_number != chunk_number or self.current_chunk is None:
+            self.current_chunk = None
+            self.current_chunk_number = chunk_number
+            self.current_chunk = misc.copy_into_memory(self.data_set, self.as_bool, False,
+                                                       self.chunks[self.current_chunk_number]['start'],
+                                                       self.chunks[self.current_chunk_number]['end'],
+                                                       log_level=logger.LogLevel.DEBUG)
+            return True
+        else:
+            return False
 
-    def reset(self):
-        self.current_chunk = None
-        self.current_chunk_number = -1
+    def write_current_chunk(self):
+        current_chunk = self.chunks[self.current_chunk_number]
+        self.data_set[current_chunk['start']:current_chunk['end'] + 1] = self.current_chunk[:]
 
     def __len__(self):
         return len(self.current_chunk)
@@ -45,20 +49,5 @@ class ChunkedArray():
     def get_chunks(self):
         return self.chunks
 
-    def has_next(self):
-        return self.current_chunk_number + 1 < len(self.chunks)
-
-    def min(self, *args, **kwargs):
-        return self.current_chunk.min(*args, **kwargs)
-
-    def max(self, *args, **kwargs):
-        return self.current_chunk.max(*args, **kwargs)
-
-    def mean(self, *args, **kwargs):
-        return self.current_chunk.mean(*args, **kwargs)
-
     def unload(self):
         self.current_chunk = None
-
-    def copy_chunk(self):
-        return self.current_chunk.copy()

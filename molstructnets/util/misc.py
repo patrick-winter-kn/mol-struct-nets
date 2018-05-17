@@ -52,7 +52,7 @@ def chunk_by_size(number, max_chunk_size):
     return chunks
 
 
-def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, fraction=1, buffer=math.pow(1024,3)):
+def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, fraction=1, buffer=2*math.pow(1024,3)):
     if as_bool:
         target_type = numpy.dtype(bool)
     else:
@@ -76,10 +76,6 @@ def get_chunked_array(array, as_bool=False, use_swap=False, fraction=1):
     max_chunk_size = max_in_memory_chunk_size(array, as_bool=as_bool, use_swap=use_swap, fraction=fraction)
     chunks = chunk_by_size(len(array), max_chunk_size)
     return chunked_array.ChunkedArray(array, chunks, as_bool)
-
-
-def save_chunk_to_data_set(array, data_set, chunk):
-    data_set[chunk['start']:chunk['end']+1] = array[:]
 
 
 def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None, log_level=logger.LogLevel.INFO):
