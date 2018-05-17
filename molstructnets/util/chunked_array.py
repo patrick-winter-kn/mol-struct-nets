@@ -1,4 +1,4 @@
-from util import misc
+from util import misc, logger
 
 
 class ChunkedArray():
@@ -9,20 +9,18 @@ class ChunkedArray():
         self.as_bool = as_bool
         self.current_chunk_number = -1
         self.current_chunk = None
-        self.load_next_chunk()
 
     def load_next_chunk(self):
         self.current_chunk = None
         self.current_chunk_number += 1
         self.current_chunk = misc.copy_into_memory(self.data_set, self.as_bool, False,
                                                    self.chunks[self.current_chunk_number]['start'],
-                                                   self.chunks[self.current_chunk_number]['end'])
+                                                   self.chunks[self.current_chunk_number]['end'],
+                                                   log_level=logger.LogLevel.DEBUG)
 
     def reset(self):
-        if len(self.chunks) > 1:
-            self.current_chunk = None
-            self.current_chunk_number = -1
-            self.load_next_chunk()
+        self.current_chunk = None
+        self.current_chunk_number = -1
 
     def __len__(self):
         return len(self.current_chunk)
@@ -33,6 +31,10 @@ class ChunkedArray():
     @property
     def shape(self):
         return self.current_chunk.shape
+
+    @property
+    def original_shape(self):
+        return self.data_set.shape
 
     def number_chunks(self):
         return len(self.chunks)
@@ -55,9 +57,8 @@ class ChunkedArray():
     def mean(self, *args, **kwargs):
         return self.current_chunk.mean(*args, **kwargs)
 
-    def get_overall_size(self):
-        return len(self.data_set)
-
-    def close(self):
+    def unload(self):
         self.current_chunk = None
-        self.current_chunk_number = -1
+
+    def copy_chunk(self):
+        return self.current_chunk.copy()

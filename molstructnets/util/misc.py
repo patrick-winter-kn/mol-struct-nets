@@ -78,7 +78,11 @@ def get_chunked_array(array, as_bool=False, use_swap=False, fraction=1):
     return chunked_array.ChunkedArray(array, chunks, as_bool)
 
 
-def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None):
+def save_chunk_to_data_set(array, data_set, chunk):
+    data_set[chunk['start']:chunk['end']+1] = array[:]
+
+
+def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None, log_level=logger.LogLevel.INFO):
     if start is None:
         start = 0
     if end is None:
@@ -111,11 +115,11 @@ def copy_into_memory(array, as_bool=False, use_swap=True, start=None, end=None):
             new_shape[0] = end - start + 1
             new_shape = tuple(new_shape)
             logger.log('Copying data with shape: ' + str(new_shape) + ', type: ' + str(target_type) + ' and size: '
-                       + humanize.naturalsize(necessary_size, binary=True) + ' into memory.')
+                       + humanize.naturalsize(necessary_size, binary=True) + ' into memory.', log_level=log_level)
             if isinstance(array, numpy.ndarray):
                 return array.astype(bool)[start:end+1]
             else:
-                return copy_ndarray(array, as_bool, start=start, end=end)
+                return copy_ndarray(array, as_bool, start=start, end=end, log_level=log_level)
 
 
 def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO, start=None, end=None):

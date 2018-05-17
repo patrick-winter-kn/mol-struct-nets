@@ -15,7 +15,7 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
     file_h5 = h5py.File(temp_path, 'r+')
     data_set = file_h5[data_set_name]
     if stats is None:
-        chunked_array = misc.get_chunked_array(data_set, fraction=0.5)
+        chunked_array = misc.get_chunked_array(data_set, fraction=1)
         if type_ == NormalizationTypes.min_max_1 or type_ == NormalizationTypes.min_max_2:
             stats = statistics.calculate_statistics(chunked_array, {statistics.Statistics.min,
                                                                     statistics.Statistics.max})
@@ -26,7 +26,7 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
                                                                     statistics.Statistics.std})
             stats_0 = stats[statistics.Statistics.mean]
             stats_1 = stats[statistics.Statistics.std]
-        chunked_array.close()
+        chunked_array.unload()
         stats = hdf5_util.create_dataset(file_h5, data_set_name + '_normalization_stats', (len(stats_0), 2))
         stats[:, 0] = stats_0[:]
         stats[:, 1] = stats_1[:]
@@ -34,25 +34,41 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
     slices = list()
     for length in data_set.shape[:-1]:
         slices.append(slice(0,length))
-    logger.log('Normalizing values')
-    with progressbar.ProgressBar(stats.shape[0]) as progress:
-        for i in range(stats.shape[0]):
-            index = tuple(slices + [i])
-            if type_ == NormalizationTypes.min_max_1:
-                if stats[i, 1] - stats[i, 0] != 0:
-                    data_set[index] = (data_set[index] - stats[i, 0]) / (stats[i, 1] - stats[i, 0])
-                else:
-                    data_set[index] = 0
-            elif type_ == NormalizationTypes.min_max_2:
-                if stats[i, 1] - stats[i, 0] != 0:
-                    data_set[index] = ((2 * (data_set[index] - stats[i, 0])) / (stats[i, 1] - stats[i, 0])) - 1
-                else:
-                    data_set[index] = 0
-            elif type_ == NormalizationTypes.z_score:
-                if stats[i, 1] != 0:
-                    data_set[index] = (data_set[index] - stats[i, 0]) / stats[i, 1]
-                else:
-                    data_set[index] = 0
+    chunked_array = misc.get_chunked_array(data_set, fraction=1)
+    logger.log('Normalizing values of ' + str(stats.shape[0]) + ' features (in ' + str(len(chunked_array.get_chunks()))
+               + ' chunks)')
+    with progressbar.ProgressBar(stats.shape[0] * chunked_array.number_chunks() + 2 * chunked_array.number_chunks()) as progress:
+        while chunked_array.has_next():
+            chunked_array.load_next_chunk()
             progress.increment()
+            normalized = chunked_array[:]
+            chunked_array.unload()
+            for i in range(stats.shape[0]):
+                index = tuple(slices + [i])
+                if type_ == NormalizationTypes.min_max_1:
+                    if stats[i, 1] - stats[i, 0] != 0:
+                        normalized[index] -= stats[i, 0]
+                        normalized[index] /= stats[i, 1] - stats[i, 0]
+                    else:
+                        normalized[index] = 0
+                elif type_ == NormalizationTypes.min_max_2:
+                    if stats[i, 1] - stats[i, 0] != 0:
+                        normalized[index] -= stats[i, 0]
+                        normalized[index] *= 2
+                        normalized[index] /= stats[i, 1] - stats[i, 0]
+                        normalized[index] -= 1
+                    else:
+                        normalized[index] = 0
+                elif type_ == NormalizationTypes.z_score:
+                    if stats[i, 1] != 0:
+                        normalized[index] -= stats[i, 0]
+                        normalized[index] /= stats[i, 1]
+                    else:
+                        normalized[index] = 0
+                progress.increment()
+            misc.save_chunk_to_data_set(normalized, data_set,
+                                        chunked_array.get_chunks()[chunked_array.get_current_chunk_number()])
+            progress.increment()
+            normalized = None
     file_h5.close()
     file_util.copy_file(temp_path, path)

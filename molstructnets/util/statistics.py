@@ -1,4 +1,5 @@
 import numpy
+from util import logger, progressbar
 
 
 class Statistics:
@@ -25,12 +26,13 @@ def get_stds(data_set):
     return data_set.std(tuple(range(len(data_set.shape) - 1)))
 
 
-def calculate_statistics(array, stats):
+def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
     stats = set(stats)
     if Statistics.std in stats:
         stats.add(Statistics.mean)
     statistics = dict()
     if isinstance(array, numpy.ndarray):
+        logger.log('Calculating statistics: ' + str(sorted(stats)), log_level)
         for stat in stats:
             if stat == Statistics.min:
                 statistics[stat] = get_mins(array)
@@ -41,54 +43,72 @@ def calculate_statistics(array, stats):
             if stat == Statistics.std:
                 statistics[stat] = get_stds(array)
     else:
-        for stat in stats:
-            if stat == Statistics.min:
-                statistics[stat] = numpy.ndarray((array.number_chunks(), array.shape[-1]))
-            if stat == Statistics.max:
-                statistics[stat] = numpy.ndarray((array.number_chunks(), array.shape[-1]))
-            if stat == Statistics.mean:
-                statistics[stat] = numpy.ndarray((array.number_chunks(), array.shape[-1]))
-            if stat == Statistics.std:
-                statistics[stat] = numpy.ndarray((array.number_chunks(), array.shape[-1]))
-        more = True
-        while more:
-            current_chunk_number = array.get_current_chunk_number()
+        logger.log('Calculating statistics: ' + str(sorted(stats))
+                   + ' (in ' + str(len(array.get_chunks())) + ' chunks)', log_level)
+        number_first_run = len(stats)
+        number_second_run = 0
+        if Statistics.std in stats:
+            number_first_run -= 1
+            number_second_run += 1
+        number_first_run = number_first_run * array.number_chunks() + array.number_chunks()
+        if number_second_run > 0 and array.number_chunks() > 1:
+                number_second_run = number_second_run * array.number_chunks() + array.number_chunks()
+        with progressbar.ProgressBar(number_first_run + number_second_run, log_level) as progress:
             for stat in stats:
                 if stat == Statistics.min:
-                    statistics[stat][current_chunk_number,:] = array.min(tuple(range(len(array.shape) - 1)))
+                    statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
                 if stat == Statistics.max:
-                    statistics[stat][current_chunk_number,:] = array.max(tuple(range(len(array.shape) - 1)))
+                    statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
                 if stat == Statistics.mean:
-                    statistics[stat][current_chunk_number,:] = array.mean(tuple(range(len(array.shape) - 1)))
-            more = array.has_next()
-            if more:
+                    statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
+                if stat == Statistics.std:
+                    statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
+            while array.has_next():
                 array.load_next_chunk()
-        for stat in stats:
-            if stat == Statistics.min:
-                statistics[stat] = statistics[stat].min(0)
-            if stat == Statistics.max:
-                statistics[stat] = statistics[stat].max(0)
-            if stat == Statistics.mean:
-                for i in range(statistics[stat].shape[0]):
-                    statistics[stat][i] = statistics[stat][i] * array.get_chunks()[i]['size']
-                statistics[stat] = statistics[stat].sum(0) / array.get_overall_size()
-        if Statistics.std in stats:
-            array.reset()
-            more = True
-            sums = numpy.ndarray(array.shape[-1])
-            while more:
-                slices = list()
-                for length in array.shape[:-1]:
-                    slices.append(slice(0,length))
-                for i in range(array.shape[-1]):
-                    index = tuple(slices + [i])
-                    a = array[index]
-                    a -= statistics[Statistics.mean][i]
-                    a **= 2
-                    sums[i] += a.sum()
-                more = array.has_next()
-                if more:
+                progress.increment()
+                current_chunk_number = array.get_current_chunk_number()
+                for stat in stats:
+                    if stat == Statistics.min:
+                        statistics[stat][current_chunk_number, :] = array.min(tuple(range(len(array.shape) - 1)))
+                        progress.increment()
+                    if stat == Statistics.max:
+                        statistics[stat][current_chunk_number, :] = array.max(tuple(range(len(array.shape) - 1)))
+                        progress.increment()
+                    if stat == Statistics.mean:
+                        statistics[stat][current_chunk_number, :] = array.mean(tuple(range(len(array.shape) - 1)))
+                        progress.increment()
+            for stat in stats:
+                if stat == Statistics.min:
+                    statistics[stat] = statistics[stat].min(0)
+                if stat == Statistics.max:
+                    statistics[stat] = statistics[stat].max(0)
+                if stat == Statistics.mean:
+                    for i in range(statistics[stat].shape[0]):
+                        statistics[stat][i] = statistics[stat][i] * array.get_chunks()[i]['size']
+                    statistics[stat] = statistics[stat].sum(0) / array.original_shape[0]
+            if Statistics.std in stats:
+                if array.get_current_chunk_number() > 0:
+                    array.reset()
                     array.load_next_chunk()
-            sums /= array.get_overall_size()
-            statistics[Statistics.std] = numpy.sqrt(sums)
+                    progress.increment()
+                more = True
+                sums = numpy.ndarray(array.original_shape[-1])
+                while more:
+                    slices = list()
+                    for length in array.shape[:-1]:
+                        slices.append(slice(0,length))
+                    for i in range(array.shape[-1]):
+                        index = tuple(slices + [i])
+                        a = array[index]
+                        a -= statistics[Statistics.mean][i]
+                        a **= 2
+                        sums[i] += a.sum()
+                        a = None
+                    progress.increment()
+                    more = array.has_next()
+                    if more:
+                        array.load_next_chunk()
+                        progress.increment()
+                sums /= array.original_shape[0]
+                statistics[Statistics.std] = numpy.sqrt(sums)
     return statistics
