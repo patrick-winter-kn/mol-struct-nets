@@ -27,13 +27,11 @@ def get_bond_symbol(bond_type):
 
 
 def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
-                          transformer_=None, random_=None, flip=False, rotation=0, chemical_properties_=[]):
+                          transformer_=None, random_=None, flip=False, rotation=0, chemical_properties_=[],
+                          data_type='float32'):
     # We redo this if the transformation size does not fit
     while True:
         try:
-            data_type = 'int16'
-            if len(chemical_properties_) > 0:
-                data_type = 'float'
             preprocessed_row = numpy.zeros((preprocessed_shape[1], preprocessed_shape[2], preprocessed_shape[3]),
                                            dtype=data_type)
             if atom_locations_shape is None:

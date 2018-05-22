@@ -70,6 +70,7 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
                     statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
                 if stat == Statistics.std:
                     statistics[stat] = numpy.ndarray((array.number_chunks(), array.original_shape[-1]))
+            # First run
             for i in range(array.number_chunks()):
                 array.load_chunk(i)
                 progress.increment()
@@ -95,9 +96,10 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
                     statistics[stat] = statistics[stat].sum(0) / array.original_shape[0]
             if Statistics.std in stats:
                 sums = numpy.ndarray(array.original_shape[-1])
+                # Second run
                 for i in reversed(range(array.number_chunks())):
-                    array.load_chunk(i)
-                    progress.increment()
+                    if array.load_chunk(i):
+                        progress.increment()
                     slices = list()
                     for length in array.shape[:-1]:
                         slices.append(slice(0,length))

@@ -1,6 +1,7 @@
 from util import data_validation, file_structure, misc, file_util, progressbar, logger, constants, hdf5_util
 import random
 import h5py
+import numpy
 from steps.partitioning.shared import partitioning
 
 
@@ -57,14 +58,17 @@ class StratifiedSampling:
             partition_h5 = h5py.File(temp_partition_path, 'w')
             active_indices = []
             inactive_indices = []
-            logger.log('Retrieving active and inactive data')
-            with progressbar.ProgressBar(len(classes)) as progress:
-                for i in range(len(classes)):
-                    if classes[i, 0] > 0.0:
-                        active_indices.append(i)
-                    else:
-                        inactive_indices.append(i)
-                    progress.increment()
+            classes_chunks = misc.get_chunked_array(classes)
+            offset = 0
+            for i in range(classes_chunks.number_chunks()):
+                classes_chunks.load_chunk(i)
+                chunk = classes_chunks[:]
+                # Get list of indices for not zero elements in first/second column (actives/inacitves)
+                # and add offset of chunk
+                active_indices += list((chunk[:,0].nonzero()[0] + offset).astype('int32'))
+                inactive_indices += list((chunk[:,1].nonzero()[0] + offset).astype('int32'))
+                offset += classes_chunks.shape[0]
+            classes_chunks.unload()
             logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
                        ' inactive data points', logger.LogLevel.VERBOSE)
             number_training = round(len(classes) * local_parameters['train_percentage'] * 0.01)

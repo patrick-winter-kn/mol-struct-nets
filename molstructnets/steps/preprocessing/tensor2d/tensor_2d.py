@@ -134,14 +134,17 @@ class Tensor2D:
                 rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_tensor.padding, min_x, max_x,
                                                     min_y, max_y, local_parameters['square'])
                 feature_vector_size = len(index)
+                data_type = 'int8'
                 if local_parameters['chemical_properties']:
                     feature_vector_size += len(local_parameters['chemical_properties'])
+                if len(local_parameters['chemical_properties']) > 0 or needs_gauss or needs_normalization:
+                    data_type = 'float32'
                 global_parameters[constants.GlobalParameters.input_dimensions] = (rasterizer_.size_x,
                                                                                   rasterizer_.size_y,
                                                                                   feature_vector_size)
                 preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                         (len(smiles_data), rasterizer_.size_x, rasterizer_.size_y,
-                                                         feature_vector_size), dtype='f',
+                                                         feature_vector_size), dtype=data_type,
                                                         chunks=(1, rasterizer_.size_x, rasterizer_.size_y,
                                                                 feature_vector_size))
                 atom_locations = hdf5_util.create_dataset(preprocessed_h5, 'atom_locations',
@@ -216,7 +219,8 @@ class Tensor2D:
             preprocessed_row, atom_locations_row =\
                 molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed.shape,
                                                          atom_locations_shape=atom_locations.shape,
-                                                         chemical_properties_=chemical_properties)
+                                                         chemical_properties_=chemical_properties,
+                                                         data_type=preprocessed.dtype)
             preprocessed[i + offset, :] = preprocessed_row[:]
             atom_locations[i + offset, :] = atom_locations_row[:]
             progress.increment()
