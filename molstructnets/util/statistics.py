@@ -58,7 +58,7 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
             number_first_run -= 1
             number_second_run += 1
         number_first_run = number_first_run * array.number_chunks() + array.number_chunks()
-        if number_second_run > 0 and array.number_chunks() > 1:
+        if number_second_run > 0:
                 number_second_run = number_second_run * array.number_chunks() + array.number_chunks()
         with progressbar.ProgressBar(number_first_run + number_second_run, log_level) as progress:
             for stat in stats:
@@ -98,8 +98,7 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
                 sums = numpy.ndarray(array.original_shape[-1])
                 # Second run
                 for i in reversed(range(array.number_chunks())):
-                    if array.load_chunk(i):
-                        progress.increment()
+                    progress.increment()
                     slices = list()
                     for length in array.shape[:-1]:
                         slices.append(slice(0,length))

@@ -68,7 +68,6 @@ class StratifiedSampling:
                 active_indices += list((chunk[:,0].nonzero()[0] + offset).astype('int32'))
                 inactive_indices += list((chunk[:,1].nonzero()[0] + offset).astype('int32'))
                 offset += classes_chunks.shape[0]
-            classes_chunks.unload()
             logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
                        ' inactive data points', logger.LogLevel.VERBOSE)
             number_training = round(len(classes) * local_parameters['train_percentage'] * 0.01)
@@ -93,22 +92,28 @@ class StratifiedSampling:
             with progressbar.ProgressBar(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0
-                for i in range(len(classes)):
-                    if classes[i, 0] > 0.0:
-                        if i in actives:
-                            partition_test[partition_test_index] = i
-                            partition_test_index += 1
+                offset = 0
+                for i in range(classes_chunks.number_chunks()):
+                    classes_chunks.load_chunk(i)
+                    for j in range(classes_chunks.shape[0]):
+                        index = j + offset
+                        if classes_chunks[j, 0] > 0.0:
+                            if index in actives:
+                                partition_test[partition_test_index] = index
+                                partition_test_index += 1
+                            else:
+                                partition_train[partition_train_index] = index
+                                partition_train_index += 1
                         else:
-                            partition_train[partition_train_index] = i
-                            partition_train_index += 1
-                    else:
-                        if i in inactives:
-                            partition_test[partition_test_index] = i
-                            partition_test_index += 1
-                        else:
-                            partition_train[partition_train_index] = i
-                            partition_train_index += 1
-                    progress.increment()
+                            if index in inactives:
+                                partition_test[partition_test_index] = index
+                                partition_test_index += 1
+                            else:
+                                partition_train[partition_train_index] = index
+                                partition_train_index += 1
+                        progress.increment()
+                    offset += classes_chunks.shape[0]
+            classes_chunks.unload()
             if local_parameters['oversample']:
                 partition_train = partitioning.oversample(partition_h5, file_structure.Partitions.train, classes)
             if local_parameters['shuffle']:
