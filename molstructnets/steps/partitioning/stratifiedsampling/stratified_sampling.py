@@ -54,7 +54,7 @@ class StratifiedSampling:
             random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
-            classes = misc.copy_into_memory(classes, log_level=logger.LogLevel.VERBOSE)
+            classes = classes[:].astype('bool')
             temp_partition_path = file_util.get_temporary_file_path('stratified_sampling')
             partition_h5 = h5py.File(temp_partition_path, 'w')
             # Get list of indices for not zero elements in first/second column (actives/inacitves)

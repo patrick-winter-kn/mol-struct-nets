@@ -51,18 +51,24 @@ class Postprocessing:
             random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
+            classes = classes[:].astype('bool')
             temp_partition_path = file_util.get_temporary_file_path('postprocessing')
-            file_util.copy_file(source_partition_path, temp_partition_path)
-            partition_h5 = h5py.File(temp_partition_path, 'r+')
-            partition_train = partition_h5[file_structure.Partitions.train]
-            partition_test = partition_h5[file_structure.Partitions.test]
+            source_partition_h5 = h5py.File(source_partition_path, 'r')
+            partition_train = source_partition_h5[file_structure.Partitions.train]
+            partition_train = partition_train[:].astype('uint32')
+            partition_test = source_partition_h5[file_structure.Partitions.test]
+            partition_test = partition_test[:].astype('uint32')
             train_percentage = (len(partition_train) / (len(partition_train) + len(partition_test))) * 100
             if local_parameters['oversample']:
-                partition_train = partitioning.oversample(partition_h5, file_structure.Partitions.train, classes)
+                partition_train = partitioning.oversample(partition_train, classes, logger.LogLevel.VERBOSE)
             if local_parameters['shuffle']:
-                partitioning.shuffle(partition_train, random_)
+                partitioning.shuffle(partition_train, random_, logger.LogLevel.VERBOSE)
+            partition_h5 = h5py.File(temp_partition_path, 'w')
+            hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.test, partition_test)
+            hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.train, partition_train)
             target_h5.close()
             partition_h5.close()
+            source_partition_h5.close()
             hdf5_util.set_property(temp_partition_path, 'train_percentage', train_percentage)
             hdf5_util.set_property(temp_partition_path, 'oversample', local_parameters['oversample'])
             hdf5_util.set_property(temp_partition_path, 'shuffle', local_parameters['shuffle'])
