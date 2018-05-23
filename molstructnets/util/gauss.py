@@ -10,7 +10,7 @@ def apply_gauss(path, data_set_name, sigma):
     file_h5 = h5py.File(temp_path, 'r+')
     data_set = file_h5[data_set_name]
     chunked_data = misc.get_chunked_array(data_set, fraction=0.5)
-    logger.log('Applying gauss (in ' + chunked_data.number_chunks() + ' chunks)')
+    logger.log('Applying gauss (in ' + str(chunked_data.number_chunks()) + ' chunks)')
     with progressbar.ProgressBar(chunked_data.number_chunks() * 2 + chunked_data.number_chunks()
                                  * data_set.shape[-1]) as progress:
         for i in range(chunked_data.number_chunks()):
