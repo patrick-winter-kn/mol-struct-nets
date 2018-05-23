@@ -54,12 +54,20 @@ class StratifiedSampling:
             random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
-            classes = misc.copy_into_memory(classes, log_level=logger.LogLevel.VERBOSE)
             temp_partition_path = file_util.get_temporary_file_path('stratified_sampling')
             partition_h5 = h5py.File(temp_partition_path, 'w')
-            # Get list of indices for not zero elements in first/second column (actives/inacitves)
-            active_indices = list((classes[:,0].nonzero()[0]).astype('int32'))
-            inactive_indices = list((classes[:,1].nonzero()[0]).astype('int32'))
+            active_indices = []
+            inactive_indices = []
+            classes_chunks = misc.get_chunked_array(classes)
+            offset = 0
+            for i in range(classes_chunks.number_chunks()):
+                classes_chunks.load_chunk(i)
+                chunk = classes_chunks[:]
+                # Get list of indices for not zero elements in first/second column (actives/inacitves)
+                # and add offset of chunk
+                active_indices += list((chunk[:,0].nonzero()[0] + offset).astype('int32'))
+                inactive_indices += list((chunk[:,1].nonzero()[0] + offset).astype('int32'))
+                offset += classes_chunks.shape[0]
             logger.log('Found ' + str(len(active_indices)) + ' active indices and ' + str(len(inactive_indices)) +
                        ' inactive data points', logger.LogLevel.VERBOSE)
             number_training = round(len(classes) * local_parameters['train_percentage'] * 0.01)
@@ -73,37 +81,43 @@ class StratifiedSampling:
                 for i in range(number_training_inactive):
                     del inactive_indices[random_.randint(0, len(inactive_indices) - 1)]
                     progress.increment()
-            partition_train = numpy.zeros(number_training, dtype='uint32')
-            partition_test = numpy.zeros(classes.shape[0] - number_training, dtype='uint32')
-            logger.log('Writing partitions', logger.LogLevel.VERBOSE)
+            partition_train = hdf5_util.create_dataset(partition_h5, file_structure.Partitions.train,
+                                                       (number_training,), dtype='I')
+            partition_test = hdf5_util.create_dataset(partition_h5, file_structure.Partitions.test,
+                                                      (len(classes) - number_training,), dtype='I')
+            logger.log('Writing partitions')
             # Convert actives and inactives into set to speed up processing
             actives = set(active_indices)
             inactives = set(inactive_indices)
-            with progressbar.ProgressBar(len(classes), logger.LogLevel.VERBOSE) as progress:
+            with progressbar.ProgressBar(len(classes)) as progress:
                 partition_train_index = 0
                 partition_test_index = 0
-                for i in range(classes.shape[0]):
-                    if classes[i, 0] > 0.0:
-                        if i in actives:
-                            partition_test[partition_test_index] = i
-                            partition_test_index += 1
+                offset = 0
+                for i in range(classes_chunks.number_chunks()):
+                    classes_chunks.load_chunk(i)
+                    for j in range(classes_chunks.shape[0]):
+                        index = j + offset
+                        if classes_chunks[j, 0] > 0.0:
+                            if index in actives:
+                                partition_test[partition_test_index] = index
+                                partition_test_index += 1
+                            else:
+                                partition_train[partition_train_index] = index
+                                partition_train_index += 1
                         else:
-                            partition_train[partition_train_index] = i
-                            partition_train_index += 1
-                    else:
-                        if i in inactives:
-                            partition_test[partition_test_index] = i
-                            partition_test_index += 1
-                        else:
-                            partition_train[partition_train_index] = i
-                            partition_train_index += 1
-                    progress.increment()
+                            if index in inactives:
+                                partition_test[partition_test_index] = index
+                                partition_test_index += 1
+                            else:
+                                partition_train[partition_train_index] = index
+                                partition_train_index += 1
+                        progress.increment()
+                    offset += classes_chunks.shape[0]
+            classes_chunks.unload()
             if local_parameters['oversample']:
-                partition_train = partitioning.oversample(partition_train, classes, log_level=logger.LogLevel.VERBOSE)
+                partition_train = partitioning.oversample_old(partition_h5, file_structure.Partitions.train, classes)
             if local_parameters['shuffle']:
-                partitioning.shuffle(partition_train, random_, log_level=logger.LogLevel.VERBOSE)
-            hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.train, partition_train)
-            hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.test, partition_test)
+                partitioning.shuffle(partition_train, random_)
             target_h5.close()
             partition_h5.close()
             hdf5_util.set_property(temp_partition_path, 'train_percentage', local_parameters['train_percentage'])
