@@ -1,29 +1,11 @@
 import numpy
 from rdkit.Chem import AllChem
-from rdkit.Chem.rdchem import BondType
 
-from steps.preprocessing.shared.tensor2d import bond_positions
+from steps.preprocessing.shared.tensor2d import bond_positions, bond_symbols
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 with_empty_bits = False
 padding = 2
-
-
-def get_bond_symbol(bond_type):
-    if bond_type == BondType.ZERO:
-        return None
-    elif bond_type == BondType.SINGLE:
-        return '-'
-    elif bond_type == BondType.DOUBLE:
-        return '='
-    elif bond_type == BondType.TRIPLE:
-        return '#'
-    elif bond_type == BondType.QUADRUPLE:
-        return '$'
-    elif bond_type == BondType.AROMATIC:
-        return ':'
-    else:
-        return '-'
 
 
 def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
@@ -66,7 +48,7 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                 atom_positions[atom.GetIdx()] = [x, y]
             bond_positions_ = bond_positions.calculate(molecule, atom_positions)
             for bond in molecule.GetBonds():
-                bond_symbol = get_bond_symbol(bond.GetBondType())
+                bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
                 if bond_symbol is not None and bond_symbol in index_lookup:
                     bond_symbol_index = index_lookup[bond_symbol]
                     for position in bond_positions_[bond.GetIdx()]:

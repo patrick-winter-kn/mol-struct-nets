@@ -2,12 +2,12 @@ import os
 from multiprocessing import pool
 
 
-default_number_threads = os.cpu_count()
+default_number_processes = os.cpu_count()
 
 
 class ProcessPool:
 
-    def __init__(self, number_threads=default_number_threads):
+    def __init__(self, number_threads=default_number_processes):
         self.pool = pool.Pool(number_threads)
         self.number_threads = number_threads
         self.futures = []
@@ -19,6 +19,14 @@ class ProcessPool:
     def wait(self):
         for i in range(len(self.futures)):
             self.futures[i].wait()
+        self.futures = []
+
+    def get_results(self):
+        results = list()
+        for i in range(len(self.futures)):
+            results.append(self.futures[i].get())
+        self.futures = []
+        return results
 
     def get_number_threads(self):
         return self.number_threads

@@ -25,7 +25,7 @@ class Properties:
 def get_chemical_properties(atom, properties=None):
     if properties is None:
         properties = Properties.selected
-    values = numpy.zeros(len(properties))
+    values = numpy.zeros(len(properties), dtype='float32')
     for i in range(len(properties)):
         if properties[i] == Properties.atomic_number:
             values[i] = atom.GetAtomicNum()

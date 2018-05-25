@@ -145,17 +145,17 @@ def substring_cut_from_middle(string, slices):
 
 
 def minimum(value_1, value_2):
-    if value_1 is None:
+    if value_1 is None or numpy.isnan(value_1):
         return value_2
-    if value_2 is None:
+    if value_2 is None or numpy.isnan(value_2):
         return value_1
     return min(value_1, value_2)
 
 
 def maximum(value_1, value_2):
-    if value_1 is None:
+    if value_1 is None or numpy.isnan(value_1):
         return value_2
-    if value_2 is None:
+    if value_2 is None or numpy.isnan(value_2):
         return value_1
     return max(value_1, value_2)
 

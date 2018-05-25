@@ -46,6 +46,21 @@ class Cam:
     cam_inactive_indices = 'cam_inactive_indices'
 
 
+class PreprocessedTensor2DJit:
+
+    gridsize_x = 'gridsize_x'
+    gridsize_y = 'gridsize_y'
+    scale = 'scale'
+    symbols = 'symbols'
+    chemical_properties = 'chemical_properties'
+    gauss_sigma = 'gauss_sigma'
+    normalization_type = 'normalization_type'
+    normalization_min = 'normalization_min'
+    normalization_max = 'normalization_max'
+    normalization_mean = 'normalization_mean'
+    normalization_std = 'normalization_std'
+
+
 def get_root_from_experiment_file(experiment_file_path):
     return file_util.get_parent(file_util.get_parent(experiment_file_path))
 
