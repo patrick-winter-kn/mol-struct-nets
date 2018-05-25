@@ -2,9 +2,9 @@ import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
 import numpy
-from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer
 from util import data_validation, misc, file_structure, file_util, logger, thread_pool, hdf5_util, normalization,\
-    process_pool
+    process_pool, constants
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 
@@ -70,7 +70,10 @@ class Tensor2DJit:
     @staticmethod
     def execute(global_parameters, local_parameters):
         preprocessed_path = Tensor2DJit.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
+            global_parameters[constants.GlobalParameters.input_dimensions] =\
+                hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions)
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
             temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')
@@ -101,8 +104,10 @@ class Tensor2DJit:
                                 normalization_min=needs_min_max, normalization_max=needs_min_max,
                                 normalization_mean=needs_mean_std)
                 results = pool.get_results()
-                gridsize_x = None
-                gridsize_y = None
+                min_x = None
+                max_x = None
+                min_y = None
+                max_y = None
                 symbols = set()
                 if needs_min_max:
                     mins = numpy.zeros(number_chemical_properties, dtype='float32')
@@ -112,8 +117,10 @@ class Tensor2DJit:
                 if needs_mean_std:
                     means = numpy.zeros(number_chemical_properties, dtype='float32')
                 for i in range(len(results)):
-                    gridsize_x = misc.maximum(gridsize_x, results[i]['gridsize_x'])
-                    gridsize_y = misc.maximum(gridsize_y, results[i]['gridsize_y'])
+                    min_x = misc.minimum(min_x, results[i]['min_x'])
+                    max_x = misc.minimum(max_x, results[i]['max_x'])
+                    min_y = misc.minimum(min_y, results[i]['min_y'])
+                    max_y = misc.minimum(max_y, results[i]['max_y'])
                     symbols = symbols.union(results[i]['symbols'])
                     if needs_min_max or needs_mean_std:
                         for j in range(number_chemical_properties):
@@ -122,9 +129,6 @@ class Tensor2DJit:
                                 maxs[j] = misc.maximum(maxs[j], results[i]['normalization_max'][j])
                             if needs_mean_std:
                                 means[j] += results[i]['normalization_mean'][j]
-                if local_parameters['square']:
-                    gridsize_x = misc.maximum(gridsize_x, gridsize_y)
-                    gridsize_y = gridsize_x
                 if local_parameters['symbols'] is not None:
                     symbols = symbols.union(set(local_parameters['symbols'].split(';')))
                 if needs_mean_std:
@@ -141,6 +145,10 @@ class Tensor2DJit:
                 if needs_mean_std:
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
                                                        file_structure.PreprocessedTensor2DJit.normalization_mean, means)
+                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_tensor.padding, min_x, max_x,
+                                                    min_y, max_y, local_parameters['square'])
+                dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) +
+                              len(local_parameters['chemical_properties']))
                 # Second run: Calculate normalization_std
                 if needs_mean_std:
                     logger.log('Calculating standard deviation')
@@ -160,12 +168,16 @@ class Tensor2DJit:
                                                        file_structure.PreprocessedTensor2DJit.normalization_std, stds)
             preprocessed_h5.close()
             data_set_h5.close()
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.gridsize_x,
-                                   gridsize_x)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.gridsize_y,
-                                   gridsize_y)
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions,
+                                   dimensions)
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.min_x, min_x)
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.max_x, max_x)
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.min_y, min_y)
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.max_y, max_y)
             hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.scale,
                                    local_parameters['scale'])
+            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.square,
+                                   local_parameters['square'])
             if local_parameters['gauss_sigma'] is not None:
                 hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.gauss_sigma,
                                        local_parameters['gauss_sigma'])
@@ -173,6 +185,7 @@ class Tensor2DJit:
                 hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.normalization_type,
                                        local_parameters['normalization'])
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
+            global_parameters[constants.GlobalParameters.input_dimensions] = dimensions
 
     @staticmethod
     def first_run(smiles, chemical_properties_=[], with_atom_symbols=False, with_bonds=False, normalization_min=False,
@@ -217,8 +230,10 @@ class Tensor2DJit:
             if with_bonds:
                 for bond in molecule.GetBonds():
                     symbols.add(bond_symbols.get_bond_symbol(bond.GetBondType()))
-        results['gridsize_x'] = max_x - min_x
-        results['gridsize_y'] = max_y - min_y
+        results['min_x'] = min_x
+        results['max_x'] = max_x
+        results['min_y'] = min_y
+        results['max_y'] = max_y
         results['symbols'] = symbols
         if normalization_min:
             results['normalization_min'] = n_min

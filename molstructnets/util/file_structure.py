@@ -48,8 +48,12 @@ class Cam:
 
 class PreprocessedTensor2DJit:
 
-    gridsize_x = 'gridsize_x'
-    gridsize_y = 'gridsize_y'
+    dimensions = 'dimensions'
+    min_x = 'min_x'
+    max_x = 'max_x'
+    min_y = 'min_y'
+    max_y = 'max_y'
+    square = 'square'
     scale = 'scale'
     symbols = 'symbols'
     chemical_properties = 'chemical_properties'
