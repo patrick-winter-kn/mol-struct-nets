@@ -31,8 +31,11 @@ class ProcessPool:
     def get_number_threads(self):
         return self.number_threads
 
+    def close(self):
+        self.pool.terminate()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.pool.terminate()
+        self.close()

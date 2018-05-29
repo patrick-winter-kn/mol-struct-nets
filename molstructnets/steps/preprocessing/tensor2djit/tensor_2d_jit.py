@@ -73,7 +73,7 @@ class Tensor2DJit:
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             global_parameters[constants.GlobalParameters.input_dimensions] =\
-                hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions)
+                tuple(hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions))
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
             temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')

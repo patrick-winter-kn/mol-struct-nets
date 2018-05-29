@@ -101,7 +101,7 @@ class StratifiedSampling:
             if local_parameters['oversample']:
                 partition_train = partitioning.oversample(partition_train, classes, log_level=logger.LogLevel.VERBOSE)
             if local_parameters['shuffle']:
-                partitioning.shuffle(partition_train, random_, log_level=logger.LogLevel.VERBOSE)
+                numpy.random.shuffle(partition_train)
             hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.train, partition_train)
             hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.test, partition_test)
             target_h5.close()
