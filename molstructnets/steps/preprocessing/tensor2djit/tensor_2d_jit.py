@@ -166,24 +166,23 @@ class Tensor2DJit:
                     stds = numpy.sqrt(stds)
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
                                                        file_structure.PreprocessedTensor2DJit.normalization_std, stds)
-            preprocessed_h5.close()
-            data_set_h5.close()
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions,
-                                   dimensions)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.min_x, min_x)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.max_x, max_x)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.min_y, min_y)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.max_y, max_y)
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.scale,
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions, dimensions)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_x, min_x)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_x, max_x)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_y, min_y)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_y, max_y)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale,
                                    local_parameters['scale'])
-            hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.square,
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square,
                                    local_parameters['square'])
             if local_parameters['gauss_sigma'] is not None:
-                hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.gauss_sigma,
+                hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.gauss_sigma,
                                        local_parameters['gauss_sigma'])
             if local_parameters['normalization'] is not None:
-                hdf5_util.set_property(temp_preprocessed_path, file_structure.PreprocessedTensor2DJit.normalization_type,
+                hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_type,
                                        local_parameters['normalization'])
+            preprocessed_h5.close()
+            data_set_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
             global_parameters[constants.GlobalParameters.input_dimensions] = dimensions
 
