@@ -77,8 +77,8 @@ class Tensor:
             model = models.load_model(model_path)
             callback_list.append(ModelCheckpoint(model_path))
             callback_list.append(callbacks.CustomCheckpoint(model_path))
-            callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
-                                             write_graph=True, write_images=False, embeddings_freq=1))
+            #callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
+            #                                 write_graph=True, write_images=False, embeddings_freq=1))
             input_ = misc.copy_into_memory(input_, as_bool=only_boolean)
             output = misc.copy_into_memory(output, as_bool=True)
             if isinstance(input, numpy.ndarray) and isinstance(output, numpy.ndarray):

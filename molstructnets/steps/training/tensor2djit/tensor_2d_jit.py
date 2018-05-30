@@ -48,8 +48,6 @@ class Tensor2DJit:
             model = models.load_model(model_path)
             callback_list.append(ModelCheckpoint(model_path))
             callback_list.append(callbacks.CustomCheckpoint(model_path))
-            callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
-                                             write_graph=True, write_images=False, embeddings_freq=1))
             number_batches = tensor_2d_jit_data_generator.number_chunks(array, batch_size)
             logger.log('Training on ' + str(number_batches) + ' batches with size ' + str(batch_size))
             model.fit_generator(tensor_2d_jit_data_generator.generate_data(array, batch_size), number_batches,
