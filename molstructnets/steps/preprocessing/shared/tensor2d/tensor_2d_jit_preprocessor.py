@@ -10,7 +10,7 @@ from steps.preprocessingtraining.tensor2dtransformation import transformer
 from scipy.ndimage import filters
 
 
-padding = 2
+padding = 3
 
 
 class Tensor2DJitPreprocessor:

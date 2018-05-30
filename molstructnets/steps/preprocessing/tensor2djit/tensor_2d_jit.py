@@ -2,7 +2,7 @@ import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
 import numpy
-from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_jit_preprocessor
 from util import data_validation, misc, file_structure, file_util, logger, thread_pool, hdf5_util, normalization,\
     process_pool, constants
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
@@ -145,7 +145,7 @@ class Tensor2DJit:
                 if needs_mean_std:
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
                                                        file_structure.PreprocessedTensor2DJit.normalization_mean, means)
-                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], molecule_2d_tensor.padding, min_x, max_x,
+                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_jit_preprocessor.padding, min_x, max_x,
                                                     min_y, max_y, local_parameters['square'])
                 dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) +
                               len(local_parameters['chemical_properties']))

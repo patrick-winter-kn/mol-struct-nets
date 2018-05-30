@@ -30,7 +30,8 @@ class Tensor2DJitArray():
         if len(indices) > 1:
             chunks = misc.chunk(len(indices), self._pool.get_number_threads())
             for chunk in chunks:
-                self._pool.submit(self._preprocessor.preprocess, self._smiles[chunk['start']:chunk['end'] + 1],
+                indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                self._pool.submit(self._preprocessor.preprocess, self._smiles[indices_chunk],
                                   self._random_seed + chunk['start'] + self._iteration * len(self))
             results = self._pool.get_results()
             all_results = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
