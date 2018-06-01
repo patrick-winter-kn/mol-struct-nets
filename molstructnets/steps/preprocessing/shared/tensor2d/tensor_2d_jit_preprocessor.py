@@ -33,8 +33,10 @@ class Tensor2DJitPreprocessor:
             self._symbol_index_lookup = dict()
             for i in range(len(symbols)):
                 self._symbol_index_lookup[symbols[i].decode('utf-8')] = i
+            self._number_symbols = len(self._symbol_index_lookup)
         else:
             self._symbol_index_lookup = None
+            self._number_symbols = 0
         if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.chemical_properties):
             self._chemical_properties =\
                 numpy_array_to_string_list(preprocessed_h5[file_structure.PreprocessedTensor2DJit.chemical_properties])
@@ -84,7 +86,7 @@ class Tensor2DJitPreprocessor:
                     if self._chemical_properties is not None:
                         chemical_property_values = chemical_properties.get_chemical_properties(atom, self._chemical_properties)
                         self.normalize(chemical_property_values)
-                        tensor[position_x, position_y, len(self._symbol_index_lookup):] = chemical_property_values[:]
+                        tensor[position_x, position_y, self._number_symbols:] = chemical_property_values[:]
                     atom_positions[atom.GetIdx()] = [position_x, position_y]
                 if not successful:
                     tensor[:] = 0
