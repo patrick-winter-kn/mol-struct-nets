@@ -27,12 +27,14 @@ class Tensor2DJitArray():
 
     def __getitem__(self, item):
         indices = self._indices[item]
+        random_seed = None
         if len(indices) > 1:
             chunks = misc.chunk(len(indices), self._pool.get_number_threads())
             for chunk in chunks:
                 indices_chunk = indices[chunk['start']:chunk['end'] + 1]
-                self._pool.submit(self._preprocessor.preprocess, self._smiles[indices_chunk],
-                                  self._random_seed + chunk['start'] + self._iteration * len(self))
+                if self._random_seed is not None:
+                    random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
+                self._pool.submit(self._preprocessor.preprocess, self._smiles[indices_chunk], random_seed)
             results = self._pool.get_results()
             all_results = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
             offset = 0
@@ -41,8 +43,9 @@ class Tensor2DJitArray():
                 offset += len(result)
             return all_results
         else:
-            return self._preprocessor.preprocess(self._smiles[indices], self._random_seed + indices[0]
-                                                 + self._iteration * len(self))
+            if self._random_seed is not None:
+                random_seed = self._random_seed + indices[0] + self._iteration * len(self)
+            return self._preprocessor.preprocess(self._smiles[indices], random_seed)
 
     @property
     def shape(self):
@@ -68,6 +71,6 @@ def load_array(global_parameters, train=False):
         partition_h5.close()
     else:
         partition = numpy.arange(len(smiles), dtype='uint32')
-    preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
     random_seed = global_parameters[constants.GlobalParameters.seed]
+    preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
     return Tensor2DJitArray(smiles, classes, partition, preprocessed_path, random_seed)

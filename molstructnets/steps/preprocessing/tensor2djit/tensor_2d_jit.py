@@ -117,9 +117,9 @@ class Tensor2DJit:
                     means = numpy.zeros(number_chemical_properties, dtype='float32')
                 for i in range(len(results)):
                     min_x = misc.minimum(min_x, results[i]['min_x'])
-                    max_x = misc.minimum(max_x, results[i]['max_x'])
+                    max_x = misc.maximum(max_x, results[i]['max_x'])
                     min_y = misc.minimum(min_y, results[i]['min_y'])
-                    max_y = misc.minimum(max_y, results[i]['max_y'])
+                    max_y = misc.maximum(max_y, results[i]['max_y'])
                     symbols = symbols.union(results[i]['symbols'])
                     if needs_min_max or needs_mean_std:
                         for j in range(number_chemical_properties):
