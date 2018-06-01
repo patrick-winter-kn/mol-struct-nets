@@ -8,7 +8,6 @@ from util import data_validation, misc, file_structure, file_util, logger, threa
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 
-number_threads = thread_pool.default_number_threads
 fixed_symbols = {'-', '=', '#', '$', ':'}
 if molecule_2d_tensor.with_empty_bits:
     fixed_symbols.add(' ')
@@ -173,6 +172,8 @@ class Tensor2DJit:
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_y, max_y)
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale,
                                    local_parameters['scale'])
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.with_bonds,
+                                   local_parameters['bonds'])
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square,
                                    local_parameters['square'])
             if local_parameters['gauss_sigma'] is not None:

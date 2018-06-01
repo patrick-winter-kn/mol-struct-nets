@@ -55,6 +55,7 @@ class PreprocessedTensor2DJit:
     max_y = 'max_y'
     square = 'square'
     scale = 'scale'
+    with_bonds = 'with_bonds'
     symbols = 'symbols'
     chemical_properties = 'chemical_properties'
     gauss_sigma = 'gauss_sigma'
