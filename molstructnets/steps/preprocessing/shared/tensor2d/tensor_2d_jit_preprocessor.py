@@ -68,13 +68,14 @@ class Tensor2DJitPreprocessor:
             while not successful:
                 successful = True
                 atom_positions = dict()
+                if random_seed is not None:
+                    rotation = random_.randint(0, 359)
+                    flip = bool(random_.randint(0, 1))
                 for atom in molecule.GetAtoms():
                     position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
                     position_x = position.x
                     position_y = position.y
                     if random_seed is not None:
-                        rotation = random_.randint(0, 359)
-                        flip = bool(random_.randint(0, 1))
                         position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation)
                     position_x, position_y = self._rasterizer.apply(position_x, position_y)
                     if position_x >= tensor.shape[0] or position_y >= tensor.shape[1]:

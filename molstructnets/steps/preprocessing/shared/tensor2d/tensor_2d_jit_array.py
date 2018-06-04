@@ -69,8 +69,9 @@ def load_array(global_parameters, train=False):
         partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
         partition = partition_h5[file_structure.Partitions.train][:]
         partition_h5.close()
+        random_seed = global_parameters[constants.GlobalParameters.seed]
     else:
         partition = numpy.arange(len(smiles), dtype='uint32')
-    random_seed = global_parameters[constants.GlobalParameters.seed]
+        random_seed = None
     preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
     return Tensor2DJitArray(smiles, classes, partition, preprocessed_path, random_seed)
