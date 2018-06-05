@@ -21,6 +21,9 @@ class Tensor2DJit:
         parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 50, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory. Default: 50'})
+        parameters.append({'id': 'number_predictions', 'name': 'Predictions per data point', 'type': int, 'default': 1,
+                           'min': 1, 'description': 'The number of times a data point is predicted (with different'
+                                          ' transformations). The result is the mean of all predictions. Default: 1'})
         return parameters
 
     @staticmethod
@@ -34,7 +37,8 @@ class Tensor2DJit:
         if file_util.file_exists(prediction_path):
             logger.log('Skipping step: ' + prediction_path + ' already exists')
         else:
-            array = tensor_2d_jit_array.load_array(global_parameters)
+            multiple = local_parameters['number_predictions'] > 1
+            array = tensor_2d_jit_array.load_array(global_parameters, transform=multiple)
             temp_prediction_path = file_util.get_temporary_file_path('tensor_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
@@ -45,7 +49,14 @@ class Tensor2DJit:
             chunks = misc.chunk_by_size(len(array), local_parameters['batch_size'])
             with progressbar.ProgressBar(len(array)) as progress:
                 for chunk in chunks:
-                    predictions[chunk['start']:chunk['end']+1] = model.predict(array[chunk['start']:chunk['end']+1])[:]
+                    predictions_chunk = model.predict(array[chunk['start']:chunk['end']+1])
+                    if multiple:
+                        for i in range(1, local_parameters['number_predictions']):
+                            array.set_iteration(i)
+                            predictions_chunk += model.predict(array[chunk['start']:chunk['end']+1])
+                        array.set_iteration(0)
+                        predictions_chunk /= local_parameters['number_predictions']
+                    predictions[chunk['start']:chunk['end']+1] = predictions_chunk[:]
                     progress.increment(chunk['end'] + 1 - chunk['start'])
             array.close()
             prediction_h5.close()

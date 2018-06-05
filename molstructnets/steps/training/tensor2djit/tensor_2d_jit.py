@@ -43,7 +43,7 @@ class Tensor2DJit:
             logger.log('Skipping step: ' + model_path + ' has already been trained for ' + str(epoch) + ' epochs')
         else:
             batch_size = local_parameters['batch_size']
-            array = tensor_2d_jit_array.load_array(global_parameters, train=True)
+            array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True)
             callback_list = list()
             model = models.load_model(model_path)
             callback_list.append(ModelCheckpoint(model_path))

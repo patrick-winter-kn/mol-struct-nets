@@ -22,6 +22,9 @@ class Tensor2DJitArray():
         random.shuffle(self._indices)
         self._iteration += 1
 
+    def set_iteration(self, iteration):
+        self._iteration = iteration
+
     def __len__(self):
         return self._shape[0]
 
@@ -58,7 +61,7 @@ class Tensor2DJitArray():
         self._pool.close()
 
 
-def load_array(global_parameters, train=False):
+def load_array(global_parameters, train=False, transform=False):
     smiles_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
     smiles = smiles_h5[file_structure.DataSet.smiles][:]
     smiles_h5.close()
@@ -69,9 +72,11 @@ def load_array(global_parameters, train=False):
         partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
         partition = partition_h5[file_structure.Partitions.train][:]
         partition_h5.close()
-        random_seed = global_parameters[constants.GlobalParameters.seed]
     else:
         partition = numpy.arange(len(smiles), dtype='uint32')
+    if transform:
+        random_seed = global_parameters[constants.GlobalParameters.seed]
+    else:
         random_seed = None
     preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
     return Tensor2DJitArray(smiles, classes, partition, preprocessed_path, random_seed)
