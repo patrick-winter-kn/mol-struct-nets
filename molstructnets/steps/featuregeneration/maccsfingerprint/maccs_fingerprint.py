@@ -1,13 +1,9 @@
 import h5py
 from rdkit import Chem
-from rdkit.Chem import AllChem, MACCSkeys
+from rdkit.Chem import MACCSkeys
 import numpy
 
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, thread_pool, constants,\
-    hdf5_util
-
-
-number_threads = thread_pool.default_number_threads
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, hdf5_util
 
 
 class MaccsFingerprint:
@@ -42,29 +38,33 @@ class MaccsFingerprint:
             global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
         else:
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
-            smiles_data = data_h5[file_structure.DataSet.smiles]
-            temp_preprocessed_path = file_util.get_temporary_file_path('maccsfingerprint')
-            preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
-            chunks = misc.chunk(len(smiles_data), number_threads)
-            global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
-            preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
-                                                    (len(smiles_data), 166), dtype='I', chunks=(1, 166))
-            logger.log('Writing fingerprints')
-            with progressbar.ProgressBar(len(smiles_data)) as progress:
-                with thread_pool.ThreadPool(number_threads) as pool:
-                    for chunk in chunks:
-                        pool.submit(MaccsFingerprint.write_fingerprints, preprocessed,
-                                    smiles_data[chunk['start']:chunk['end'] + 1], chunk['start'], progress)
-                    pool.wait()
+            smiles_data = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
+            temp_preprocessed_path = file_util.get_temporary_file_path('maccsfingerprint')
+            chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
+            global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
+            pool = process_pool.ProcessPool(len(chunks))
+            logger.log('Calculating fingerprints')
+            for chunk in chunks:
+                pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1])
+            results = pool.get_results()
+            pool.close()
+            preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
+            preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
+                                                    (len(smiles_data), 166), dtype='uint8', chunks=(1, 166))
+            offset = 0
+            for result in results:
+                preprocessed[offset:offset + len(result)] = result[:]
+                offset += len(result)
             preprocessed_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
 
-    @staticmethod
-    def write_fingerprints(preprocessed, smiles_data, offset, progress):
-        for i in range(len(smiles_data)):
-            smiles = smiles_data[i].decode('utf-8')
-            molecule = Chem.MolFromSmiles(smiles)
-            fingerprint = MACCSkeys.GenMACCSKeys(molecule)
-            preprocessed[i + offset, :] = list(fingerprint)[1:]
-            progress.increment()
+
+def generate_fingerprints(smiles_data):
+    preprocessed = numpy.zeros((len(smiles_data), 166), dtype='uint8')
+    for i in range(len(smiles_data)):
+        smiles = smiles_data[i].decode('utf-8')
+        molecule = Chem.MolFromSmiles(smiles)
+        fingerprint = MACCSkeys.GenMACCSKeys(molecule)
+        preprocessed[i, :] = list(fingerprint)[1:]
+    return preprocessed
