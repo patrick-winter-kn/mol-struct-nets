@@ -1,8 +1,8 @@
-from util import data_validation, file_structure, progressbar, logger, file_util, hdf5_util, misc
+from util import data_validation, file_structure, progressbar, logger, file_util, hdf5_util, misc, thread_pool
 from keras import models
 import h5py
-import math
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+import queue
 
 
 class Tensor2DJit:
@@ -39,6 +39,7 @@ class Tensor2DJit:
         else:
             multiple = local_parameters['number_predictions'] > 1
             array = tensor_2d_jit_array.load_array(global_parameters, transform=multiple)
+            data_queue = queue.Queue(10)
             temp_prediction_path = file_util.get_temporary_file_path('tensor_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
@@ -47,17 +48,28 @@ class Tensor2DJit:
             model = models.load_model(model_path)
             logger.log('Predicting data')
             chunks = misc.chunk_by_size(len(array), local_parameters['batch_size'])
+            pool = thread_pool.ThreadPool(1)
+            pool.submit(generate_data, array, chunks, local_parameters['number_predictions'], data_queue)
             with progressbar.ProgressBar(len(array)) as progress:
                 for chunk in chunks:
-                    predictions_chunk = model.predict(array[chunk['start']:chunk['end']+1])
+                    predictions_chunk = model.predict(data_queue.get())
                     if multiple:
                         for i in range(1, local_parameters['number_predictions']):
-                            array.set_iteration(i)
-                            predictions_chunk += model.predict(array[chunk['start']:chunk['end']+1])
-                        array.set_iteration(0)
+                            predictions_chunk += model.predict(data_queue.get())
                         predictions_chunk /= local_parameters['number_predictions']
                     predictions[chunk['start']:chunk['end']+1] = predictions_chunk[:]
                     progress.increment(chunk['end'] + 1 - chunk['start'])
+            pool.close()
             array.close()
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)
+
+
+def generate_data(array, chunks, number_predictions, data_queue):
+    for chunk in chunks:
+        data_queue.put(array[chunk['start']:chunk['end']+1])
+        if number_predictions > 1:
+            for i in range(1, number_predictions):
+                array.set_iteration(i)
+                data_queue.put(array[chunk['start']:chunk['end']+1])
+            array.set_iteration(0)

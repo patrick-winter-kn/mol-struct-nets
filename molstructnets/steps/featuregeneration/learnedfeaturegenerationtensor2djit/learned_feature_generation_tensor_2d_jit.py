@@ -1,9 +1,10 @@
 import h5py
 import numpy
 from keras import models
-import math
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util, misc
+from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util, misc,\
+    thread_pool
+import queue
 
 
 class LearnedFeatureGenerationTensor2DJit:
@@ -46,6 +47,7 @@ class LearnedFeatureGenerationTensor2DJit:
         else:
             feature_model = models.Model(inputs=model.input, outputs=feature_layer.output)
             array = tensor_2d_jit_array.load_array(global_parameters)
+            data_queue = queue.Queue(10)
             temp_learned_features_path = file_util.get_temporary_file_path('learned_features')
             learned_features_h5 = h5py.File(temp_learned_features_path, 'w')
             learned_features = hdf5_util.create_dataset(learned_features_h5, file_structure.Preprocessed.preprocessed,
@@ -53,12 +55,19 @@ class LearnedFeatureGenerationTensor2DJit:
                                                         chunks=(1,) + feature_dimensions)
             logger.log('Generating features')
             chunks = misc.chunk_by_size(len(array), local_parameters['batch_size'])
+            pool = thread_pool.ThreadPool(1)
+            pool.submit(generate_data, array, chunks, data_queue)
             with progressbar.ProgressBar(len(array)) as progress:
                 for chunk in chunks:
-                    learned_features[chunk['start']:chunk['end']+1] = feature_model.predict(array[chunk['start']:chunk['end']+1])[:]
+                    learned_features[chunk['start']:chunk['end']+1] = feature_model.predict(data_queue.get())[:]
                     progress.increment(chunk['end'] + 1 - chunk['start'])
             array.close()
             learned_features_h5.close()
             file_util.move_file(temp_learned_features_path, learned_features_path)
         global_parameters[constants.GlobalParameters.input_dimensions] = feature_dimensions
         global_parameters[constants.GlobalParameters.preprocessed_data] = learned_features_path
+
+
+def generate_data(array, chunks, data_queue):
+    for chunk in chunks:
+        data_queue.put(array[chunk['start']:chunk['end']+1])

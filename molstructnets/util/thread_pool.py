@@ -1,8 +1,9 @@
 import os
 from concurrent import futures
+from util import process_pool
 
 
-default_number_threads = os.cpu_count() * 2
+default_number_threads = process_pool.default_number_processes
 
 
 class ThreadPool:
@@ -14,16 +15,28 @@ class ThreadPool:
 
     def submit(self, function_, *args, **kwargs):
         self.futures.append(self.pool.submit(function_, *args, **kwargs))
+        return self.futures[-1]
 
     def wait(self):
         for i in range(len(self.futures)):
             self.futures[i].result()
+        self.futures = []
+
+    def get_results(self):
+        results = []
+        for i in range(len(self.futures)):
+            results.append(self.futures[i].result())
+        self.futures = []
+        return results
 
     def get_number_threads(self):
         return self.number_threads
+
+    def close(self):
+        self.pool.shutdown()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.pool.shutdown()
+        self.close()
