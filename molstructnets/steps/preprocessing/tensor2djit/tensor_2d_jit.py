@@ -78,13 +78,6 @@ class Tensor2DJit:
             temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             number_chemical_properties = len(local_parameters['chemical_properties'])
-            # Write chemical properties
-            if number_chemical_properties > 0:
-                chemical_properties_array = Tensor2DJit.string_list_to_numpy_array(
-                    local_parameters['chemical_properties'])
-                hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                   file_structure.PreprocessedTensor2DJit.chemical_properties,
-                                                   chemical_properties_array)
             # First run: Calculate gridsize_x, gridsize_y, symbols, normalization_min, normalization_max,
             # normalization_mean
             data_set_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
@@ -103,18 +96,31 @@ class Tensor2DJit:
                                 normalization_min=needs_min_max, normalization_max=needs_min_max,
                                 normalization_mean=needs_mean_std)
                 results = pool.get_results()
+                same_values = results[0]['same_values']
+                for i in range(1, len(results)):
+                    for j in range(len(same_values)):
+                        same_values[j].add_same_value(results[i]['same_values'][j])
+                valid_property_indices = list()
+                valid_properties = list()
+                for i in range(len(local_parameters['chemical_properties'])):
+                    if same_values[i].same():
+                        logger.log('All values for ' + local_parameters['chemical_properties'][i] + ' are '
+                                   + str(same_values[i].get_value()) + '. Leaving it out.', logger.LogLevel.WARNING)
+                    else:
+                        valid_property_indices.append(i)
+                        valid_properties.append(local_parameters['chemical_properties'][i])
                 min_x = None
                 max_x = None
                 min_y = None
                 max_y = None
                 symbols = set()
                 if needs_min_max:
-                    mins = numpy.zeros(number_chemical_properties, dtype='float32')
+                    mins = numpy.zeros(len(valid_property_indices), dtype='float32')
                     mins[:] = numpy.nan
-                    maxs = numpy.zeros(number_chemical_properties, dtype='float32')
+                    maxs = numpy.zeros(len(valid_property_indices), dtype='float32')
                     maxs[:] = numpy.nan
                 if needs_mean_std:
-                    means = numpy.zeros(number_chemical_properties, dtype='float32')
+                    means = numpy.zeros(len(valid_property_indices), dtype='float32')
                 for i in range(len(results)):
                     min_x = misc.minimum(min_x, results[i]['min_x'])
                     max_x = misc.maximum(max_x, results[i]['max_x'])
@@ -122,12 +128,14 @@ class Tensor2DJit:
                     max_y = misc.maximum(max_y, results[i]['max_y'])
                     symbols = symbols.union(results[i]['symbols'])
                     if needs_min_max or needs_mean_std:
-                        for j in range(number_chemical_properties):
+                        index = 0
+                        for j in valid_property_indices:
                             if needs_min_max:
-                                mins[j] = misc.minimum(mins[j], results[i]['normalization_min'][j])
-                                maxs[j] = misc.maximum(maxs[j], results[i]['normalization_max'][j])
+                                mins[index] = misc.minimum(mins[index], results[i]['normalization_min'][j])
+                                maxs[index] = misc.maximum(maxs[index], results[i]['normalization_max'][j])
                             if needs_mean_std:
-                                means[j] += results[i]['normalization_mean'][j]
+                                means[index] += results[i]['normalization_mean'][j]
+                            index += 1
                 if local_parameters['symbols'] is not None:
                     symbols = symbols.union(set(local_parameters['symbols'].split(';')))
                 if needs_mean_std:
@@ -146,25 +154,30 @@ class Tensor2DJit:
                                                        file_structure.PreprocessedTensor2DJit.normalization_mean, means)
                 rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_jit_preprocessor.padding, min_x, max_x,
                                                     min_y, max_y, local_parameters['square'])
-                dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) +
-                              len(local_parameters['chemical_properties']))
+                dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) + len(valid_properties))
                 # Second run: Calculate normalization_std
                 if needs_mean_std:
                     logger.log('Calculating standard deviation')
                     for chunk in chunks:
                         pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end'] + 1],
-                                    local_parameters['chemical_properties'], means)
+                                    valid_properties, means)
                     results = pool.get_results()
-                    stds = numpy.zeros(number_chemical_properties, dtype='float32')
+                    stds = numpy.zeros(len(valid_properties), dtype='float32')
                     atom_counter = 0
                     for i in range(len(results)):
                         atom_counter += results[i]['atom_counter']
-                        for j in range(number_chemical_properties):
+                        for j in range(len(valid_properties)):
                             stds[j] += results[i]['normalization_std'][j]
                     stds /= atom_counter
                     stds = numpy.sqrt(stds)
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
                                                        file_structure.PreprocessedTensor2DJit.normalization_std, stds)
+            # Write chemical properties
+            if number_chemical_properties > 0:
+                chemical_properties_array = Tensor2DJit.string_list_to_numpy_array(valid_properties)
+                hdf5_util.create_dataset_from_data(preprocessed_h5,
+                                                   file_structure.PreprocessedTensor2DJit.chemical_properties,
+                                                   chemical_properties_array)
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions, dimensions)
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_x, min_x)
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_x, max_x)
@@ -191,6 +204,9 @@ class Tensor2DJit:
     def first_run(smiles, chemical_properties_=[], with_atom_symbols=False, with_bonds=False, normalization_min=False,
                   normalization_max=False, normalization_mean=False):
         results = dict()
+        same_values = list()
+        for i in range(len(chemical_properties_)):
+            same_values.append(SameValues())
         min_x = None
         max_x = None
         min_y = None
@@ -216,15 +232,15 @@ class Tensor2DJit:
                 max_y = misc.maximum(max_y, position.y)
                 if with_atom_symbols:
                     symbols.add(atom.GetSymbol())
-                if normalization_min or normalization_max or normalization_mean:
-                    chemical_property_values = chemical_properties.get_chemical_properties(atom, chemical_properties_)
-                    for j in range(len(chemical_property_values)):
-                        if normalization_min:
-                            n_min[j] = misc.minimum(n_min[j], chemical_property_values[j])
-                        if normalization_max:
-                            n_max[j] = misc.maximum(n_max[j], chemical_property_values[j])
-                        if normalization_mean:
-                            n_mean[j] += chemical_property_values[j]
+                chemical_property_values = chemical_properties.get_chemical_properties(atom, chemical_properties_)
+                for j in range(len(chemical_property_values)):
+                    same_values[j].add(chemical_property_values[j])
+                    if normalization_min:
+                        n_min[j] = misc.minimum(n_min[j], chemical_property_values[j])
+                    if normalization_max:
+                        n_max[j] = misc.maximum(n_max[j], chemical_property_values[j])
+                    if normalization_mean:
+                        n_mean[j] += chemical_property_values[j]
                 if normalization_mean:
                     atom_counter += 1
             if with_bonds:
@@ -242,6 +258,7 @@ class Tensor2DJit:
         if normalization_mean:
             n_mean /= atom_counter
             results['normalization_mean'] = n_mean
+        results['same_values'] = same_values
         return results
 
     @staticmethod
@@ -269,3 +286,34 @@ class Tensor2DJit:
         for i in range(len(string_list)):
             array[i] = string_list[i].encode('utf-8')
         return array
+
+
+class SameValues():
+
+    def __init__(self):
+        self._value = None
+        self._same = True
+
+    def add(self, value):
+        if self._same:
+            if self._value is None:
+                self._value = value
+            elif self._value != value:
+                self._same = False
+                self._value = None
+
+    def add_same_value(self, value):
+        if not self._same or not value._same:
+            self._same = False
+            self._value = None
+        elif self._value is None:
+            self._value = value._value
+        elif self._value != value._value:
+            self._same = False
+            self._value = None
+
+    def same(self):
+        return self._same
+
+    def get_value(self):
+        return self._value
