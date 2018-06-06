@@ -1,11 +1,8 @@
-from util import data_validation, file_structure, file_util, misc, progressbar, thread_pool, logger, constants,\
-    hdf5_util
+from util import data_validation, file_structure, file_util, misc, process_pool, logger, constants, hdf5_util
 from rdkit import Chem
 import h5py
 import random
-
-
-number_threads = 1
+import numpy
 
 
 class Substructure:
@@ -64,55 +61,59 @@ class Substructure:
             substructures = []
             for string in local_parameters['substructures'].split(';'):
                 substructures.append(Chem.MolFromSmiles(string, sanitize=False))
-            data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
-            smiles_data = data_h5[file_structure.DataSet.smiles]
             temp_target_path = file_util.get_temporary_file_path('substructure_target_data')
-            target_h5 = h5py.File(temp_target_path, 'w')
-            classes = hdf5_util.create_dataset(target_h5, file_structure.Target.classes, (smiles_data.shape[0], 2))
             logic = local_parameters['logic']
             if logic is None:
                 logic = 'a'
                 for i in range(1, len(substructures)):
                     logic += '&' + chr(ord('a')+i)
-            chunks = misc.chunk(len(smiles_data), number_threads)
             error = local_parameters['error'] * 0.01
-            with progressbar.ProgressBar(len(smiles_data)) as progress:
-                with thread_pool.ThreadPool(number_threads) as pool:
-                    for i in range(len(chunks)):
-                        chunk = chunks[i]
-                        pool.submit(Substructure._generate_activities,
-                                    smiles_data[chunk['start']:chunk['end'] + 1], substructures, logic, classes,
-                                    chunk['start'], error, global_parameters[constants.GlobalParameters.seed] + i,
-                                    progress)
-                    pool.wait()
+            data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+            smiles_data = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
+            chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
+            pool = process_pool.ProcessPool(len(chunks))
+            for i in range(len(chunks)):
+                chunk = chunks[i]
+                pool.submit(generate_targets, smiles_data[chunk['start']:chunk['end'] + 1], substructures, logic, error,
+                            global_parameters[constants.GlobalParameters.seed] + i)
+            results = pool.get_results()
+            pool.close()
+            target_h5 = h5py.File(temp_target_path, 'w')
+            classes = hdf5_util.create_dataset(target_h5, file_structure.Target.classes, (len(smiles_data), 2),
+                                               dtype='uint8')
+            offset = 0
+            for result in results:
+                classes[offset:offset + len(result)] = result[:]
+                offset += len(result)
+            hdf5_util.set_property(target_h5, 'substructures', local_parameters['substructures'])
+            hdf5_util.set_property(target_h5, 'logic', logic)
             target_h5.close()
-            hdf5_util.set_property(temp_target_path, 'substructures', local_parameters['substructures'])
-            hdf5_util.set_property(temp_target_path, 'logic', logic)
             file_util.move_file(temp_target_path, target_path)
 
-    @staticmethod
-    def _generate_activities(smiles_data, substructures, logic, classes, offset, error, random_seed, progress):
-        random_ = random.Random(random_seed)
-        for i in range(len(smiles_data)):
-            structure = Chem.MolFromSmiles(smiles_data[i].decode('utf-8'), sanitize=False)
-            evals = []
-            for substructure in substructures:
-                evals.append(structure.HasSubstructMatch(substructure))
-            expression = ''
-            for character in logic:
-                if misc.in_range(ord(character), ord('a'), ord('z')):
-                    index = ord(character) - ord('a')
-                    expression += str(evals[index])
-                else:
-                    expression += character
-            active = eval(expression)
-            if random_.random() < error:
-                active = not active
-            if active:
-                classes[i + offset, 0] = 1.0
-                classes[i + offset, 1] = 0.0
+
+def generate_targets(smiles_data, substructures, logic, error, random_seed):
+    classes = numpy.zeros((len(smiles_data), 2), dtype='uint8')
+    random_ = random.Random(random_seed)
+    for i in range(len(smiles_data)):
+        structure = Chem.MolFromSmiles(smiles_data[i].decode('utf-8'), sanitize=False)
+        evals = []
+        for substructure in substructures:
+            evals.append(structure.HasSubstructMatch(substructure))
+        expression = ''
+        for character in logic:
+            if misc.in_range(ord(character), ord('a'), ord('z')):
+                index = ord(character) - ord('a')
+                expression += str(evals[index])
             else:
-                classes[i + offset, 0] = 0.0
-                classes[i + offset, 1] = 1.0
-            progress.increment()
+                expression += character
+        active = eval(expression)
+        if random_.random() < error:
+            active = not active
+        if active:
+            classes[i, 0] = 1.0
+            classes[i, 1] = 0.0
+        else:
+            classes[i, 0] = 0.0
+            classes[i, 1] = 1.0
+    return classes

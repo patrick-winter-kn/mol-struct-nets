@@ -49,7 +49,6 @@ class Postprocessing:
         if file_util.file_exists(partition_path):
             logger.log('Skipping step: ' + partition_path + ' already exists')
         else:
-            random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
             classes = classes[:].astype('bool')
