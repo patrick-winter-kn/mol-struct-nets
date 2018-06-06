@@ -5,9 +5,6 @@ import random
 
 
 def stats(predictions, classes, alphas, positives=None, shuffle=True, seed=42):
-    # We copy the needed data into memory to speed up sorting
-    classes = misc.copy_into_memory(classes, as_bool=True)
-    predictions = misc.copy_into_memory(predictions)
     # First axis of first element
     predictions = predictions[:, 0]
     if shuffle:

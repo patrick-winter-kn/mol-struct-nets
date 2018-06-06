@@ -46,24 +46,23 @@ class RieBedroc:
         alphas = []
         for alpha in local_parameters['alphas'].split(','):
             alphas.append(int(alpha))
-        partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-        target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-        classes = target_h5[file_structure.Target.classes]
         prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-        ground_truth = classes
-        predictions = prediction_h5[file_structure.Predictions.prediction]
-        partition = None
-        if local_parameters['partition'] == 'train':
-            partition = partition_h5[file_structure.Partitions.train]
-            # Remove oversampling
-            partition = numpy.unique(partition)
-        elif local_parameters['partition'] == 'test' or local_parameters['partition'] != 'both':
-            partition = partition_h5[file_structure.Partitions.test]
-        if partition is not None:
-            ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
-            predictions = reference_data_set.ReferenceDataSet(partition,
-                                                              prediction_h5[file_structure.Predictions.prediction])
-        ries, bedrocs = rie_bedroc.stats(predictions, ground_truth, alphas, shuffle=local_parameters['shuffle'],
+        predictions = prediction_h5[file_structure.Predictions.prediction][:]
+        prediction_h5.close()
+        target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
+        classes = target_h5[file_structure.Target.classes][:]
+        target_h5.close()
+        if local_parameters['partition'] == 'train' or local_parameters['partition'] == 'test':
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+            if local_parameters['partition'] == 'train':
+                partition = partition_h5[file_structure.Partitions.train][:]
+                partition = numpy.unique(partition)
+            else:
+                partition = partition_h5[file_structure.Partitions.test][:]
+            partition_h5.close()
+            predictions = predictions[partition]
+            classes = classes[partition]
+        ries, bedrocs = rie_bedroc.stats(predictions, classes, alphas, shuffle=local_parameters['shuffle'],
                                              seed=global_parameters[constants.GlobalParameters.seed])
         csv_path = file_structure.get_evaluation_stats_file(global_parameters)
         csv = csv_file.CsvFile(csv_path)
@@ -73,6 +72,3 @@ class RieBedroc:
             row['bedroc' + str(alphas[i])] = bedrocs[i]
         csv.add_row(method_name, row)
         csv.save()
-        partition_h5.close()
-        target_h5.close()
-        prediction_h5.close()

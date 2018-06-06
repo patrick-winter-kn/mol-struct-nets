@@ -52,24 +52,23 @@ class RocCurvePlot:
             method_name = local_parameters['method_name']
             if method_name is None:
                 method_name = local_parameters['partition'].title()
-            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-            target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-            classes = target_h5[file_structure.Target.classes]
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-            ground_truth = classes
-            predictions = prediction_h5[file_structure.Predictions.prediction]
-            partition = None
-            if local_parameters['partition'] == 'train':
-                partition = partition_h5[file_structure.Partitions.train]
-                # Remove oversampling
-                partition = numpy.unique(partition)
-            elif local_parameters['partition'] == 'test' or local_parameters['partition'] != 'both':
-                partition = partition_h5[file_structure.Partitions.test]
-            if partition is not None:
-                ground_truth = reference_data_set.ReferenceDataSet(partition, classes)
-                predictions = reference_data_set.ReferenceDataSet(partition,
-                                                                  prediction_h5[file_structure.Predictions.prediction])
-            auc_list = roc_curve.plot([predictions], [method_name], ground_truth,
+            predictions = prediction_h5[file_structure.Predictions.prediction][:]
+            prediction_h5.close()
+            target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
+            classes = target_h5[file_structure.Target.classes][:]
+            target_h5.close()
+            if local_parameters['partition'] == 'train' or local_parameters['partition'] == 'test':
+                partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+                if local_parameters['partition'] == 'train':
+                    partition = partition_h5[file_structure.Partitions.train][:]
+                    partition = numpy.unique(partition)
+                else:
+                    partition = partition_h5[file_structure.Partitions.test][:]
+                partition_h5.close()
+                predictions = predictions[partition]
+                classes = classes[partition]
+            auc_list = roc_curve.plot([predictions], [method_name], classes,
                                                  roc_curve_plot_path, local_parameters['shuffle'],
                                                  global_parameters[constants.GlobalParameters.seed])
             csv_path = file_structure.get_evaluation_stats_file(global_parameters)
@@ -78,6 +77,3 @@ class RocCurvePlot:
             row['roc_curve_auc'] = auc_list[0]
             csv.add_row(method_name, row)
             csv.save()
-            partition_h5.close()
-            target_h5.close()
-            prediction_h5.close()

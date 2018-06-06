@@ -9,8 +9,6 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
     actives_list = []
     inactives_list = []
     auc_list = []
-    # We copy the needed data into memory to speed up sorting
-    classes = misc.copy_into_memory(classes, as_bool=True)
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
         actives, inactives, auc= stats(predictions_list[i], classes, shuffle=shuffle, seed=seed)
@@ -40,11 +38,8 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
 
 def stats(predictions, classes, positives=None, shuffle=True, seed=42):
     if positives is None:
-        positives = positives_count(classes)
+        positives = classes[:,0].sum()
     negatives = len(classes) - positives
-    # We copy the needed data into memory to speed up sorting
-    classes = misc.copy_into_memory(classes, as_bool=True)
-    predictions = misc.copy_into_memory(predictions)
     # First axis of first element
     predictions = predictions[:, 0]
     if shuffle:
@@ -76,18 +71,3 @@ def stats(predictions, classes, positives=None, shuffle=True, seed=42):
     auc = (curve_sum / positives) / negatives
     logger.log('AUC: ' + str(auc), logger.LogLevel.VERBOSE)
     return actives, inactives, auc
-
-
-def positives_count(classes):
-    positives = 0
-    logger.log('Counting actives')
-    with progressbar.ProgressBar(len(classes)) as progress:
-        i = 0
-        for row in classes:
-            if numpy.where(row == max(row))[0] == 0:
-                positives += 1
-            i += 1
-            progress.increment()
-    logger.log('Found ' + str(positives) + ' actives and ' + str(len(classes) - positives) + ' inactives',
-               logger.LogLevel.VERBOSE)
-    return positives
