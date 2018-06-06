@@ -20,13 +20,13 @@ class Tensor2DJitPreprocessor:
         self._shape =\
             tuple(hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions))
         self._with_bonds = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.with_bonds)
-        scale = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale)
+        self._scale = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale)
         square = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square)
         min_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_x)
         min_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_y)
         max_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_x)
         max_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_y)
-        self._rasterizer = rasterizer.Rasterizer(scale, padding, min_x, max_x, min_y, max_y, square)
+        self._rasterizer = rasterizer.Rasterizer(self._scale, padding, min_x, max_x, min_y, max_y, square)
         self._transformer = transformer.Transformer(min_x, max_x, min_y, max_y)
         if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.symbols):
             symbols = preprocessed_h5[file_structure.PreprocessedTensor2DJit.symbols]
@@ -71,12 +71,15 @@ class Tensor2DJitPreprocessor:
                 if random_seed is not None:
                     rotation = random_.randint(0, 359)
                     flip = bool(random_.randint(0, 1))
+                    shift_x = random_.randint(0, 1) / self._scale - 0.5 / self._scale
+                    shift_y = random_.randint(0, 1) / self._scale - 0.5 / self._scale
                 for atom in molecule.GetAtoms():
                     position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
                     position_x = position.x
                     position_y = position.y
                     if random_seed is not None:
-                        position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation)
+                        position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation,
+                                                                         shift_x, shift_y)
                     position_x, position_y = self._rasterizer.apply(position_x, position_y)
                     if position_x >= tensor.shape[0] or position_y >= tensor.shape[1]:
                         successful = False

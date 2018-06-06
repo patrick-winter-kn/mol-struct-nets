@@ -7,12 +7,12 @@ class Transformer:
         self.center_x = min_x + (max_x - min_x) / 2
         self.center_y = min_y + (max_y - min_y) / 2
 
-    def apply(self, x, y, flip=False, rotation=0):
+    def apply(self, x, y, flip=False, rotation=0, shift_x=0, shift_y=0):
         if flip:
             x = 2 * self.center_x - x
         if rotation != 0:
             x, y = Transformer.rotate((self.center_x, self.center_y), (x, y), rotation)
-        return x, y
+        return x + shift_x, y + shift_y
 
     @staticmethod
     def rotate(origin, point, angle):
