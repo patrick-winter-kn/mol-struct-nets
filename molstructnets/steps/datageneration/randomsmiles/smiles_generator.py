@@ -2,6 +2,7 @@ import random
 from util import misc
 import re
 from rdkit import Chem, RDLogger
+import numpy
 
 
 # Available SMILES string elements
@@ -23,14 +24,12 @@ atom_pattern = re.compile('[A-Z]')
 
 class SmilesGenerator:
 
-    def __init__(self, number, max_length, seed, offset=0, progress=None, global_smiles_set=None):
+    def __init__(self, number, max_length, seed, offset=0):
         self.number = number
         self.max_length = max_length
         self.random = random.Random()
         self.seed = seed
         self.offset = offset
-        self.progress = progress
-        self.global_smiles_set = global_smiles_set
         self.ring_label = 1
 
     def pick_option(self, option_probabilities_map):
@@ -179,14 +178,15 @@ class SmilesGenerator:
                 ring_mainline += 2
         return string, previous_atom, used_bonds + bonds_in_back
 
-    def write_smiles(self, array):
+    def generate_smiles_batch(self):
+        array = numpy.zeros((self.number,), dtype='S' + str(self.max_length))
         # Turn of error logging of RDKit
         logger = RDLogger.logger()
         logger.setLevel(RDLogger.CRITICAL)
         # Iterate over assigned area of array
-        for i in range(self.offset, self.number + self.offset):
+        for i in range(self.number):
             # Set seed based on general seed and position in array
-            self.random.seed(self.seed + i)
+            self.random.seed(self.seed + i + self.offset)
             smiles = None
             valid = False
             # Run until we found a valid SMILES for this position
@@ -210,10 +210,9 @@ class SmilesGenerator:
                 # Get SMILES back (in canonical form)
                 smiles = Chem.MolToSmiles(mol)
                 # Check if canonical SMILES does not exceed maximum length
-                if len(smiles) <= self.max_length:
-                    # Check if SMILES has not been generated before
-                    valid = self.global_smiles_set is None or self.global_smiles_set.add(smiles)
+                valid = len(smiles) <= self.max_length
             array[i] = smiles.encode('utf-8')
-            self.progress.increment()
         # Turn error logging of RDKit back on
         logger.setLevel(RDLogger.DEBUG)
+        return array
+    

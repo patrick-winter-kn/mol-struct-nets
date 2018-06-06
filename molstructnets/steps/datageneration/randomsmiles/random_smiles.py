@@ -1,8 +1,6 @@
-from util import file_structure, thread_pool, file_util, progressbar, misc, concurrent_set, logger, constants, hdf5_util
+from util import file_structure, process_pool, file_util, misc, concurrent_set, logger, constants, hdf5_util
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
-
-number_threads = 1
 
 
 class RandomSmiles:
@@ -48,19 +46,21 @@ class RandomSmiles:
         else:
             global_parameters[constants.GlobalParameters.n] = local_parameters['n']
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
+            chunks = misc.chunk(local_parameters['n'], process_pool.default_number_processes)
+            pool = process_pool.ProcessPool(len(chunks))
+            for chunk in chunks:
+                generator = smiles_generator\
+                    .SmilesGenerator(chunk['size'], local_parameters['max_length'],
+                                     global_parameters[constants.GlobalParameters.seed], chunk['start'])
+                pool.submit(generator.generate_smiles_batch)
+            results = pool.get_results()
+            pool.close()
             data_h5 = h5py.File(temp_data_set_path, 'w')
             smiles_data = hdf5_util.create_dataset(data_h5, file_structure.DataSet.smiles, (local_parameters['n'],),
                                                    'S' + str(local_parameters['max_length']))
-            chunks = misc.chunk(local_parameters['n'], number_threads)
-            smiles_set = concurrent_set.ConcurrentSet()
-            with progressbar.ProgressBar(local_parameters['n']) as progress:
-                with thread_pool.ThreadPool(number_threads) as pool:
-                    for chunk in chunks:
-                        generator = smiles_generator\
-                            .SmilesGenerator(chunk['size'], local_parameters['max_length'],
-                                             global_parameters[constants.GlobalParameters.seed], chunk['start'],
-                                             progress, smiles_set)
-                        pool.submit(generator.write_smiles, smiles_data)
-                    pool.wait()
+            offset = 0
+            for result in results:
+                smiles_data[offset:offset + len(result)] = result[:]
+                offset += len(result)
             data_h5.close()
             file_util.move_file(temp_data_set_path, data_set_path)
