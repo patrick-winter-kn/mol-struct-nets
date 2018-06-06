@@ -36,15 +36,14 @@ class RandomForest:
             logger.log('Skipping step: ' + prediction_path + ' already exists')
         else:
             preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
-            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
+            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed][:]
+            preprocessed_h5.close()
             temp_prediction_path = file_util.get_temporary_file_path('random_forest_prediction')
-            prediction_h5 = h5py.File(temp_prediction_path, 'w')
-            predictions = hdf5_util.create_dataset(prediction_h5, file_structure.Predictions.prediction,
-                                                   (len(preprocessed), 2))
             model_path = file_util.resolve_subpath(file_structure.get_result_folder(global_parameters),
                                                        'randomforest.pkl.gz')
             model = joblib.load(model_path)
-            predictions[:] = random_forest.predict(preprocessed, model)[:]
-            preprocessed_h5.close()
+            predictions = random_forest.predict(preprocessed, model)
+            prediction_h5 = h5py.File(temp_prediction_path, 'w')
+            hdf5_util.create_dataset_from_data(prediction_h5, file_structure.Predictions.prediction, predictions)
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)

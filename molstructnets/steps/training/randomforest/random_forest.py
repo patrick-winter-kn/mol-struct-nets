@@ -39,29 +39,17 @@ class RandomForest:
         if file_util.file_exists(model_path):
             logger.log('Skipping step: ' + model_path + ' already exists')
         else:
-            target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-            classes = target_h5[file_structure.Target.classes]
-            preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
-            preprocessed_training_h5 = None
-            if constants.GlobalParameters.preprocessed_training_data in global_parameters:
-                preprocessed_training_h5 =\
-                    h5py.File(global_parameters[constants.GlobalParameters.preprocessed_training_data], 'r')
-                train = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training_references]
-                input_ = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training]
-            else:
-                train = partition_h5[file_structure.Partitions.train]
-                input_ = reference_data_set.ReferenceDataSet(train, preprocessed)
-            output = reference_data_set.ReferenceDataSet(train, classes)
-            input_ = misc.copy_into_memory(input_)
-            output = misc.copy_into_memory(output, as_bool=True)
-            random_forest.train(input_, output, model_path, local_parameters['nr_trees'],
+            train = partition_h5[file_structure.Partitions.train][:]
+            partition_h5.close()
+            target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
+            classes = target_h5[file_structure.Target.classes][:]
+            target_h5.close()
+            preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
+            preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed][:]
+            preprocessed_h5.close()
+            classes = classes[train]
+            preprocessed = preprocessed[train]
+            random_forest.train(preprocessed, classes, model_path, local_parameters['nr_trees'],
                                 local_parameters['min_samples_leaf'],
                                 global_parameters[constants.GlobalParameters.seed])
-            target_h5.close()
-            preprocessed_h5.close()
-            if preprocessed_training_h5 is not None:
-                preprocessed_training_h5.close()
-            if 'partition_h5' in locals():
-                partition_h5.close()
