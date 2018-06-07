@@ -4,7 +4,7 @@ from experimentbatch import batch_entry
 
 def load_entries_from_csv(csv_path):
     with open(file_util.resolve_path(csv_path), 'r') as file:
-        csv = file.read()
+        csv = file.read().strip()
     experiment_location = None
     if csv.startswith('#'):
         experiment_location = csv[1:csv.find('\n')]
