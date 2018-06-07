@@ -3,7 +3,8 @@ from rdkit import Chem
 from rdkit.Chem import MACCSkeys
 import numpy
 
-from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, hdf5_util
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, hdf5_util,\
+    multi_process_progressbar
 
 
 class MaccsFingerprint:
@@ -43,12 +44,13 @@ class MaccsFingerprint:
             temp_preprocessed_path = file_util.get_temporary_file_path('maccsfingerprint')
             chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
             global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
-            pool = process_pool.ProcessPool(len(chunks))
             logger.log('Calculating fingerprints')
-            for chunk in chunks:
-                pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1])
-            results = pool.get_results()
-            pool.close()
+            with process_pool.ProcessPool(len(chunks)) as pool:
+                with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
+                    for chunk in chunks:
+                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1],
+                                    progress=progress.get_slave())
+                    results = pool.get_results()
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
                                                     (len(smiles_data), 166), dtype='uint8', chunks=(1, 166))
@@ -60,11 +62,15 @@ class MaccsFingerprint:
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
 
 
-def generate_fingerprints(smiles_data):
+def generate_fingerprints(smiles_data, progress=None):
     preprocessed = numpy.zeros((len(smiles_data), 166), dtype='uint8')
     for i in range(len(smiles_data)):
         smiles = smiles_data[i].decode('utf-8')
         molecule = Chem.MolFromSmiles(smiles)
         fingerprint = MACCSkeys.GenMACCSKeys(molecule)
         preprocessed[i, :] = list(fingerprint)[1:]
+        if progress is not None:
+            progress.increment()
+    if progress is not None:
+        progress.finish()
     return preprocessed

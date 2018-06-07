@@ -4,7 +4,7 @@ from rdkit.Chem import AllChem
 import numpy
 
 from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants,\
-    hdf5_util
+    hdf5_util, multi_process_progressbar
 
 
 class EcfpFingerprint:
@@ -55,13 +55,14 @@ class EcfpFingerprint:
             temp_preprocessed_path = file_util.get_temporary_file_path('ecfpfingerprint')
             chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
             global_parameters[constants.GlobalParameters.input_dimensions] = (local_parameters['nr_values'],)
-            pool = process_pool.ProcessPool(len(chunks))
             logger.log('Calculating fingerprints')
-            for chunk in chunks:
-                pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1],
-                            local_parameters['radius'], local_parameters['nr_values'], local_parameters['count'])
-            results = pool.get_results()
-            pool.close()
+            with process_pool.ProcessPool(len(chunks)) as pool:
+                with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
+                    for chunk in chunks:
+                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1],
+                                    local_parameters['radius'], local_parameters['nr_values'], local_parameters['count'],
+                                    progress=progress.get_slave())
+                    results = pool.get_results()
             dtype = 'uint8'
             if local_parameters['count']:
                 dtype = 'uint16'
@@ -77,7 +78,7 @@ class EcfpFingerprint:
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
 
 
-def generate_fingerprints(smiles_data, radius, nr_values, count):
+def generate_fingerprints(smiles_data, radius, nr_values, count, progress=None):
     dtype = 'uint8'
     if count:
         dtype = 'uint16'
@@ -93,4 +94,8 @@ def generate_fingerprints(smiles_data, radius, nr_values, count):
         else:
             fingerprint = numpy.array(AllChem.GetMorganFingerprintAsBitVect(molecule, radius, nr_values))
         preprocessed[i] = fingerprint[:]
+        if progress is not None:
+            progress.increment()
+    if progress is not None:
+        progress.finish()
     return preprocessed

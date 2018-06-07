@@ -3,8 +3,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 import numpy
 from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_jit_preprocessor
-from util import data_validation, misc, file_structure, file_util, logger, thread_pool, hdf5_util, normalization,\
-    process_pool, constants
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, hdf5_util, normalization,\
+    constants, multi_process_progressbar
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
 
@@ -88,14 +88,15 @@ class Tensor2DJit:
                 needs_min_max = local_parameters['normalization'] == normalization.NormalizationTypes.min_max_1\
                                 or local_parameters['normalization'] == normalization.NormalizationTypes.min_max_2
                 needs_mean_std = local_parameters['normalization'] == normalization.NormalizationTypes.z_score
-                for chunk in chunks:
-                    pool.submit(Tensor2DJit.first_run, smiles[chunk['start']:chunk['end'] + 1],
-                                chemical_properties_=local_parameters['chemical_properties'],
-                                with_atom_symbols=local_parameters['atom_symbols'],
-                                with_bonds=local_parameters['bonds'],
-                                normalization_min=needs_min_max, normalization_max=needs_min_max,
-                                normalization_mean=needs_mean_std)
-                results = pool.get_results()
+                with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
+                    for chunk in chunks:
+                        pool.submit(Tensor2DJit.first_run, smiles[chunk['start']:chunk['end'] + 1],
+                                    chemical_properties_=local_parameters['chemical_properties'],
+                                    with_atom_symbols=local_parameters['atom_symbols'],
+                                    with_bonds=local_parameters['bonds'],
+                                    normalization_min=needs_min_max, normalization_max=needs_min_max,
+                                    normalization_mean=needs_mean_std, progress=progress.get_slave())
+                    results = pool.get_results()
                 same_values = results[0]['same_values']
                 for i in range(1, len(results)):
                     for j in range(len(same_values)):
@@ -158,10 +159,11 @@ class Tensor2DJit:
                 # Second run: Calculate normalization_std
                 if needs_mean_std:
                     logger.log('Calculating standard deviation')
-                    for chunk in chunks:
-                        pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end'] + 1],
-                                    valid_properties, means)
-                    results = pool.get_results()
+                    with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
+                        for chunk in chunks:
+                            pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end'] + 1],
+                                        valid_properties, means, progress=progress.get_slave())
+                        results = pool.get_results()
                     stds = numpy.zeros(len(valid_properties), dtype='float32')
                     atom_counter = 0
                     for i in range(len(results)):
@@ -202,7 +204,7 @@ class Tensor2DJit:
 
     @staticmethod
     def first_run(smiles, chemical_properties_=[], with_atom_symbols=False, with_bonds=False, normalization_min=False,
-                  normalization_max=False, normalization_mean=False):
+                  normalization_max=False, normalization_mean=False, progress=None):
         results = dict()
         same_values = list()
         for i in range(len(chemical_properties_)):
@@ -246,6 +248,10 @@ class Tensor2DJit:
             if with_bonds:
                 for bond in molecule.GetBonds():
                     symbols.add(bond_symbols.get_bond_symbol(bond.GetBondType()))
+            if progress is not None:
+                progress.increment()
+        if progress is not None:
+            progress.finish()
         results['min_x'] = min_x
         results['max_x'] = max_x
         results['min_y'] = min_y
@@ -262,7 +268,7 @@ class Tensor2DJit:
         return results
 
     @staticmethod
-    def second_run(smiles, chemical_properties_, means):
+    def second_run(smiles, chemical_properties_, means, progress=None):
         results = dict()
         n_std = numpy.zeros(len(chemical_properties_), dtype='float32')
         atom_counter = 0
@@ -273,6 +279,10 @@ class Tensor2DJit:
                 for j in range(len(chemical_property_values)):
                     n_std[j] += (chemical_property_values[j] - means[j]) ** 2
                 atom_counter += 1
+            if progress is not None:
+                progress.increment()
+        if progress is not None:
+            progress.finish()
         results['normalization_std'] = n_std
         results['atom_counter'] = atom_counter
         return results

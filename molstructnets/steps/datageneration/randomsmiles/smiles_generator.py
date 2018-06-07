@@ -178,7 +178,7 @@ class SmilesGenerator:
                 ring_mainline += 2
         return string, previous_atom, used_bonds + bonds_in_back
 
-    def generate_smiles_batch(self):
+    def generate_smiles_batch(self, progress=None):
         array = numpy.zeros((self.number,), dtype='S' + str(self.max_length))
         # Turn of error logging of RDKit
         logger = RDLogger.logger()
@@ -212,6 +212,10 @@ class SmilesGenerator:
                 # Check if canonical SMILES does not exceed maximum length
                 valid = len(smiles) <= self.max_length
             array[i] = smiles.encode('utf-8')
+            if progress is not None:
+                progress.increment()
+        if progress is not None:
+            progress.finish()
         # Turn error logging of RDKit back on
         logger.setLevel(RDLogger.DEBUG)
         return array

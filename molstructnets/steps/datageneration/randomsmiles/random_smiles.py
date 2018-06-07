@@ -1,4 +1,4 @@
-from util import file_structure, process_pool, file_util, misc, concurrent_set, logger, constants, hdf5_util
+from util import file_structure, process_pool, file_util, misc, logger, constants, hdf5_util, multi_process_progressbar
 import h5py
 from steps.datageneration.randomsmiles import smiles_generator
 
@@ -47,14 +47,14 @@ class RandomSmiles:
             global_parameters[constants.GlobalParameters.n] = local_parameters['n']
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             chunks = misc.chunk(local_parameters['n'], process_pool.default_number_processes)
-            pool = process_pool.ProcessPool(len(chunks))
-            for chunk in chunks:
-                generator = smiles_generator\
-                    .SmilesGenerator(chunk['size'], local_parameters['max_length'],
-                                     global_parameters[constants.GlobalParameters.seed], chunk['start'])
-                pool.submit(generator.generate_smiles_batch)
-            results = pool.get_results()
-            pool.close()
+            with process_pool.ProcessPool(len(chunks)) as pool:
+                with multi_process_progressbar.MultiProcessProgressbar(local_parameters['n'], value_buffer=100) as progress:
+                    for chunk in chunks:
+                        generator = smiles_generator\
+                            .SmilesGenerator(chunk['size'], local_parameters['max_length'],
+                                             global_parameters[constants.GlobalParameters.seed], chunk['start'])
+                        pool.submit(generator.generate_smiles_batch, progress=progress.get_slave())
+                    results = pool.get_results()
             data_h5 = h5py.File(temp_data_set_path, 'w')
             smiles_data = hdf5_util.create_dataset(data_h5, file_structure.DataSet.smiles, (local_parameters['n'],),
                                                    'S' + str(local_parameters['max_length']))
