@@ -5,7 +5,7 @@ from util import hdf5_util, file_structure, normalization
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
-from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols
+from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols, tensor_2d_jit_preprocessed
 from steps.preprocessingtraining.tensor2dtransformation import transformer
 from scipy.ndimage import filters
 
@@ -54,6 +54,59 @@ class Tensor2DJitPreprocessor:
         if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_std):
             self._normalization_std = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_std][:]
         preprocessed_h5.close()
+
+    def preprocess_small(self, smiles_array, random_seed=None):
+        results = list()
+        for i in range(len(smiles_array)):
+            if random_seed is not None:
+                random_ = random.Random(random_seed + i)
+            smiles = smiles_array[i].decode('utf-8')
+            molecule = Chem.MolFromSmiles(smiles)
+            AllChem.Compute2DCoords(molecule)
+            successful = False
+            while not successful:
+                preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed()
+                successful = True
+                atom_positions = dict()
+                if random_seed is not None:
+                    rotation = random_.randint(0, 359)
+                    flip = bool(random_.randint(0, 1))
+                    shift_x = random_.randint(0, 1) / self._scale - 0.5 / self._scale
+                    shift_y = random_.randint(0, 1) / self._scale - 0.5 / self._scale
+                for atom in molecule.GetAtoms():
+                    position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
+                    position_x = position.x
+                    position_y = position.y
+                    if random_seed is not None:
+                        position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation,
+                                                                         shift_x, shift_y)
+                    position_x, position_y = self._rasterizer.apply(position_x, position_y)
+                    if position_x >= self.shape[0] or position_y >= self.shape[1]:
+                        successful = False
+                        break
+                    symbol_index = None
+                    if self._symbol_index_lookup is not None:
+                        symbol_index = self._symbol_index_lookup[atom.GetSymbol()]
+                    chemical_property_values = None
+                    if self._chemical_properties is not None:
+                        chemical_property_values = chemical_properties.get_chemical_properties(atom, self._chemical_properties)
+                        self.normalize(chemical_property_values)
+                    preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                        position_x, position_y, symbol=symbol_index, features=chemical_property_values))
+                    atom_positions[atom.GetIdx()] = [position_x, position_y]
+                if not successful:
+                    preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed()
+            if self._with_bonds:
+                bond_positions_ = bond_positions.calculate(molecule, atom_positions)
+                for bond in molecule.GetBonds():
+                    bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
+                    if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
+                        bond_symbol_index = self._symbol_index_lookup[bond_symbol]
+                        for position in bond_positions_[bond.GetIdx()]:
+                            preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                                position[0], position[1], symbol=bond_symbol_index))
+            results.append(preprocessed_molecule)
+        return results
 
     def preprocess(self, smiles_array, random_seed=None):
         results = numpy.zeros([len(smiles_array)] + list(self.shape), dtype='float32')

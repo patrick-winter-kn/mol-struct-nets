@@ -6,7 +6,7 @@ from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 from steps.training.tensor2djit import tensor_2d_jit_data_generator
 
 
-use_keras_workers = True
+use_keras_workers = False
 
 
 class Tensor2DJit:
