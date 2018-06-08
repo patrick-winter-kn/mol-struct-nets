@@ -4,9 +4,10 @@ from util import file_structure, constants, process_pool, misc
 import h5py
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
 import random
+import multiprocessing
 
 
-small_preprocessing = False
+small_preprocessing = True
 
 
 class Tensor2DJitArray():
@@ -35,28 +36,31 @@ class Tensor2DJitArray():
         return self._shape[0]
 
     def __getitem__(self, item):
-        if small_preprocessing:
-            preprocessing_method = self._preprocessor.preprocess_small
-        else:
-            preprocessing_method = self._preprocessor.preprocess
         indices = self._indices[item]
         random_seed = None
         if self._pool is not None and len(indices) > 1:
-            chunks = misc.chunk(len(indices), self._pool.get_number_threads())
-            for chunk in chunks:
-                indices_chunk = indices[chunk['start']:chunk['end'] + 1]
-                if self._random_seed is not None:
-                    random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
-                self._pool.submit(preprocessing_method, self._smiles[indices_chunk], random_seed)
-            results = self._pool.get_results()
             all_results = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
+            chunks = misc.chunk(len(indices), self._pool.get_number_threads())
             if small_preprocessing:
-                offset = 0
-                for result in results:
-                    for preprocessed in result:
-                        preprocessed.fill_array(all_results[offset])
-                        offset += 1
+                queue = multiprocessing.Manager().Queue()
+                for chunk in chunks:
+                    indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                    if self._random_seed is not None:
+                        random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
+                    self._pool.submit(self._preprocessor.preprocess_small, self._smiles[indices_chunk], chunk['start'],
+                                      queue, random_seed)
+                done = 0
+                while done < len(indices):
+                    preprocessed = queue.get()
+                    preprocessed.fill_array(all_results)
+                    done += 1
             else:
+                for chunk in chunks:
+                    indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                    if self._random_seed is not None:
+                        random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
+                    self._pool.submit(self._preprocessor.preprocess, self._smiles[indices_chunk], random_seed)
+                results = self._pool.get_results()
                 offset = 0
                 for result in results:
                     all_results [offset:offset + len(result)] = result[:]

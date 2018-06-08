@@ -1,6 +1,7 @@
 class Tensor2DJitPreprocessed():
 
-    def __init__(self):
+    def __init__(self, position):
+        self._position = position
         self._atoms = list()
 
     def add_atom(self, atom):
@@ -8,7 +9,7 @@ class Tensor2DJitPreprocessed():
 
     def fill_array(self, array):
         for atom in self._atoms:
-            atom.fill_array(array)
+            atom.fill_array(array, self._position)
 
 
 class Tensor2DJitPreprocessedAtom():
@@ -19,8 +20,8 @@ class Tensor2DJitPreprocessedAtom():
         self._symbol = symbol
         self._features = features
 
-    def fill_array(self, array):
+    def fill_array(self, array, position):
         if self._symbol is not None:
-            array[self._position_x, self._position_y, self._symbol] = 1
+            array[position, self._position_x, self._position_y, self._symbol] = 1
         if self._features is not None:
-            array[self._position_x, self._position_y, -len(self._features):] = self._features[:]
+            array[position, self._position_x, self._position_y, -len(self._features):] = self._features[:]

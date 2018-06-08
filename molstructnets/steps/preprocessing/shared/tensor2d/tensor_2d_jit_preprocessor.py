@@ -55,8 +55,7 @@ class Tensor2DJitPreprocessor:
             self._normalization_std = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_std][:]
         preprocessed_h5.close()
 
-    def preprocess_small(self, smiles_array, random_seed=None):
-        results = list()
+    def preprocess_small(self, smiles_array, offset, queue, random_seed=None):
         for i in range(len(smiles_array)):
             if random_seed is not None:
                 random_ = random.Random(random_seed + i)
@@ -65,7 +64,7 @@ class Tensor2DJitPreprocessor:
             AllChem.Compute2DCoords(molecule)
             successful = False
             while not successful:
-                preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed()
+                preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed(i + offset)
                 successful = True
                 atom_positions = dict()
                 if random_seed is not None:
@@ -94,8 +93,6 @@ class Tensor2DJitPreprocessor:
                     preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
                         position_x, position_y, symbol=symbol_index, features=chemical_property_values))
                     atom_positions[atom.GetIdx()] = [position_x, position_y]
-                if not successful:
-                    preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed()
             if self._with_bonds:
                 bond_positions_ = bond_positions.calculate(molecule, atom_positions)
                 for bond in molecule.GetBonds():
@@ -105,8 +102,7 @@ class Tensor2DJitPreprocessor:
                         for position in bond_positions_[bond.GetIdx()]:
                             preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
                                 position[0], position[1], symbol=bond_symbol_index))
-            results.append(preprocessed_molecule)
-        return results
+            queue.put(preprocessed_molecule)
 
     def preprocess(self, smiles_array, random_seed=None):
         results = numpy.zeros([len(smiles_array)] + list(self.shape), dtype='float32')
