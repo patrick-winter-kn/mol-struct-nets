@@ -1,9 +1,12 @@
 from keras import models
 from keras.callbacks import ModelCheckpoint, TensorBoard
 
-from util import data_validation, file_structure, hdf5_util, logger, callbacks
+from util import data_validation, file_structure, hdf5_util, logger, callbacks, process_pool
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 from steps.training.tensor2djit import tensor_2d_jit_data_generator
+
+
+use_keras_workers = True
 
 
 class Tensor2DJit:
@@ -43,13 +46,19 @@ class Tensor2DJit:
             logger.log('Skipping step: ' + model_path + ' has already been trained for ' + str(epoch) + ' epochs')
         else:
             batch_size = local_parameters['batch_size']
-            array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True)
+            array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True,
+                                                   multi_process=not use_keras_workers)
             callback_list = list()
             model = models.load_model(model_path)
             callback_list.append(ModelCheckpoint(model_path))
             callback_list.append(callbacks.CustomCheckpoint(model_path))
             number_batches = tensor_2d_jit_data_generator.number_chunks(array, batch_size)
             logger.log('Training on ' + str(number_batches) + ' batches with size ' + str(batch_size))
+            if use_keras_workers:
+                keras_workers = process_pool.default_number_processes
+            else:
+                keras_workers = 1
             model.fit_generator(tensor_2d_jit_data_generator.generate_data(array, batch_size), number_batches,
-                                epochs=local_parameters['epochs'], callbacks=callback_list, initial_epoch=epoch)
+                                epochs=local_parameters['epochs'], callbacks=callback_list, initial_epoch=epoch,
+                                workers=keras_workers)
             array.close()
