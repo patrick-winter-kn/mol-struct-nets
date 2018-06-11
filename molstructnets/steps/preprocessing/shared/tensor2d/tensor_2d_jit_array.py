@@ -4,7 +4,6 @@ from util import file_structure, constants, process_pool, misc, buffered_queue
 import h5py
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
 import random
-import multiprocessing
 
 
 small_preprocessing = True

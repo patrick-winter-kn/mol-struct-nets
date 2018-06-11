@@ -90,6 +90,7 @@ for i in range(nr_steps):
     step.check_prerequisites(global_parameters, parameters)
     step.execute(global_parameters, parameters)
     backend.clear_session()
+    gc.collect()
 logger.divider()
 add_last_commit_hash(sys.argv[0], global_parameters)
 end_time = datetime.datetime.now()

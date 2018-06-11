@@ -11,7 +11,7 @@ class BufferedQueue():
 
     def put(self, value):
         self._values.append(value)
-        if self._buffer_size < len(self._values):
+        if len(self._values) >= self._buffer_size:
             self._queue.put(self._values)
             self._values = list()
 
@@ -24,5 +24,6 @@ class BufferedQueue():
             return self._received.pop(0)
 
     def flush(self):
-        self._queue.put(self._values)
-        self._values = list()
+        if len(self._values) > 0:
+            self._queue.put(self._values)
+            self._values = list()
