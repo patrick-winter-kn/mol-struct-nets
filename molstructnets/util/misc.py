@@ -33,6 +33,7 @@ def is_active(probabilities):
 def chunk(number, number_chunks):
     chunks = []
     chunk_size = math.ceil(number / number_chunks)
+    number_chunks = math.ceil(number / chunk_size)
     for i in range(number_chunks):
         start = chunk_size * i
         end = min(start + chunk_size, number) - 1

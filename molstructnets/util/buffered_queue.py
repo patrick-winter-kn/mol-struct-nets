@@ -8,7 +8,6 @@ class BufferedQueue():
         self._values = list()
         self._buffer_size = buffer_size
         self._received = list()
-        self._received.pop()
 
     def put(self, value):
         self._values.append(value)
