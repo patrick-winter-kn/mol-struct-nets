@@ -103,6 +103,7 @@ class Tensor2DJitPreprocessor:
                             preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
                                 position[0], position[1], symbol=bond_symbol_index))
             queue.put(preprocessed_molecule)
+        queue.flush()
 
     def preprocess(self, smiles_array, random_seed=None):
         results = numpy.zeros([len(smiles_array)] + list(self.shape), dtype='float32')

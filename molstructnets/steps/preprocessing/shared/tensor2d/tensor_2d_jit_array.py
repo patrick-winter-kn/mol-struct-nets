@@ -1,6 +1,6 @@
 from numpy import random
 import numpy
-from util import file_structure, constants, process_pool, misc
+from util import file_structure, constants, process_pool, misc, buffered_queue
 import h5py
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
 import random
@@ -42,7 +42,7 @@ class Tensor2DJitArray():
             all_results = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
             chunks = misc.chunk(len(indices), self._pool.get_number_threads())
             if small_preprocessing:
-                queue = multiprocessing.Manager().Queue()
+                queue = buffered_queue.BufferedQueue(10)
                 for chunk in chunks:
                     indices_chunk = indices[chunk['start']:chunk['end'] + 1]
                     if self._random_seed is not None:
