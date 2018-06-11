@@ -22,7 +22,7 @@ class Tensor2DJit:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int, 'default': 1, 'min': 1,
+        parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int, 'min': 1,
                            'description': 'The number of times the model will be trained on the whole data set.'})
         parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 50, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
@@ -48,10 +48,7 @@ class Tensor2DJit:
             batch_size = local_parameters['batch_size']
             array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True,
                                                    multi_process=not use_keras_workers)
-            callback_list = list()
             model = models.load_model(model_path)
-            callback_list.append(ModelCheckpoint(model_path))
-            callback_list.append(callbacks.CustomCheckpoint(model_path))
             number_batches = tensor_2d_jit_data_generator.number_chunks(array, batch_size)
             logger.log('Training on ' + str(number_batches) + ' batches with size ' + str(batch_size))
             if use_keras_workers:
@@ -59,6 +56,6 @@ class Tensor2DJit:
             else:
                 keras_workers = 1
             model.fit_generator(tensor_2d_jit_data_generator.generate_data(array, batch_size), number_batches,
-                                epochs=local_parameters['epochs'], callbacks=callback_list, initial_epoch=epoch,
-                                workers=keras_workers)
+                                epochs=local_parameters['epochs'], callbacks=[callbacks.CustomCheckpoint(model_path)],
+                                initial_epoch=epoch, workers=keras_workers)
             array.close()
