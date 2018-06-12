@@ -36,6 +36,10 @@ class Tensor2DJitArray():
 
     def __getitem__(self, item):
         indices = self._indices[item]
+        single_item = False
+        if not hasattr(indices, '__len__'):
+            single_item = True
+            indices = [indices]
         random_seed = None
         if self._pool is not None and len(indices) > 1:
             all_results = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
@@ -68,7 +72,10 @@ class Tensor2DJitArray():
         else:
             if self._random_seed is not None:
                 random_seed = self._random_seed + indices[0] + self._iteration * len(self)
-            return self._preprocessor.preprocess(self._smiles[indices], random_seed)
+            result = self._preprocessor.preprocess(self._smiles[indices], random_seed)
+            if single_item:
+                result = result[0]
+            return result
 
     @property
     def shape(self):

@@ -6,6 +6,8 @@ from steps.interpretation.rendercams import render_cams
 from steps.interpretation.rendersubstructureatoms import render_substructure_atoms
 from steps.interpretation.camevaluation import cam_evaluation
 from steps.interpretation.extractcamsubstructures import extract_cam_substructures
+from steps.interpretation.calculatecams2djit import calculate_cams_2d_jit
+from steps.interpretation.rendercams2djit import render_cams_2d_jit
 
 
 class InterpretationRepository(repository.Repository):
@@ -21,7 +23,9 @@ class InterpretationRepository(repository.Repository):
 
 instance = InterpretationRepository()
 instance.add_implementation(calculate_cams.CalculateCams)
+instance.add_implementation(calculate_cams_2d_jit.CalculateCams2DJit)
 instance.add_implementation(render_cams.RenderCams)
+instance.add_implementation(render_cams_2d_jit.RenderCams2DJit)
 instance.add_implementation(extract_cam_substructures.ExtractCamSubstructures)
 instance.add_implementation(calculate_smiles_substructure_atoms.CalculateSmilesSubstructureAtoms)
 instance.add_implementation(calculate_2d_substructure_atoms.Calculate2DSubstructureAtoms)
