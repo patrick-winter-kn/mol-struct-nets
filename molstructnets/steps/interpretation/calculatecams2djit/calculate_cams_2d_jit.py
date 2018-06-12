@@ -5,7 +5,7 @@ from vis.utils import utils
 import numpy
 
 from steps.interpretation.shared.kerasviz import cam
-from util import data_validation, file_structure, file_util, progressbar, misc, constants, hdf5_util, logger
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 
 
@@ -75,12 +75,10 @@ class CalculateCams2DJit:
             model = utils.apply_modifications(model)
             model.save(modified_model_path)
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-            classes = target_h5[file_structure.Target.classes]
+            classes = target_h5[file_structure.Target.classes][:]
             prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
             predictions = prediction_h5[file_structure.Predictions.prediction][:]
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
-            preprocessed_h5 = h5py.File(global_parameters[constants.GlobalParameters.preprocessed_data], 'r')
-            #preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed]
             preprocessed = tensor_2d_jit_array.load_array(global_parameters)
             if local_parameters['partition'] == 'train':
                 references = partition_h5[file_structure.Partitions.train][:]
@@ -88,16 +86,12 @@ class CalculateCams2DJit:
                 references = partition_h5[file_structure.Partitions.test][:]
             else:
                 references = numpy.arange(0, len(preprocessed))
-            # Speedup lookup by copying into memory
-            #references = misc.copy_into_memory(references)
             cam_indices_list = list()
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
             else:
-                # We copy the needed data into memory to speed up sorting
                 # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-                #indices = misc.copy_into_memory(predictions)[:, 0].argsort()[::-1]
                 indices = predictions[:, 0].argsort()[::-1]
                 count = min(local_parameters['top_n'], len(indices))
                 if local_parameters['actives']:
@@ -128,7 +122,7 @@ class CalculateCams2DJit:
                                 index = -1
                     j += 1
                 if index is not None:
-                    if not numpy.max(cam_[index]) > 0:
+                    if not numpy.max(cam_[index][:]) > 0:
                         cam_indices_list.append(index)
             if local_parameters['top_n'] is not None:
                 cam_indices = hdf5_util.create_dataset(cam_h5, indices_data_set_name,
@@ -151,5 +145,4 @@ class CalculateCams2DJit:
             target_h5.close()
             prediction_h5.close()
             partition_h5.close()
-            preprocessed_h5.close()
             file_util.move_file(temp_cam_path, cam_path)
