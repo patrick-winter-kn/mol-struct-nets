@@ -48,9 +48,9 @@ def has_data_set(file, name):
     return value
 
 
-def create_dataset(file, name, shape, dtype='f', chunks=True):
+def create_dataset(file, name, shape, dtype='float32', chunks=True):
     return file.create_dataset(name, shape, dtype=dtype, chunks=chunks, compression='gzip')
 
 
-def create_dataset_from_data(file, name, data, chunks=True):
-    return file.create_dataset(name, data=data, chunks=chunks, compression='gzip')
+def create_dataset_from_data(file, name, data, dtype=None, chunks=True):
+    return file.create_dataset(name, data=data, dtype=dtype, chunks=chunks, compression='gzip')

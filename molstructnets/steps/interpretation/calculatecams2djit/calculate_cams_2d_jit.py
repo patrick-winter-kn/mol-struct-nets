@@ -3,9 +3,10 @@ from keras import backend
 from keras import models, activations
 from vis.utils import utils
 import numpy
+import queue
 
 from steps.interpretation.shared.kerasviz import cam
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 
 
@@ -76,39 +77,41 @@ class CalculateCams2DJit:
             model.save(modified_model_path)
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes][:]
-            prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-            predictions = prediction_h5[file_structure.Predictions.prediction][:]
-            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+            target_h5.close()
             preprocessed = tensor_2d_jit_array.load_array(global_parameters)
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
                 references = partition_h5[file_structure.Partitions.train][:]
             elif local_parameters['partition'] == 'test':
                 references = partition_h5[file_structure.Partitions.test][:]
             else:
                 references = numpy.arange(0, len(preprocessed))
-            cam_indices_list = list()
+            partition_h5.close()
+            if local_parameters['actives']:
+                indices_data_set_name = file_structure.Cam.cam_active_indices
+                class_index = 0
+            else:
+                indices_data_set_name = file_structure.Cam.cam_inactive_indices
+                class_index = 1
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
             else:
-                # Get first column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-                indices = predictions[:, 0].argsort()[::-1]
+                prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
+                predictions = prediction_h5[file_structure.Predictions.prediction][:]
+                prediction_h5.close()
+                # Get class column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
+                indices = predictions[:, class_index].argsort()[::-1]
                 count = min(local_parameters['top_n'], len(indices))
-                if local_parameters['actives']:
-                    indices_data_set_name = file_structure.Cam.cam_active_indices
-                else:
-                    indices_data_set_name = file_structure.Cam.cam_inactive_indices
-            if local_parameters['actives']:
-                class_index = 0
-            else:
-                class_index = 1
             if cam_dataset_name in cam_h5.keys():
                 cam_ = cam_h5[cam_dataset_name]
             else:
                 cam_shape = list(preprocessed.shape)
-                cam_shape = tuple(cam_shape[:-1])
-                cam_ = hdf5_util.create_dataset(cam_h5, cam_dataset_name,
-                                                          cam_shape)
+                cam_shape = cam_shape[:-1]
+                chunk_shape = tuple([1] + cam_shape[1:])
+                cam_shape = tuple(cam_shape)
+                cam_ = hdf5_util.create_dataset(cam_h5, cam_dataset_name, cam_shape, chunks=chunk_shape, dtype='float32')
+            cam_indices_list = list()
             j = 0
             for i in range(count):
                 index = -1
@@ -125,14 +128,15 @@ class CalculateCams2DJit:
                     if not numpy.max(cam_[index][:]) > 0:
                         cam_indices_list.append(index)
             if local_parameters['top_n'] is not None:
-                cam_indices = hdf5_util.create_dataset(cam_h5, indices_data_set_name,
-                                                                 (len(cam_indices_list),), dtype='I')
                 cam_indices_list = sorted(cam_indices_list)
-                cam_indices[:] = cam_indices_list[:]
+                hdf5_util.create_dataset_from_data(cam_h5, indices_data_set_name, cam_indices_list, dtype='uint32')
+            data_queue = queue.Queue(10)
+            pool = thread_pool.ThreadPool(1)
+            pool.submit(generate_data, preprocessed, cam_indices_list, data_queue)
             with progressbar.ProgressBar(len(cam_indices_list)) as progress:
                 for i in range(len(cam_indices_list)):
                     index = cam_indices_list[i]
-                    tensor = preprocessed[index]
+                    tensor = data_queue.get()
                     grads = cam.calculate_saliency(model, out_layer_index,
                                                    filter_indices=[class_index],
                                                    seed_input=tensor)
@@ -142,7 +146,9 @@ class CalculateCams2DJit:
                         model = models.load_model(modified_model_path)
                     progress.increment()
             cam_h5.close()
-            target_h5.close()
-            prediction_h5.close()
-            partition_h5.close()
             file_util.move_file(temp_cam_path, cam_path)
+
+
+def generate_data(preprocessed, cam_indices_list, queue):
+    for i in range(len(cam_indices_list)):
+        queue.put(preprocessed[cam_indices_list[i]])
