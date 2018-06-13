@@ -4,6 +4,7 @@ import numpy
 from util import progressbar, logger, chunked_array
 import humanize
 import psutil
+import time
 
 
 def hash_parameters(parameters):
@@ -180,3 +181,11 @@ def normalize(values):
     factor = 1 / (values.max() + offset)
     for i in range(len(values)):
         values[i] = (values[i] + offset) * factor
+
+
+def be_busy(seconds):
+    target = time.time() + seconds
+    while time.time() < target:
+        dummy = 0
+        while dummy < 1000:
+            dummy += 1
