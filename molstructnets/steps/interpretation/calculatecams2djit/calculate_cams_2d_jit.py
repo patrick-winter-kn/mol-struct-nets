@@ -131,20 +131,20 @@ class CalculateCams2DJit:
                 cam_indices_list = sorted(cam_indices_list)
                 hdf5_util.create_dataset_from_data(cam_h5, indices_data_set_name, cam_indices_list, dtype='uint32')
             data_queue = queue.Queue(10)
-            pool = thread_pool.ThreadPool(1)
-            pool.submit(generate_data, preprocessed, cam_indices_list, data_queue)
-            with progressbar.ProgressBar(len(cam_indices_list)) as progress:
-                for i in range(len(cam_indices_list)):
-                    index = cam_indices_list[i]
-                    tensor = data_queue.get()
-                    grads = cam.calculate_saliency(model, out_layer_index,
-                                                   filter_indices=[class_index],
-                                                   seed_input=tensor)
-                    cam_[index] = grads[:]
-                    if i % CalculateCams2DJit.iterations_per_clear == 0:
-                        backend.clear_session()
-                        model = models.load_model(modified_model_path)
-                    progress.increment()
+            with thread_pool.ThreadPool(1) as pool:
+                pool.submit(generate_data, preprocessed, cam_indices_list, data_queue)
+                with progressbar.ProgressBar(len(cam_indices_list)) as progress:
+                    for i in range(len(cam_indices_list)):
+                        index = cam_indices_list[i]
+                        tensor = data_queue.get()
+                        grads = cam.calculate_saliency(model, out_layer_index,
+                                                       filter_indices=[class_index],
+                                                       seed_input=tensor)
+                        cam_[index] = grads[:]
+                        if i % CalculateCams2DJit.iterations_per_clear == 0:
+                            backend.clear_session()
+                            model = models.load_model(modified_model_path)
+                        progress.increment()
             cam_h5.close()
             file_util.move_file(temp_cam_path, cam_path)
 

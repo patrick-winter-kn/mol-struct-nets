@@ -48,18 +48,17 @@ class Tensor2DJit:
             model = models.load_model(model_path)
             logger.log('Predicting data')
             chunks = misc.chunk_by_size(len(array), local_parameters['batch_size'])
-            pool = thread_pool.ThreadPool(1)
-            pool.submit(generate_data, array, chunks, local_parameters['number_predictions'], data_queue)
-            with progressbar.ProgressBar(len(array)) as progress:
-                for chunk in chunks:
-                    predictions_chunk = model.predict(data_queue.get())
-                    if multiple:
-                        for i in range(1, local_parameters['number_predictions']):
-                            predictions_chunk += model.predict(data_queue.get())
-                        predictions_chunk /= local_parameters['number_predictions']
-                    predictions[chunk['start']:chunk['end']+1] = predictions_chunk[:]
-                    progress.increment(chunk['end'] + 1 - chunk['start'])
-            pool.close()
+            with thread_pool.ThreadPool(1) as pool:
+                pool.submit(generate_data, array, chunks, local_parameters['number_predictions'], data_queue)
+                with progressbar.ProgressBar(len(array)) as progress:
+                    for chunk in chunks:
+                        predictions_chunk = model.predict(data_queue.get())
+                        if multiple:
+                            for i in range(1, local_parameters['number_predictions']):
+                                predictions_chunk += model.predict(data_queue.get())
+                            predictions_chunk /= local_parameters['number_predictions']
+                        predictions[chunk['start']:chunk['end']+1] = predictions_chunk[:]
+                        progress.increment(chunk['end'] + 1 - chunk['start'])
             array.close()
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)
