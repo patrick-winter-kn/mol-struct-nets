@@ -1,6 +1,4 @@
 from keras import callbacks
-from util import hdf5_util
-import time
 
 
 class CustomCheckpoint(callbacks.Callback):
@@ -11,5 +9,5 @@ class CustomCheckpoint(callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         self.model.save(self.file_path, overwrite=True)
-        time.sleep(0.01)
-        hdf5_util.set_property(self.file_path, 'epochs_trained', epoch + 1)
+        with open(self.file_path[:-3] + '-epochs.txt') as file:
+            file.write(str(epoch + 1))

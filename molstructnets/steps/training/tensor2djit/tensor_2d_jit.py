@@ -1,7 +1,6 @@
 from keras import models
-from keras.callbacks import ModelCheckpoint, TensorBoard
 
-from util import data_validation, file_structure, hdf5_util, logger, callbacks, process_pool
+from util import data_validation, file_structure, logger, callbacks, process_pool, file_util
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 from steps.training.tensor2djit import tensor_2d_jit_data_generator
 
@@ -39,8 +38,11 @@ class Tensor2DJit:
     @staticmethod
     def execute(global_parameters, local_parameters):
         model_path = file_structure.get_network_file(global_parameters)
-        epoch = hdf5_util.get_property(model_path, 'epochs_trained')
-        if epoch is None:
+        epoch_path = model_path[:-3] + '-epochs.txt'
+        if file_util.file_exists(epoch_path):
+            with open(epoch_path, 'r') as file:
+                epoch = int(file.read())
+        else:
             epoch = 0
         if epoch >= local_parameters['epochs']:
             logger.log('Skipping step: ' + model_path + ' has already been trained for ' + str(epoch) + ' epochs')
