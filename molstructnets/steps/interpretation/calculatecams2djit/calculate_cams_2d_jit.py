@@ -1,7 +1,4 @@
 import h5py
-from keras import backend
-from keras import models, activations
-from vis.utils import utils
 import numpy
 import queue
 
@@ -11,8 +8,6 @@ from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 
 
 class CalculateCams2DJit:
-
-    iterations_per_clear = 20
 
     @staticmethod
     def get_id():
@@ -69,12 +64,6 @@ class CalculateCams2DJit:
             else:
                 file_util.remove_file(cam_path)
             cam_h5 = h5py.File(temp_cam_path, 'a')
-            modified_model_path = file_util.get_temporary_file_path('modified_model')
-            model = models.load_model(file_structure.get_network_file(global_parameters))
-            out_layer_index = len(model.layers)-1
-            model.layers[out_layer_index].activation = activations.linear
-            model = utils.apply_modifications(model)
-            model.save(modified_model_path)
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes][:]
             target_h5.close()
@@ -131,19 +120,15 @@ class CalculateCams2DJit:
                 cam_indices_list = sorted(cam_indices_list)
                 hdf5_util.create_dataset_from_data(cam_h5, indices_data_set_name, cam_indices_list, dtype='uint32')
             data_queue = queue.Queue(10)
+            cam_calc = cam.CAM(file_structure.get_network_file(global_parameters), class_index)
             with thread_pool.ThreadPool(1) as pool:
                 pool.submit(generate_data, preprocessed, cam_indices_list, data_queue)
                 with progressbar.ProgressBar(len(cam_indices_list)) as progress:
                     for i in range(len(cam_indices_list)):
                         index = cam_indices_list[i]
                         tensor = data_queue.get()
-                        grads = cam.calculate_saliency(model, out_layer_index,
-                                                       filter_indices=[class_index],
-                                                       seed_input=tensor)
+                        grads = cam_calc.calculate(tensor)
                         cam_[index] = grads[:]
-                        if i % CalculateCams2DJit.iterations_per_clear == 0:
-                            backend.clear_session()
-                            model = models.load_model(modified_model_path)
                         progress.increment()
             cam_h5.close()
             file_util.move_file(temp_cam_path, cam_path)
