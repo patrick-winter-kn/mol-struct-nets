@@ -9,5 +9,5 @@ class CustomCheckpoint(callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         self.model.save(self.file_path, overwrite=True)
-        with open(self.file_path[:-3] + '-epochs.txt') as file:
+        with open(self.file_path[:-3] + '-epochs.txt', 'w') as file:
             file.write(str(epoch + 1))
