@@ -81,6 +81,10 @@ class Tensor2DJitArray():
     def shape(self):
         return self._shape
 
+    @property
+    def dtype(self):
+        return numpy.float32
+
     def classes(self, item):
         return self._classes[self._indices[item]]
 
