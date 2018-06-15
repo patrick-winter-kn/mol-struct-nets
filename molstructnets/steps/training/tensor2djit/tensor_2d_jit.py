@@ -1,11 +1,7 @@
 from keras import models
 
-from util import data_validation, file_structure, logger, callbacks, process_pool, file_util
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-from steps.training.tensor2djit import tensor_2d_jit_data_generator
-
-
-use_keras_workers = False
+from util import data_validation, file_structure, logger, callbacks, file_util
+from steps.training.tensor2djit import training_array
 
 
 class Tensor2DJit:
@@ -47,17 +43,10 @@ class Tensor2DJit:
         if epoch >= local_parameters['epochs']:
             logger.log('Skipping step: ' + model_path + ' has already been trained for ' + str(epoch) + ' epochs')
         else:
+            epochs = local_parameters['epochs']
             batch_size = local_parameters['batch_size']
-            array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True,
-                                                   multi_process=not use_keras_workers)
             model = models.load_model(model_path)
-            number_batches = tensor_2d_jit_data_generator.number_chunks(array, batch_size)
-            logger.log('Training on ' + str(number_batches) + ' batches with size ' + str(batch_size))
-            if use_keras_workers:
-                keras_workers = process_pool.default_number_processes
-            else:
-                keras_workers = 1
-            model.fit_generator(tensor_2d_jit_data_generator.generate_data(array, batch_size), number_batches,
-                                epochs=local_parameters['epochs'], callbacks=[callbacks.CustomCheckpoint(model_path)],
-                                initial_epoch=epoch, workers=keras_workers)
-            array.close()
+            arrays = training_array.TrainingArrays(global_parameters, epochs, batch_size)
+            model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
+                      callbacks=[callbacks.CustomCheckpoint(model_path)], initial_epoch=epoch)
+            arrays.close()
