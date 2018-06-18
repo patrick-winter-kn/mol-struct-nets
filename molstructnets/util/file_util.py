@@ -49,10 +49,14 @@ def get_temporary_file_path(prefix=None):
     return file_path
 
 
-def move_file(source, destination):
+def move_file(source, destination, safe=True):
     make_folders(destination)
     remove_file(destination)
-    shutil.move(source, destination)
+    if safe:
+        shutil.copy(source, destination)
+        remove_file(source)
+    else:
+        shutil.move(source, destination)
 
 
 def is_folder(file_path):
