@@ -19,9 +19,9 @@ class Tensor2DJit:
         parameters = list()
         parameters.append({'id': 'epochs', 'name': 'Epochs', 'type': int, 'min': 1,
                            'description': 'The number of times the model will be trained on the whole data set.'})
-        parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 50, 'min': 1,
+        parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 100, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
-                                          ' to faster processing but needs more memory. Default: 50'})
+                                          ' to faster processing but needs more memory. Default: 100'})
         return parameters
 
     @staticmethod
