@@ -54,12 +54,9 @@ def chunk_by_size(number, max_chunk_size):
     return chunks
 
 
-def max_in_memory_chunk_size(array, as_bool=False, use_swap=True, fraction=1, buffer=2*math.pow(1024,3)):
-    if as_bool:
-        target_type = numpy.dtype(bool)
-    else:
-        target_type = array.dtype
-    shape = list(array.shape)
+def max_in_memory_chunk_size(dtype, shape, use_swap=True, fraction=1, buffer=2*math.pow(1024,3)):
+    target_type = dtype
+    shape = list(shape)
     shape[0] = 1
     shape = tuple(shape)
     single_size = numpy.zeros(shape, target_type).nbytes

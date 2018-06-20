@@ -1,10 +1,9 @@
 import h5py
 from rdkit import Chem
 
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool, misc
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, buffered_queue, misc
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import numpy
-import queue
 
 
 class Calculate2DSubstructureAtomsJit:
@@ -66,31 +65,26 @@ class Calculate2DSubstructureAtomsJit:
                                                           dtype='uint8')
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
-            location_queue = queue.Queue(1000)
+            location_queue = buffered_queue.BufferedQueue(1000, 10000)
             with progressbar.ProgressBar(len(smiles)) as progress:
-                with thread_pool.ThreadPool(1) as pool:
-                    pool.submit(generate_locations, preprocessed, substructures, location_queue)
-                    write_substructure_atoms(location_queue, substructure_atoms, progress)
+                write_substructure_atoms(preprocessed, substructures, location_queue, substructure_atoms, progress)
             preprocessed.close()
             attention_map_h5.close()
             file_util.move_file(temp_attention_map_path, attention_map_path)
 
 
-def write_substructure_atoms(location_queue, substructure_atoms, progress):
-    for i in range(substructure_atoms.shape[0]):
-        atom_locations = location_queue.get()
-        result = numpy.zeros((substructure_atoms.shape[1], substructure_atoms.shape[2]), dtype='uint8')
-        for index in range(len(atom_locations)):
-            x = atom_locations[index][0]
-            y = atom_locations[index][1]
-            result[x, y] = 1.0
-        substructure_atoms[i, :] = result[:]
-        progress.increment()
-
-
-def generate_locations(preprocessed, substructures, locations_queue):
-    chunks = misc.chunk_by_size(len(preprocessed), 1000)
+def write_substructure_atoms(preprocessed, substructures, location_queue, substructure_atoms, progress):
+    size = misc.max_in_memory_chunk_size('uint8', (1, substructure_atoms.shape[1], substructure_atoms.shape[2]),
+                                         use_swap=False)
+    chunks = misc.chunk_by_size(substructure_atoms.shape[0], size)
     for chunk in chunks:
-        results = preprocessed.get_substructure_locations(slice(chunk['start'], chunk['end']+1), substructures)
-        for result in results:
-            locations_queue.put(result)
+        preprocessed.calc_substructure_locations(chunk['start'], chunk['end'] + 1, substructures, location_queue)
+        result = numpy.zeros((chunk['size'], substructure_atoms.shape[1], substructure_atoms.shape[2]), dtype='uint8')
+        for i in range(result.shape[0]):
+            idx, atom_locations = location_queue.get()
+            for index in range(len(atom_locations)):
+                x = atom_locations[index][0]
+                y = atom_locations[index][1]
+                result[idx, x, y] = 1.0
+            progress.increment()
+        substructure_atoms[chunk['start']:chunk['end'] + 1] = result[:]

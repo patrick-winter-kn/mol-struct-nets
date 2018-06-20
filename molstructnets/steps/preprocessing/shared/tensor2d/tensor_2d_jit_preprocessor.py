@@ -156,8 +156,7 @@ class Tensor2DJitPreprocessor:
             results[:] = filters.gaussian_filter(results[:], self._gauss_sigma)
         return results
 
-    def substructure_locations(self, smiles_array, substructures, random_seed=None):
-        results = list()
+    def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None):
         for i in range(len(smiles_array)):
             if random_seed is not None:
                 random_ = random.Random(random_seed + i)
@@ -202,8 +201,8 @@ class Tensor2DJitPreprocessor:
                         if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
                             for position in bond_positions_[bond.GetIdx()]:
                                 locations.append([position[0], position[1]])
-            results.append(locations)
-        return results
+            locations_queue.put((i + offset, locations))
+        locations_queue.flush()
 
 
     @property
