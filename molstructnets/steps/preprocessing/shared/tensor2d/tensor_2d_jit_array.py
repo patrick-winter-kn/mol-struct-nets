@@ -77,6 +77,34 @@ class Tensor2DJitArray():
                 result = result[0]
             return result
 
+    def get_substructure_locations(self, item, substructures):
+        indices = self._indices[item]
+        single_item = False
+        if not hasattr(indices, '__len__'):
+            single_item = True
+            indices = [indices]
+        random_seed = None
+        if self._pool is not None and len(indices) > 1:
+            all_results = list()
+            chunks = misc.chunk(len(indices), self._pool.get_number_threads())
+            for chunk in chunks:
+                indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                if self._random_seed is not None:
+                    random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
+                self._pool.submit(self._preprocessor.substructure_locations, self._smiles[indices_chunk], substructures,
+                                  random_seed)
+            results = self._pool.get_results()
+            for result in results:
+                all_results += result
+            return all_results
+        else:
+            if self._random_seed is not None:
+                random_seed = self._random_seed + indices[0] + self._iteration * len(self)
+            result = self._preprocessor.substructure_locations(self._smiles[indices], substructures, random_seed)
+            if single_item:
+                result = result[0]
+            return result
+
     @property
     def shape(self):
         return self._shape

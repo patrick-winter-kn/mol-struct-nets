@@ -2,7 +2,7 @@ import h5py
 from rdkit import Chem
 
 from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool, misc
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_position_list
+from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import numpy
 import queue
 
@@ -59,46 +59,38 @@ class Calculate2DSubstructureAtomsJit:
                 substructures = hdf5_util.get_property(file_structure.get_target_file(global_parameters),
                                                        'substructures')
             substructures = substructures.split(';')
-            atom_locations = tensor_2d_jit_position_list.load_list(global_parameters)
+            preprocessed = tensor_2d_jit_array.load_array(global_parameters)
             substructure_atoms = hdf5_util.create_dataset(attention_map_h5,
                                                           file_structure.Cam.substructure_atoms,
-                                                          (len(smiles), atom_locations.shape[1], atom_locations.shape[2]),
+                                                          (len(smiles), preprocessed.shape[1], preprocessed.shape[2]),
                                                           dtype='uint8')
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
             location_queue = queue.Queue(1000)
             with progressbar.ProgressBar(len(smiles)) as progress:
                 with thread_pool.ThreadPool(1) as pool:
-                    pool.submit(generate_locations, atom_locations, location_queue)
-                    write_substructure_atoms(smiles, substructures, location_queue, substructure_atoms, progress)
+                    pool.submit(generate_locations, preprocessed, substructures, location_queue)
+                    write_substructure_atoms(location_queue, substructure_atoms, progress)
+            preprocessed.close()
             attention_map_h5.close()
             file_util.move_file(temp_attention_map_path, attention_map_path)
 
 
-def write_substructure_atoms(smiles, substructures, location_queue, substructure_atoms, progress):
-    for i in range(len(smiles)):
+def write_substructure_atoms(location_queue, substructure_atoms, progress):
+    for i in range(substructure_atoms.shape[0]):
         atom_locations = location_queue.get()
         result = numpy.zeros((substructure_atoms.shape[1], substructure_atoms.shape[2]), dtype='uint8')
-        smiles_string = smiles[i].decode('utf-8')
-        molecule = Chem.MolFromSmiles(smiles_string, sanitize=False)
-        indices = set()
-        for substructure in substructures:
-            matches = molecule.GetSubstructMatches(substructure)
-            for match in matches:
-                for index in match:
-                    indices.add(index)
-        for index in indices:
+        for index in range(len(atom_locations)):
             x = atom_locations[index][0]
             y = atom_locations[index][1]
             result[x, y] = 1.0
-        # TODO add bonds?
         substructure_atoms[i, :] = result[:]
         progress.increment()
 
 
-def generate_locations(atom_locations, locations_queue):
-    chunks = misc.chunk_by_size(len(atom_locations), 1000)
+def generate_locations(preprocessed, substructures, locations_queue):
+    chunks = misc.chunk_by_size(len(preprocessed), 1000)
     for chunk in chunks:
-        results = atom_locations[chunk['start']:chunk['end']+1]
+        results = preprocessed.get_substructure_locations(slice(chunk['start'], chunk['end']+1), substructures)
         for result in results:
             locations_queue.put(result)

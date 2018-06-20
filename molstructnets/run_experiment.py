@@ -4,7 +4,7 @@ import gc
 import time
 import argparse
 from experiments import experiment
-from util import file_structure, logger, file_util, constants, misc
+from util import file_structure, logger, file_util, constants, misc, process_pool
 from steps import steps_repository
 import h5py
 import datetime
@@ -89,6 +89,7 @@ for i in range(nr_steps):
             parameters[parameter] = step_config['parameters'][parameter]
     step.check_prerequisites(global_parameters, parameters)
     step.execute(global_parameters, parameters)
+    process_pool.close_all_pools()
     backend.clear_session()
     gc.collect()
 logger.divider()

@@ -156,7 +156,7 @@ class Tensor2DJitPreprocessor:
             results[:] = filters.gaussian_filter(results[:], self._gauss_sigma)
         return results
 
-    def atom_locations(self, smiles_array, random_seed=None):
+    def substructure_locations(self, smiles_array, substructures, random_seed=None):
         results = list()
         for i in range(len(smiles_array)):
             if random_seed is not None:
@@ -164,10 +164,17 @@ class Tensor2DJitPreprocessor:
             smiles = smiles_array[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
             AllChem.Compute2DCoords(molecule)
+            indices = set()
+            for substructure in substructures:
+                matches = molecule.GetSubstructMatches(substructure)
+                for match in matches:
+                    for index in match:
+                        indices.add(index)
             successful = False
             while not successful:
                 successful = True
                 atom_positions = dict()
+                locations = list()
                 if random_seed is not None:
                     rotation = random_.randint(0, 359)
                     flip = bool(random_.randint(0, 1))
@@ -185,7 +192,17 @@ class Tensor2DJitPreprocessor:
                         successful = False
                         break
                     atom_positions[atom.GetIdx()] = [position_x, position_y]
-            results.append(atom_positions)
+                    if atom.GetIdx() in indices:
+                        locations.append([position_x, position_y])
+            if self._with_bonds:
+                bond_positions_ = bond_positions.calculate(molecule, atom_positions)
+                for bond in molecule.GetBonds():
+                    if bond.GetBeginAtomIdx() in indices and bond.GetEndAtomIdx() in indices:
+                        bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
+                        if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
+                            for position in bond_positions_[bond.GetIdx()]:
+                                locations.append([position[0], position[1]])
+            results.append(locations)
         return results
 
 
