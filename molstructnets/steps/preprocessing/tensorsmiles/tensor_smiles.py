@@ -71,7 +71,7 @@ class TensorSmiles:
             with progressbar.ProgressBar(len(smiles_data)) as progress:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
-                        pool.submit(TensorSmiles.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1],
+                        pool.submit(TensorSmiles.analyze_smiles, smiles_data[chunk['start']:chunk['end']],
                                     characters, max_length, progress)
                     pool.wait()
             characters = sorted(characters.get_set_copy())
@@ -90,7 +90,7 @@ class TensorSmiles:
                 with thread_pool.ThreadPool(number_threads) as pool:
                     for chunk in chunks:
                         pool.submit(TensorSmiles.write_smiles_tensors, preprocessed,
-                                    smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, length, chunk['start'],
+                                    smiles_data[chunk['start']:chunk['end']], index_lookup, length, chunk['start'],
                                     progress)
                     pool.wait()
             data_h5.close()

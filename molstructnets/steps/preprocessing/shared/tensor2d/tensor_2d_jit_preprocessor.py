@@ -105,6 +105,7 @@ class Tensor2DJitPreprocessor:
             queue.put(preprocessed_molecule)
         queue.flush()
 
+
     def preprocess(self, smiles_array, random_seed=None):
         results = numpy.zeros([len(smiles_array)] + list(self.shape), dtype='float32')
         for i in range(len(smiles_array)):

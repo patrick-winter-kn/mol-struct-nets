@@ -179,7 +179,7 @@ class ExtractCamSubstructures:
     @staticmethod
     def extract(cam, indices, smiles, substructures, threshold, start, end, progress, atom_locations=None,
                 probabilities=None):
-        for i in indices[start:end+1]:
+        for i in indices[start:end]:
             smiles_string = smiles[i].decode('utf-8')
             if atom_locations is not None:
                 locations = atom_locations[i]

@@ -57,8 +57,8 @@ class Tensor2DJit:
                             for i in range(1, local_parameters['number_predictions']):
                                 predictions_chunk += model.predict(data_queue.get())
                             predictions_chunk /= local_parameters['number_predictions']
-                        predictions[chunk['start']:chunk['end']+1] = predictions_chunk[:]
-                        progress.increment(chunk['end'] + 1 - chunk['start'])
+                        predictions[chunk['start']:chunk['end']] = predictions_chunk[:]
+                        progress.increment(chunk['size'])
             array.close()
             prediction_h5.close()
             file_util.move_file(temp_prediction_path, prediction_path)
@@ -66,9 +66,9 @@ class Tensor2DJit:
 
 def generate_data(array, chunks, number_predictions, data_queue):
     for chunk in chunks:
-        data_queue.put(array[chunk['start']:chunk['end']+1])
+        data_queue.put(array[chunk['start']:chunk['end']])
         if number_predictions > 1:
             for i in range(1, number_predictions):
                 array.set_iteration(i)
-                data_queue.put(array[chunk['start']:chunk['end']+1])
+                data_queue.put(array[chunk['start']:chunk['end']])
             array.set_iteration(0)

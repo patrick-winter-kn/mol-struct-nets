@@ -24,7 +24,7 @@ class ChunkedArray():
 
     def write_current_chunk(self):
         current_chunk = self.chunks[self.current_chunk_number]
-        self.data_set[current_chunk['start']:current_chunk['end'] + 1] = self.current_chunk[:]
+        self.data_set[current_chunk['start']:current_chunk['end']] = self.current_chunk[:]
 
     def __len__(self):
         return len(self.current_chunk)

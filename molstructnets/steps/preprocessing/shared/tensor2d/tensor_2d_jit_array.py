@@ -47,7 +47,7 @@ class Tensor2DJitArray():
             if small_preprocessing:
                 queue = buffered_queue.BufferedQueue(10)
                 for chunk in chunks:
-                    indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                    indices_chunk = indices[chunk['start']:chunk['end']]
                     if self._random_seed is not None:
                         random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
                     self._pool.submit(self._preprocessor.preprocess_small, self._smiles[indices_chunk], chunk['start'],
@@ -59,7 +59,7 @@ class Tensor2DJitArray():
                     done += 1
             else:
                 for chunk in chunks:
-                    indices_chunk = indices[chunk['start']:chunk['end'] + 1]
+                    indices_chunk = indices[chunk['start']:chunk['end']]
                     if self._random_seed is not None:
                         random_seed = self._random_seed + chunk['start'] + self._iteration * len(self)
                     self._pool.submit(self._preprocessor.preprocess, self._smiles[indices_chunk], random_seed)
@@ -82,7 +82,7 @@ class Tensor2DJitArray():
         if self._pool is not None and len(self._smiles) > 1:
             chunks = misc.chunk(end - start, self._pool.get_number_threads())
             for chunk in chunks:
-                indices_chunk = range(start + chunk['start'], start + chunk['end'] + 1)
+                indices_chunk = range(start + chunk['start'], start + chunk['end'])
                 if self._random_seed is not None:
                     random_seed = self._random_seed + start + chunk['start'] + self._iteration * len(self)
                 self._pool.submit(self._preprocessor.substructure_locations, self._smiles[indices_chunk], substructures,

@@ -75,7 +75,7 @@ class Substructure:
             pool = process_pool.ProcessPool(len(chunks))
             for i in range(len(chunks)):
                 chunk = chunks[i]
-                pool.submit(generate_targets, smiles_data[chunk['start']:chunk['end'] + 1], substructures, logic, error,
+                pool.submit(generate_targets, smiles_data[chunk['start']:chunk['end']], substructures, logic, error,
                             global_parameters[constants.GlobalParameters.seed] + i)
             results = pool.get_results()
             pool.close()

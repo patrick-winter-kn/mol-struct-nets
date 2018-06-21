@@ -90,7 +90,7 @@ class Tensor2DJit:
                 needs_mean_std = local_parameters['normalization'] == normalization.NormalizationTypes.z_score
                 with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
                     for chunk in chunks:
-                        pool.submit(Tensor2DJit.first_run, smiles[chunk['start']:chunk['end'] + 1],
+                        pool.submit(Tensor2DJit.first_run, smiles[chunk['start']:chunk['end']],
                                     chemical_properties_=local_parameters['chemical_properties'],
                                     with_atom_symbols=local_parameters['atom_symbols'],
                                     with_bonds=local_parameters['bonds'],
@@ -161,7 +161,7 @@ class Tensor2DJit:
                     logger.log('Calculating standard deviation')
                     with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
                         for chunk in chunks:
-                            pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end'] + 1],
+                            pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end']],
                                         valid_properties, means, progress=progress.get_slave())
                         results = pool.get_results()
                     stds = numpy.zeros(len(valid_properties), dtype='float32')

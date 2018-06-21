@@ -5,7 +5,7 @@ def generate_data(data, batch_size):
     chunks = misc.chunk_by_size(len(data), batch_size)
     while True:
         for chunk in chunks:
-            batch = slice(chunk['start'], chunk['end']+1)
+            batch = slice(chunk['start'], chunk['end'])
             input = data[batch]
             output = data.classes(batch)
             yield input, output

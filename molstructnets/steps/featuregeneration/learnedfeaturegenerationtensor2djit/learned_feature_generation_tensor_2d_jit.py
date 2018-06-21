@@ -59,8 +59,8 @@ class LearnedFeatureGenerationTensor2DJit:
             pool.submit(generate_data, array, chunks, data_queue)
             with progressbar.ProgressBar(len(array)) as progress:
                 for chunk in chunks:
-                    learned_features[chunk['start']:chunk['end']+1] = feature_model.predict(data_queue.get())[:]
-                    progress.increment(chunk['end'] + 1 - chunk['start'])
+                    learned_features[chunk['start']:chunk['end']] = feature_model.predict(data_queue.get())[:]
+                    progress.increment(chunk['size'])
             array.close()
             learned_features_h5.close()
             file_util.move_file(temp_learned_features_path, learned_features_path)

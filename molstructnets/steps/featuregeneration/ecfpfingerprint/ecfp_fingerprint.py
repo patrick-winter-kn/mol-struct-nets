@@ -59,7 +59,7 @@ class EcfpFingerprint:
             with process_pool.ProcessPool(len(chunks)) as pool:
                 with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
                     for chunk in chunks:
-                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1],
+                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end']],
                                     local_parameters['radius'], local_parameters['nr_values'], local_parameters['count'],
                                     progress=progress.get_slave())
                     results = pool.get_results()

@@ -3,7 +3,7 @@ import multiprocessing
 
 class BufferedQueue():
 
-    def __init__(self, buffer_size, maximum_size=None):
+    def __init__(self, buffer_size, maximum_size=0):
         self._queue = multiprocessing.Manager().Queue(maxsize=maximum_size)
         self._values = list()
         self._buffer_size = buffer_size

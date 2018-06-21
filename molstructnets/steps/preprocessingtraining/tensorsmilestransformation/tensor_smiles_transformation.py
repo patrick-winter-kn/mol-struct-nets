@@ -80,7 +80,7 @@ class TensorSmilesTransformation:
                 with thread_pool.ThreadPool(len(chunks)) as pool:
                     for chunk in chunks:
                         pool.submit(TensorSmilesTransformation.write_transformed_smiles_tensors, preprocessed_training,
-                                    preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end'] + 1],
+                                    preprocessed_training_ref, train_smiles_data[chunk['start']:chunk['end']],
                                     index_lookup, preprocessed.shape[1], chunk['start'], progress,
                                     local_parameters['transformations'], len(train_smiles_data),
                                     random.Random(global_parameters[constants.GlobalParameters.seed]

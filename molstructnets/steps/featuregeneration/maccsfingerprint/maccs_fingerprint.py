@@ -48,7 +48,7 @@ class MaccsFingerprint:
             with process_pool.ProcessPool(len(chunks)) as pool:
                 with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
                     for chunk in chunks:
-                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end'] + 1],
+                        pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end']],
                                     progress=progress.get_slave())
                     results = pool.get_results()
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')

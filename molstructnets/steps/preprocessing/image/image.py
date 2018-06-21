@@ -48,6 +48,6 @@ class Image:
             with thread_pool.ThreadPool(number_threads) as pool:
                 for chunk in chunks:
                     renderer = image_renderer.ImageRenderer(preprocess_path, progress, local_parameters['size'])
-                    pool.submit(renderer.render, smiles_data[chunk['start']:chunk['end'] + 1], chunk['start'])
+                    pool.submit(renderer.render, smiles_data[chunk['start']:chunk['end']], chunk['start'])
                 pool.wait()
         data_h5.close()

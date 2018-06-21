@@ -108,7 +108,7 @@ class Tensor2D:
                 with progressbar.ProgressBar(len(smiles_data)) as progress:
                     with thread_pool.ThreadPool(number_threads) as pool:
                         for chunk in chunks:
-                            pool.submit(Tensor2D.analyze_smiles, smiles_data[chunk['start']:chunk['end'] + 1], symbols,
+                            pool.submit(Tensor2D.analyze_smiles, smiles_data[chunk['start']:chunk['end']], symbols,
                                         max_nr_atoms, min_x, min_y, max_x, max_y, progress)
                         pool.wait()
                 max_nr_atoms = max_nr_atoms.get_max()
@@ -155,7 +155,7 @@ class Tensor2D:
                     with thread_pool.ThreadPool(number_threads) as pool:
                         for chunk in chunks:
                             pool.submit(Tensor2D.write_2d_tensors, preprocessed, atom_locations,
-                                        smiles_data[chunk['start']:chunk['end'] + 1], index_lookup, rasterizer_,
+                                        smiles_data[chunk['start']:chunk['end']], index_lookup, rasterizer_,
                                         chunk['start'], local_parameters['chemical_properties'], progress)
                         pool.wait()
                 data_h5.close()
