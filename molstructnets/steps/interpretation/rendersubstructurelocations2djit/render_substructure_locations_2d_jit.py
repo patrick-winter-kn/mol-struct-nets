@@ -6,15 +6,15 @@ from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import multiprocessing
 
 
-class RenderSubstructureAtoms2DJit:
+class RenderSubstructureLocations2DJit:
 
     @staticmethod
     def get_id():
-        return 'render_substructure_atoms_2d_jit'
+        return 'render_substructure_locations_2d_jit'
 
     @staticmethod
     def get_name():
-        return 'Render Substructure Atoms 2D JIT'
+        return 'Render Substructure Locations 2D JIT'
 
     @staticmethod
     def get_parameters():
@@ -33,11 +33,11 @@ class RenderSubstructureAtoms2DJit:
         preprocessed_h5.close()
         if file_structure.Cam.substructure_atoms in cam_h5.keys():
             active_dir_path = file_util.resolve_subpath(file_structure.get_interpretation_folder(global_parameters),
-                                                        'rendered_substructure_atoms')
+                                                        'rendered_substructure_locations')
             file_util.make_folders(active_dir_path, True)
             substructure_atoms = cam_h5[file_structure.Cam.substructure_atoms]
             indices = range(len(substructure_atoms))
-            logger.log('Rendering substructure atoms', logger.LogLevel.INFO)
+            logger.log('Rendering substructure locations', logger.LogLevel.INFO)
             queue = multiprocessing.Manager().Queue(10)
             with multi_process_progressbar.MultiProcessProgressbar(len(indices), value_buffer=10) as progress:
                 with process_pool.ProcessPool(process_pool.default_number_processes) as pool:

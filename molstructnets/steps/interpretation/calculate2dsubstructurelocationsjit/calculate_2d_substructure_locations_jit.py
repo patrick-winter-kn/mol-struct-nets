@@ -6,15 +6,15 @@ from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import numpy
 
 
-class Calculate2DSubstructureAtomsJit:
+class Calculate2DSubstructureLocationsJit:
 
     @staticmethod
     def get_id():
-        return 'calculate_2d_substructure_atoms_jit'
+        return 'calculate_2d_substructure_locations_jit'
 
     @staticmethod
     def get_name():
-        return 'Calculate 2D Substructure Atoms JIT'
+        return 'Calculate 2D Substructure Locations JIT'
 
     @staticmethod
     def get_parameters():
@@ -36,19 +36,19 @@ class Calculate2DSubstructureAtomsJit:
         attention_map_path = file_structure.get_cam_file(global_parameters)
         file_existed = file_util.file_exists(attention_map_path)
         file_util.make_folders(attention_map_path)
-        attention_map_h5 = h5py.File(attention_map_path, 'a')
-        if file_structure.Cam.substructure_atoms in attention_map_h5.keys():
+        cam_h5 = h5py.File(attention_map_path, 'a')
+        if file_structure.Cam.substructure_atoms in cam_h5.keys():
             logger.log('Skipping step: ' + file_structure.Cam.substructure_atoms + ' in ' + attention_map_path
                        + ' already exists')
-            attention_map_h5.close()
+            cam_h5.close()
         else:
-            attention_map_h5.close()
-            temp_attention_map_path = file_util.get_temporary_file_path('attention_map')
+            cam_h5.close()
+            temp_cam_path = file_util.get_temporary_file_path('cam')
             if file_existed:
-                file_util.copy_file(attention_map_path, temp_attention_map_path)
+                file_util.copy_file(attention_map_path, temp_cam_path)
             else:
                 file_util.remove_file(attention_map_path)
-            attention_map_h5 = h5py.File(temp_attention_map_path, 'a')
+            cam_h5 = h5py.File(temp_cam_path, 'a')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
@@ -59,7 +59,7 @@ class Calculate2DSubstructureAtomsJit:
                                                        'substructures')
             substructures = substructures.split(';')
             preprocessed = tensor_2d_jit_array.load_array(global_parameters)
-            substructure_atoms = hdf5_util.create_dataset(attention_map_h5,
+            substructure_atoms = hdf5_util.create_dataset(cam_h5,
                                                           file_structure.Cam.substructure_atoms,
                                                           (len(smiles), preprocessed.shape[1], preprocessed.shape[2]),
                                                           dtype='uint8')
@@ -67,13 +67,13 @@ class Calculate2DSubstructureAtomsJit:
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
             location_queue = buffered_queue.BufferedQueue(1000, 10000)
             with progressbar.ProgressBar(len(smiles)) as progress:
-                write_substructure_atoms(preprocessed, substructures, location_queue, substructure_atoms, progress)
+                write_substructure_locations(preprocessed, substructures, location_queue, substructure_atoms, progress)
             preprocessed.close()
-            attention_map_h5.close()
-            file_util.move_file(temp_attention_map_path, attention_map_path)
+            cam_h5.close()
+            file_util.move_file(temp_cam_path, attention_map_path)
 
 
-def write_substructure_atoms(preprocessed, substructures, location_queue, substructure_atoms, progress):
+def write_substructure_locations(preprocessed, substructures, location_queue, substructure_atoms, progress):
     size = misc.max_in_memory_chunk_size('uint8', (1, substructure_atoms.shape[1], substructure_atoms.shape[2]),
                                          use_swap=False)
     chunks = misc.chunk_by_size(substructure_atoms.shape[0], size)
