@@ -4,6 +4,7 @@ from steps.interpretation.shared import tensor_2d_renderer
 from util import data_validation, file_structure, file_util, logger, constants, multi_process_progressbar, process_pool
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import multiprocessing
+from steps.interpretation.shared.kerasviz import cam
 
 
 class RenderSubstructureLocations2DJit:
@@ -60,32 +61,8 @@ def render(global_parameters, symbols, output_dir_path, queue, progress):
         index, data = next
         output_path = file_util.resolve_subpath(output_dir_path, str(index) + '.svgz')
         if not file_util.file_exists(output_path):
-            heatmap = generate_heatmap(data)
+            heatmap = cam.array_to_heatmap([data.astype('float16')])
             tensor_2d_renderer.render(output_path, preprocessed[index], symbols, heatmap=heatmap)
             progress.increment()
     progress.finish()
     preprocessed.close()
-
-
-def generate_heatmap(substructure_atoms):
-    shape = list(substructure_atoms.shape)
-    shape.append(3)
-    shape = tuple(shape)
-    heatmap = numpy.zeros(shape, dtype='uint8')
-    assign_color(substructure_atoms, heatmap)
-    return heatmap
-
-
-rgb_black = [0, 0, 0]
-rgb_red = [255, 0, 0]
-
-
-def assign_color(substructure_atoms, heatmap):
-    if isinstance(substructure_atoms, numpy.ndarray):
-        for i in range(len(substructure_atoms)):
-            assign_color(substructure_atoms[i], heatmap[i])
-    else:
-        if substructure_atoms == 1:
-            heatmap[:] = rgb_red[:]
-        else:
-            heatmap[:] = rgb_black[:]
