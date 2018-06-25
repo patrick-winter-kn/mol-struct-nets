@@ -10,6 +10,7 @@ from steps.interpretation.calculatecams2djit import calculate_cams_2d_jit
 from steps.interpretation.rendercams2djit import render_cams_2d_jit
 from steps.interpretation.calculate2dsubstructurelocationsjit import calculate_2d_substructure_locations_jit
 from steps.interpretation.rendersubstructurelocations2djit import render_substructure_locations_2d_jit
+from steps.interpretation.camevaluation2djit import cam_evaluation_2d_jit
 
 
 class InterpretationRepository(repository.Repository):
@@ -35,3 +36,4 @@ instance.add_implementation(calculate_2d_substructure_locations_jit.Calculate2DS
 instance.add_implementation(render_substructure_atoms.RenderSubstructureAtoms)
 instance.add_implementation(render_substructure_locations_2d_jit.RenderSubstructureLocations2DJit)
 instance.add_implementation(cam_evaluation.CamEvaluation)
+instance.add_implementation(cam_evaluation_2d_jit.CamEvaluation2DJit)

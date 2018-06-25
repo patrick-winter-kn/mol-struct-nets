@@ -107,7 +107,7 @@ class Tensor2DJitPreprocessor:
 
 
     def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None,
-                               only_substructures=False):
+                               only_substructures=False, only_atoms=False):
         for i in range(len(smiles_array)):
             if random_seed is not None:
                 random_ = random.Random(random_seed + i)
@@ -147,7 +147,7 @@ class Tensor2DJitPreprocessor:
                         substructure_locations_.append([position_x, position_y])
                     else:
                         other_locations.append([position_x, position_y])
-            if self._with_bonds:
+            if self._with_bonds and not only_atoms:
                 bond_positions_ = bond_positions.calculate(molecule, atom_positions)
                 for bond in molecule.GetBonds():
                     bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
