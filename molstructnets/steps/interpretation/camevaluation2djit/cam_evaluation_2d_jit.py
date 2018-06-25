@@ -92,23 +92,25 @@ class CamEvaluation2DJit:
                 preprocessed.calc_substructure_locations(chunk['start'], chunk['end'], substructures, location_queue,
                                                          False, only_atoms)
                 cam_chunk = cam[indices[chunk['start']:chunk['end']]]
+                tmp_substructure_mean = numpy.full((len(cam_chunk),), numpy.nan, dtype='float32')
+                tmp_substructure_std = numpy.full((len(cam_chunk),), numpy.nan, dtype='float32')
+                tmp_not_substructure_mean = numpy.full((len(cam_chunk),), numpy.nan, dtype='float32')
+                tmp_not_substructure_std = numpy.full((len(cam_chunk),), numpy.nan, dtype='float32')
                 for i in range(chunk['size']):
                     index, substructure_locations, other_locations = location_queue.get()
                     if len(substructure_locations) > 0:
                         substructure_locations = list(numpy.transpose(numpy.array(substructure_locations)))
                         cam_substructure = cam_chunk[index][substructure_locations]
-                        substructure_mean[index] = cam_substructure.mean()
-                        substructure_std[index] = cam_substructure.std()
-                    else:
-                        substructure_mean[index] = numpy.nan
-                        substructure_std[index] = numpy.nan
+                        tmp_substructure_mean[index] = cam_substructure.mean()
+                        tmp_substructure_std[index] = cam_substructure.std()
                     if len(other_locations) > 0:
                         other_locations = list(numpy.transpose(numpy.array(other_locations)))
                         cam_other = cam_chunk[index][other_locations]
-                        not_substructure_mean[index] = cam_other.mean()
-                        not_substructure_std[index] = cam_other.std()
-                    else:
-                        not_substructure_mean[index] = numpy.nan
-                        not_substructure_std[index] = numpy.nan
+                        tmp_not_substructure_mean[index] = cam_other.mean()
+                        tmp_not_substructure_std[index] = cam_other.std()
                     progress.increment()
+                substructure_mean[chunk['start']:chunk['end']] = tmp_substructure_mean[:]
+                substructure_std[chunk['start']:chunk['end']] = tmp_substructure_std[:]
+                not_substructure_mean[chunk['start']:chunk['end']] = tmp_not_substructure_mean[:]
+                not_substructure_std[chunk['start']:chunk['end']] = tmp_not_substructure_std[:]
         evaluation_h5.close()
