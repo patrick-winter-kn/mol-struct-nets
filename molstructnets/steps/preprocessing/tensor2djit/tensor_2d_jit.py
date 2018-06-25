@@ -44,8 +44,6 @@ class Tensor2DJit:
         parameters.append({'id': 'chemical_properties', 'name': 'Chemical Properties', 'type': list,
                            'default': [], 'options': chemical_properties.Properties.all,
                            'description': 'The chemical properties that will be used. Default: None'})
-        parameters.append({'id': 'gauss_sigma', 'name': 'Gauss sigma', 'type': float, 'default': None, 'min': 0,
-                           'description': 'Sigma for gauss filter. Default: No gauss filter'})
         parameters.append({'id': 'normalization', 'name': 'Normalization Type', 'type': str, 'default': None,
                            'options': ['None',
                                        normalization.NormalizationTypes.min_max_1,
@@ -62,7 +60,7 @@ class Tensor2DJit:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
                                                    ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
-                                                    'gauss_sigma', 'normalization'])
+                                                    'normalization'])
         file_name = 'tensor_2d_jit_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -191,9 +189,6 @@ class Tensor2DJit:
                                    local_parameters['bonds'])
             hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square,
                                    local_parameters['square'])
-            if local_parameters['gauss_sigma'] is not None:
-                hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.gauss_sigma,
-                                       local_parameters['gauss_sigma'])
             if local_parameters['normalization'] is not None:
                 hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_type,
                                        local_parameters['normalization'])
