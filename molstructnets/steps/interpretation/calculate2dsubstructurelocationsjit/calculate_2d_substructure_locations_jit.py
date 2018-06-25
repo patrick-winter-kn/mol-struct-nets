@@ -66,20 +66,20 @@ class Calculate2DSubstructureLocationsJit:
                                                           chunks=(1, preprocessed.shape[1], preprocessed.shape[2]))
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
-            location_queue = buffered_queue.BufferedQueue(1000, 10000)
             with progressbar.ProgressBar(len(smiles)) as progress:
-                write_substructure_locations(preprocessed, substructures, location_queue, substructure_locations, progress)
+                write_substructure_locations(preprocessed, substructures, substructure_locations, progress)
             preprocessed.close()
             cam_h5.close()
             file_util.move_file(temp_cam_path, attention_map_path)
 
 
-def write_substructure_locations(preprocessed, substructures, location_queue, substructure_atoms, progress):
+def write_substructure_locations(preprocessed, substructures, substructure_atoms, progress):
     size = misc.max_in_memory_chunk_size('uint8', (1, substructure_atoms.shape[1], substructure_atoms.shape[2]),
                                          use_swap=False)
+    location_queue = buffered_queue.BufferedQueue(1000, 10000)
     chunks = misc.chunk_by_size(substructure_atoms.shape[0], size)
     for chunk in chunks:
-        preprocessed.calc_substructure_locations(chunk['start'], chunk['end'], substructures, location_queue)
+        preprocessed.calc_substructure_locations(chunk['start'], chunk['end'], substructures, location_queue, True)
         result = numpy.zeros((chunk['size'], substructure_atoms.shape[1], substructure_atoms.shape[2]), dtype='uint8')
         for i in range(result.shape[0]):
             idx, atom_locations = location_queue.get()

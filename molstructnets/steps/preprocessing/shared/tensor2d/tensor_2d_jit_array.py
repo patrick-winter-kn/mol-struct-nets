@@ -59,14 +59,15 @@ class Tensor2DJitArray():
             if self._random_seed is not None:
                 random_seed = self._random_seed + indices[0] + self._iteration * len(self)
             data_queue = queue.Queue()
-            preprocessed = self._preprocessor.preprocess(self._smiles[indices], 0, queue, random_seed)
+            self._preprocessor.preprocess(self._smiles[indices], 0, data_queue, random_seed)
             result = numpy.zeros([len(indices)] + list(self._preprocessor.shape), dtype='float32')
+            preprocessed = data_queue.get()
             preprocessed.fill_array(result)
             if single_item:
                 result = result[0]
             return result
 
-    def calc_substructure_locations(self, start, end, substructures, location_queue):
+    def calc_substructure_locations(self, start, end, substructures, location_queue, only_substructures=False):
         random_seed = None
         if self._pool is not None and len(self._smiles) > 1:
             chunks = misc.chunk(end - start, self._pool.get_number_threads())
@@ -75,7 +76,7 @@ class Tensor2DJitArray():
                 if self._random_seed is not None:
                     random_seed = self._random_seed + start + chunk['start'] + self._iteration * len(self)
                 self._pool.submit(self._preprocessor.substructure_locations, self._smiles[indices_chunk], substructures,
-                                  chunk['start'], location_queue, random_seed)
+                                  chunk['start'], location_queue, random_seed, only_substructures)
 
     @property
     def shape(self):

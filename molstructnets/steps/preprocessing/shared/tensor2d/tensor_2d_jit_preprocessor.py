@@ -102,10 +102,12 @@ class Tensor2DJitPreprocessor:
                             preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
                                 position[0], position[1], symbol=bond_symbol_index))
             queue.put(preprocessed_molecule)
-        queue.flush()
+        if hasattr(queue, 'flush'):
+            queue.flush()
 
 
-    def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None):
+    def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None,
+                               only_substructures=False):
         for i in range(len(smiles_array)):
             if random_seed is not None:
                 random_ = random.Random(random_seed + i)
@@ -122,7 +124,8 @@ class Tensor2DJitPreprocessor:
             while not successful:
                 successful = True
                 atom_positions = dict()
-                locations = list()
+                other_locations = list()
+                substructure_locations_ = list()
                 if random_seed is not None:
                     rotation = random_.randint(0, 359)
                     flip = bool(random_.randint(0, 1))
@@ -141,16 +144,24 @@ class Tensor2DJitPreprocessor:
                         break
                     atom_positions[atom.GetIdx()] = [position_x, position_y]
                     if atom.GetIdx() in indices:
-                        locations.append([position_x, position_y])
+                        substructure_locations_.append([position_x, position_y])
+                    else:
+                        other_locations.append([position_x, position_y])
             if self._with_bonds:
                 bond_positions_ = bond_positions.calculate(molecule, atom_positions)
                 for bond in molecule.GetBonds():
-                    if bond.GetBeginAtomIdx() in indices and bond.GetEndAtomIdx() in indices:
-                        bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
-                        if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
+                    bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
+                    if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
+                        if bond.GetBeginAtomIdx() in indices and bond.GetEndAtomIdx() in indices:
                             for position in bond_positions_[bond.GetIdx()]:
-                                locations.append([position[0], position[1]])
-            locations_queue.put((i + offset, locations))
+                                substructure_locations_.append([position[0], position[1]])
+                        else:
+                            for position in bond_positions_[bond.GetIdx()]:
+                                other_locations.append([position[0], position[1]])
+            if only_substructures:
+                locations_queue.put((i + offset, substructure_locations_))
+            else:
+                locations_queue.put((i + offset, substructure_locations_, other_locations))
         locations_queue.flush()
 
 
