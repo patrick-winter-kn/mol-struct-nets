@@ -41,6 +41,7 @@ class CalculateCams2DJit:
         data_validation.validate_partition(global_parameters)
         data_validation.validate_preprocessed_jit(global_parameters)
         data_validation.validate_network(global_parameters)
+        data_validation.validate_prediction(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
@@ -82,15 +83,15 @@ class CalculateCams2DJit:
             else:
                 indices_data_set_name = file_structure.Cam.cam_inactive_indices
                 class_index = 1
+            prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
+            predictions = prediction_h5[file_structure.Predictions.prediction][:, class_index]
+            prediction_h5.close()
             if local_parameters['top_n'] is None:
                 count = len(preprocessed)
                 indices = references
             else:
-                prediction_h5 = h5py.File(file_structure.get_prediction_file(global_parameters), 'r')
-                predictions = prediction_h5[file_structure.Predictions.prediction][:]
-                prediction_h5.close()
                 # Get class column ([:,0], sort it (.argsort()) and reverse the order ([::-1]))
-                indices = predictions[:, class_index].argsort()[::-1]
+                indices = predictions.argsort()[::-1]
                 count = min(local_parameters['top_n'], len(indices))
             if cam_dataset_name in cam_h5.keys():
                 cam_ = cam_h5[cam_dataset_name]
@@ -128,7 +129,7 @@ class CalculateCams2DJit:
                         index = cam_indices_list[i]
                         tensor = data_queue.get()
                         grads = cam_calc.calculate(tensor)
-                        cam_[index] = grads[:]
+                        cam_[index] = grads[:] * predictions[index]
                         progress.increment()
             cam_h5.close()
             file_util.move_file(temp_cam_path, cam_path)
