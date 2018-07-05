@@ -22,10 +22,12 @@ class StartDialog(ttk.Frame):
 
     def new_file(self):
         self.top.destroy()
-        file_path = filedialog.asksaveasfilename(initialdir="~", title="Select experiment file", filetypes=(("json files", "*.json"),))
+        file_path = filedialog.asksaveasfilename(initialdir="~", title="Select experiment file",
+                                                 filetypes=(("experiment files", "*.msne"),))
         self.callback(file_path)
 
     def open_file(self):
         self.top.destroy()
-        file_path = filedialog.askopenfilename(initialdir="~", title="Select experiment file", filetypes=(("json files", "*.json"),))
+        file_path = filedialog.askopenfilename(initialdir="~", title="Select experiment file",
+                                               filetypes=(("experiment files", "*.msne"),))
         self.callback(file_path)
