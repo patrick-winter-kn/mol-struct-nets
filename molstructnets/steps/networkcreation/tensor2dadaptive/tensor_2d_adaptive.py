@@ -19,6 +19,9 @@ class Tensor2DAdaptive:
     @staticmethod
     def get_parameters():
         parameters = list()
+        parameters.append({'id': 'sparse', 'name': 'Sparse Input Features', 'type': bool, 'default': False,
+                           'description': 'If the input features are sparse. In this case the network will start with'
+                                          ' 2 features per position after the first convolution. Default: False'})
         return parameters
 
     @staticmethod
@@ -39,10 +42,14 @@ class Tensor2DAdaptive:
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
             layer = Dropout(0.3, name='input_dropout')(layer)
+            input_features = None
+            if local_parameters['sparse']:
+                input_features = 2
             iteration = 0
             while layer.shape[1] > 1:
                 iteration += 1
-                layer = add_block(layer, iteration, initializer)
+                layer = add_block(layer, iteration, initializer, input_features=input_features)
+                input_features = None
             layer = Flatten(name='features')(layer)
             layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
@@ -53,7 +60,9 @@ class Tensor2DAdaptive:
             model.save(network_path)
 
 
-def add_block(layer, iteration, initializer):
-    layer = Convolution2D(int(layer.shape[-1]) * 2, 3, activation='relu', padding='same', name='convolution_' + str(iteration),
+def add_block(layer, iteration, initializer, input_features=None):
+    if input_features is None:
+        input_features = int(layer.shape[-1])
+    layer = Convolution2D(input_features * 2, 3, activation='relu', padding='same', name='convolution_' + str(iteration),
                           kernel_initializer=initializer)(layer)
     return MaxPooling2D(2, padding='same', name='max_pool_' + str(iteration))(layer)
