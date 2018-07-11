@@ -70,4 +70,4 @@ class LearnedFeatureGenerationTensor2DJit:
 
 def generate_data(array, chunks, data_queue):
     for chunk in chunks:
-        data_queue.put(array[chunk['start']:chunk['end']+1])
+        data_queue.put(array[chunk['start']:chunk['end']])
