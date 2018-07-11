@@ -1,15 +1,5 @@
 from util import initialization
-from keras import backend
-import gc
-import time
 import argparse
-from experiments import experiment
-from util import file_structure, logger, file_util, constants, misc, process_pool
-from steps import steps_repository
-import h5py
-import datetime
-import subprocess
-import sys
 
 
 def get_arguments():
@@ -19,7 +9,25 @@ def get_arguments():
     parser.add_argument('--target', type=str, default=None, help='Target name')
     parser.add_argument('--partition', type=str, default=None, help='Partition name')
     parser.add_argument('--step', type=int, default=None, help='Run the experiment up to the given step')
+    parser.add_argument('--seed', type=int, default=None, help='The random seed (will overwrite seed set in experiment'
+                                                               ' file)')
     return parser.parse_args()
+
+
+args = get_arguments()
+initialization.initialize(args)
+
+
+from keras import backend
+import gc
+import time
+from experiments import experiment
+from util import file_structure, logger, file_util, constants, misc, process_pool
+from steps import steps_repository
+import h5py
+import datetime
+import subprocess
+import sys
 
 
 def get_n(global_parameters_):
@@ -46,7 +54,6 @@ def add_last_commit_hash(script_path, global_parameters):
                 commit_hash_file.write(hash)
 
 
-args = get_arguments()
 if not file_util.file_exists(args.experiment):
     logger.log('Experiment file ' + args.experiment + ' does not exist.', logger.LogLevel.ERROR)
     exit(1)
