@@ -183,7 +183,8 @@ def get_result_folder(global_parameters):
                                      global_parameters[constants.GlobalParameters.experiment],
                                      global_parameters[constants.GlobalParameters.data_set],
                                      global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data])
+                                     global_parameters[constants.GlobalParameters.partition_data],
+                                     str(global_parameters[constants.GlobalParameters.seed]))
 
 
 def find_file(folder_path, name):

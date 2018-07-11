@@ -16,29 +16,41 @@ def get_arguments():
 
 args = get_arguments()
 result_path = file_util.resolve_path(args.batch_csv[:args.batch_csv.rfind('.')] + '_execution_results.csv')
-experiments = experiment_batch.load_entries_from_csv(args.batch_csv)
+experiments, seeds = experiment_batch.load_entries_from_csv(args.batch_csv)
+nr_seeds = 1
+if seeds is not None:
+    nr_seeds = len(seeds)
 results = execution_results.ExecutionResults(result_path, len(experiments))
 run_experiment = [sys.executable, sys.argv[0][:sys.argv[0].rfind('/') + 1] + 'run_experiment.py']
 logger.log('\n')
 i = 0
 while i < len(experiments):
     if results.get_status(i) != execution_results.Status.success:
-        params = run_experiment + experiments[i].get_execution_arguments()
-        retry_text = ''
-        for j in range(args.retries + 1):
-            logger.divider('•', nr_lines=2)
-            logger.log(retry_text + ' '.join(params))
-            logger.divider('•', nr_lines=2)
-            logger.log('\n')
-            result = subprocess.call(params)
-            logger.log('\n')
-            if result != 0:
-                results.set_status(i, execution_results.Status.failed)
-                retry_text = 'Running for the ' + str(j + 2) + '. time:\n'
-            else:
+        successes = 0
+        for j in range(nr_seeds):
+            params = run_experiment + experiments[i].get_execution_arguments()
+            if seeds is not None:
+                params += ['--seed', str(seeds[j])]
+            retry_text = ''
+            for k in range(args.retries + 1):
+                logger.divider('•', nr_lines=2)
+                logger.log(retry_text + ' '.join(params))
+                logger.divider('•', nr_lines=2)
+                logger.log('\n')
+                result = subprocess.call(params)
+                logger.log('\n')
+                if result != 0:
+                    results.set_status(i, execution_results.Status.failed)
+                    retry_text = 'Running for the ' + str(k + 2) + '. time:\n'
+                else:
+                    successes += 1
+                    break
+            if successes == nr_seeds:
                 results.set_status(i, execution_results.Status.success)
-                break
-        results.save()
-    experiments = experiment_batch.load_entries_from_csv(args.batch_csv)
+            results.save()
+    experiments, seeds = experiment_batch.load_entries_from_csv(args.batch_csv)
+    nr_seeds = 1
+    if seeds is not None:
+        nr_seeds = len(seeds)
     results.update_number_experiments(len(experiments))
     i += 1
