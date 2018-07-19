@@ -13,6 +13,9 @@ import threading
 import time
 
 
+initialization.initialize()
+
+
 def get_arguments():
     parser = argparse.ArgumentParser(description='Shows the tensorboard of an existing experiment')
     parser.add_argument('experiment', type=str, help='Path to the experiment file')

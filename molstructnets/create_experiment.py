@@ -5,6 +5,9 @@ from util import file_util, file_structure, input_util
 from steps import steps_repository
 
 
+initialization.initialize()
+
+
 def get_arguments():
     parser = argparse.ArgumentParser(description='Creates a new experiment')
     return parser.parse_args()

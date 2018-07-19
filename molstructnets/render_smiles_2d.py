@@ -7,6 +7,9 @@ from steps.interpretation.shared import tensor_2d_renderer
 from steps.preprocessingtraining.tensor2dtransformation import transformer
 
 
+initialization.initialize()
+
+
 def get_arguments():
     parser = argparse.ArgumentParser(description='Renders the given SMILES in 2D')
     parser.add_argument('smiles', type=str, help='The SMILES string')

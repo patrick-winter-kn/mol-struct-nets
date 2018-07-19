@@ -8,6 +8,9 @@ try:
     import sys
 
 
+    initialization.initialize()
+
+
     def close_application():
         root.quit()
 

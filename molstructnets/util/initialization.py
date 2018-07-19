@@ -18,14 +18,14 @@ import matplotlib
 silent_loading = True
 
 
-def initialize(args):
+def initialize(args=None):
     global seed
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     os.environ['PYTHONHASHSEED'] = '0'
     seed = random.randint(0, numpy.iinfo(numpy.uint32).max)
-    if args.seed is not None:
+    if hasattr(args, 'seed') and args.seed is not None:
         seed = args.seed
-    else:
+    elif hasattr(args, 'experiment') and args.experiment is not None:
         experiment_path = os.path.abspath(args.experiment)
         if os.path.exists(experiment_path):
             dict_ = json.load(open(experiment_path))
