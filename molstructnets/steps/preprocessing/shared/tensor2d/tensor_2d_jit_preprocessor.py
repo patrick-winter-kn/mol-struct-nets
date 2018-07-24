@@ -84,7 +84,8 @@ class Tensor2DJitPreprocessor:
                         break
                     symbol_index = None
                     if self._symbol_index_lookup is not None:
-                        symbol_index = self._symbol_index_lookup[atom.GetSymbol()]
+                        if atom.GetSymbol() in self._symbol_index_lookup:
+                            symbol_index = self._symbol_index_lookup[atom.GetSymbol()]
                     chemical_property_values = None
                     if self._chemical_properties is not None:
                         chemical_property_values = chemical_properties.get_chemical_properties(atom, self._chemical_properties)
