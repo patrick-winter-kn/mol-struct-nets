@@ -64,7 +64,9 @@ class Tensor2D:
             layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
 
             layer = Flatten(name='features')(layer)
+            layer = Dropout(0.75, name='dropout_1')(layer)
             layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
+            layer = Dropout(0.75, name='dropout_2')(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
             optimizer = optimizers.Adam(lr=0.0001)
