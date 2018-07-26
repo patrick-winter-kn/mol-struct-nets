@@ -72,6 +72,6 @@ def copy_file(source, destination):
 def remove_file(file_path):
     if file_exists(file_path):
         if path.isdir(file_path):
-            shutil.rntree(file_path)
+            shutil.rmtree(file_path)
         else:
             os.remove(file_path)
