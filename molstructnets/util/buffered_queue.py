@@ -1,7 +1,7 @@
 import multiprocessing
 
 
-class BufferedQueue():
+class BufferedQueue:
 
     def __init__(self, buffer_size, maximum_size=0):
         self._queue = multiprocessing.Manager().Queue(maxsize=maximum_size)

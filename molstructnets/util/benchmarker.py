@@ -2,7 +2,7 @@ import datetime
 import time
 
 
-class Benchmarker():
+class Benchmarker:
 
     def __init__(self):
         self._checkpoints = dict()

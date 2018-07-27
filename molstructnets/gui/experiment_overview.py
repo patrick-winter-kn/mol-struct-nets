@@ -14,6 +14,8 @@ class ExperimentOverview(ttk.Frame):
         self.top.title('Edit Experiment')
         ttk.Frame.__init__(self, self.top)
         self.experiment = experiment
+        self.seed_spinner = None
+        self.steps_list = None
         self.add_widgets()
         self.pack(fill=tkinter.BOTH, expand=True)
 

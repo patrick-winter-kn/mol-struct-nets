@@ -19,6 +19,13 @@ class StepOverview(ttk.Frame):
         self.type_name_to_id = dict()
         for step_repo in steps_repository.instance.get_steps():
             self.type_name_to_id[step_repo.get_name()] = step_repo.get_id()
+        self.parameter_ids = list()
+        self.impl_name_to_id = dict()
+        self.type_option = None
+        self.id_option = None
+        self.id_value = None
+        self.type_value = None
+        self.parameters_list = None
         self.add_widgets()
         self.pack(fill=tkinter.BOTH, expand=True)
         self.top.wait_visibility()
@@ -54,7 +61,6 @@ class StepOverview(ttk.Frame):
         id_value = tkinter.StringVar()
         step_implementations = steps_repository.instance.get_step_implementations(self.step['type'])
         id_options = list()
-        self.impl_name_to_id = dict()
         for step_impl in step_implementations:
             id_options.append(step_impl.get_name())
             self.impl_name_to_id[step_impl.get_name()] = step_impl.get_id()
@@ -167,8 +173,8 @@ class StepOverview(ttk.Frame):
                                          (id_, self.step['parameters'][id_]))
 
     def remove_parameter(self):
-        id = self.get_selected_parameter_id()
-        del self.step['parameters'][id]
+        id_ = self.get_selected_parameter_id()
+        del self.step['parameters'][id_]
         self.rebuild_parameter_list()
 
     def save_parameter(self, parameter):

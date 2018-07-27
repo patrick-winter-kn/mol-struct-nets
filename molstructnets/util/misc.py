@@ -74,7 +74,7 @@ def max_in_memory_chunk_size(dtype, shape, use_swap=True, fraction=1, buffer=2 *
 
 
 def get_chunked_array(array, as_bool=False, use_swap=False, fraction=1):
-    max_chunk_size = max_in_memory_chunk_size(array, as_bool=as_bool, use_swap=use_swap, fraction=fraction)
+    max_chunk_size = max_in_memory_chunk_size(array.dtype, array.shape, use_swap=use_swap, fraction=fraction)
     chunks = chunk_by_size(len(array), max_chunk_size)
     return chunked_array.ChunkedArray(array, chunks, as_bool)
 
@@ -171,7 +171,7 @@ def keys_in(keys, dict_):
 def to_int(string):
     try:
         return int(string)
-    except:
+    except Exception:
         return None
 
 

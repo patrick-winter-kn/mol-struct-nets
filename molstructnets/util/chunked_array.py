@@ -1,7 +1,7 @@
 from util import misc, logger
 
 
-class ChunkedArray():
+class ChunkedArray:
 
     def __init__(self, data_set, chunks, as_bool):
         self.data_set = data_set

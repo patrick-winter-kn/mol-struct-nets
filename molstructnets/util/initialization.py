@@ -33,6 +33,8 @@ def initialize(args=None):
     numpy.random.seed(seed)
     matplotlib.use('Agg')
 
+    stdout = None
+    stderr = None
     if silent_loading:
         stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')

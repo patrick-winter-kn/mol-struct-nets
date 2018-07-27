@@ -15,6 +15,9 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
     file_h5 = h5py.File(temp_path, 'r+')
     data_set = file_h5[data_set_name]
     if stats is None:
+        stats_0 = None
+        stats_1 = None
+        chunked_array = None
         if type_ == NormalizationTypes.min_max_1 or type_ == NormalizationTypes.min_max_2:
             stats_set = {statistics.Statistics.min, statistics.Statistics.max}
             additional_percent = statistics.calculate_additional_memory(data_set.shape, stats_set)

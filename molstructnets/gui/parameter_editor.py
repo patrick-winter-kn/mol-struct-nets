@@ -14,6 +14,20 @@ class ParameterEditor(ttk.Frame):
         self.parameter_list = parameter_list
         self.last_parameter = None
         self.init_parameter()
+        self.key_value = None
+        self.text_frame = None
+        self.options_frame = None
+        self.binary_frame = None
+        self.spinner_frame = None
+        self.list_frame = None
+        self.options = None
+        self.options_value = None
+        self.spinner = None
+        self.listbox = None
+        self.text_value = None
+        self.binary_value = None
+        self.spinner_value = None
+        self.list_value = None
         self.add_widgets()
         self.pack(fill=tkinter.BOTH, expand=True)
         self.top.wait_visibility()
@@ -225,17 +239,17 @@ class ParameterEditor(ttk.Frame):
         elif param['type'] == int:
             try:
                 return int(self.spinner_value.get())
-            except:
+            except Exception:
                 return None
         elif param['type'] == float:
             try:
                 return float(self.spinner_value.get())
-            except:
+            except Exception:
                 return None
         elif param['type'] == list:
             try:
                 return [self.listbox.get(index) for index in self.listbox.curselection()]
-            except:
+            except Exception:
                 return None
 
     def update_parameter(self):
@@ -255,7 +269,7 @@ class ParameterEditor(ttk.Frame):
         elif 'options' in param:
             if param['type'] == str and value not in param['options']:
                 valid = False
-                message = value + ' is not among the allowed options'
+                message = str(value) + ' is not among the allowed options'
             if param['type'] == list:
                 invalid_values = []
                 for val in value:

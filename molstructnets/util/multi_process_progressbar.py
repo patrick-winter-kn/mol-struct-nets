@@ -4,7 +4,7 @@ import threading
 from util import progressbar, logger
 
 
-class MultiProcessProgressbar():
+class MultiProcessProgressbar:
 
     def __init__(self, max_value, log_level=logger.LogLevel.INFO, value_buffer=1):
         self._value_buffer = value_buffer
@@ -40,7 +40,7 @@ class MultiProcessProgressbar():
         self.finish()
 
 
-class MultiProcessProgressbarSlave():
+class MultiProcessProgressbarSlave:
 
     def __init__(self, queue, value_buffer):
         self._queue = queue
