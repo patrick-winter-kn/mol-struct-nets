@@ -19,9 +19,9 @@ class Tensor2DAdaptive:
     @staticmethod
     def get_parameters():
         parameters = list()
-        parameters.append({'id': 'sparse', 'name': 'Sparse Input Features', 'type': bool, 'default': False,
-                           'description': 'If the input features are sparse. In this case the network will start with'
-                                          ' 2 features per position after the first convolution. Default: False'})
+        parameters.append({'id': 'start_features', 'name': 'Number of start features', 'type': int, 'default': None,
+                           'description': 'The basis of how many features are there per position before the first'
+                                          ' convolution. Default: Based on input'})
         return parameters
 
     @staticmethod
@@ -42,9 +42,7 @@ class Tensor2DAdaptive:
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
             layer = Dropout(0.3, name='input_dropout')(layer)
-            input_features = None
-            if local_parameters['sparse']:
-                input_features = 2
+            input_features = local_parameters['start_features']
             iteration = 0
             while layer.shape[1] > 1:
                 iteration += 1
