@@ -1,7 +1,8 @@
 import h5py
 import numpy
+
 from steps.evaluation.shared import rie_bedroc
-from util import data_validation, file_structure, reference_data_set, constants, csv_file
+from util import data_validation, file_structure, constants, csv_file
 
 
 class RieBedroc:
@@ -63,7 +64,7 @@ class RieBedroc:
             predictions = predictions[partition]
             classes = classes[partition]
         ries, bedrocs = rie_bedroc.stats(predictions, classes, alphas, shuffle=local_parameters['shuffle'],
-                                             seed=global_parameters[constants.GlobalParameters.seed])
+                                         seed=global_parameters[constants.GlobalParameters.seed])
         csv_path = file_structure.get_evaluation_stats_file(global_parameters)
         csv = csv_file.CsvFile(csv_path)
         row = dict()

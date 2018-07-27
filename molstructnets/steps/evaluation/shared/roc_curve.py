@@ -1,8 +1,9 @@
-import numpy
-import math
-from matplotlib import pyplot
-from util import logger, progressbar, file_util, misc
 import random
+
+import numpy
+from matplotlib import pyplot
+
+from util import logger, progressbar, file_util
 
 
 def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuffle=True, seed=42):
@@ -11,7 +12,7 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
     auc_list = []
     for i in range(len(predictions_list)):
         logger.log('Calculating stats for ' + prediction_names[i], logger.LogLevel.VERBOSE)
-        actives, inactives, auc= stats(predictions_list[i], classes, shuffle=shuffle, seed=seed)
+        actives, inactives, auc = stats(predictions_list[i], classes, shuffle=shuffle, seed=seed)
         actives_list.append(actives)
         inactives_list.append(inactives)
         auc_list.append(auc)
@@ -22,7 +23,7 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
     # Plot actives
     for i in range(len(predictions_list)):
         pyplot.plot(inactives_list[i], actives_list[i],
-                    label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
+                    label=prediction_names[i] + ' (AUC: ' + str(round(auc_list[i], 2)) + ')')
     pyplot.ylabel('True Positive Rate')
     pyplot.xlabel('False Positive Rate')
     pyplot.legend(loc='lower right', fancybox=True)
@@ -38,7 +39,7 @@ def plot(predictions_list, prediction_names, classes, roc_curve_plot_file, shuff
 
 def stats(predictions, classes, positives=None, shuffle=True, seed=42):
     if positives is None:
-        positives = classes[:,0].sum()
+        positives = classes[:, 0].sum()
     negatives = len(classes) - positives
     # First axis of first element
     predictions = predictions[:, 0]

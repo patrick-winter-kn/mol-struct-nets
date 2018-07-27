@@ -1,6 +1,7 @@
-from scipy.ndimage import filters
-from util import hdf5_util, file_util, logger, progressbar, misc
 import h5py
+from scipy.ndimage import filters
+
+from util import hdf5_util, file_util, logger, progressbar, misc
 
 
 def apply_gauss(path, data_set_name, sigma):
@@ -19,7 +20,7 @@ def apply_gauss(path, data_set_name, sigma):
             data = chunked_data[:]
             slices = list()
             for length in data.shape[:-1]:
-                slices.append(slice(0,length))
+                slices.append(slice(0, length))
             for j in range(data.shape[-1]):
                 index = tuple(slices + [j])
                 data[index] = filters.gaussian_filter(data[index], sigma=sigma)

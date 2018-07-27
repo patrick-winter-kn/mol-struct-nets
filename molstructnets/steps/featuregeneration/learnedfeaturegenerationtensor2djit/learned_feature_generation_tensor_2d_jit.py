@@ -1,10 +1,12 @@
+import queue
+
 import h5py
 import numpy
 from keras import models
+
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util, misc,\
+from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util, misc, \
     thread_pool
-import queue
 
 
 class LearnedFeatureGenerationTensor2DJit:

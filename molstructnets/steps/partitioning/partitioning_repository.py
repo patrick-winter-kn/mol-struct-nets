@@ -1,6 +1,6 @@
 from steps import repository
-from steps.partitioning.stratifiedsampling import stratified_sampling
 from steps.partitioning.postprocessing import postprocessing
+from steps.partitioning.stratifiedsampling import stratified_sampling
 
 
 class PartitioningRepository(repository.Repository):

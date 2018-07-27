@@ -1,6 +1,7 @@
-from util import file_structure, process_pool, file_util, misc, logger, constants, hdf5_util, multi_process_progressbar
 import h5py
+
 from steps.datageneration.randomsmiles import smiles_generator
+from util import file_structure, process_pool, file_util, misc, logger, constants, hdf5_util, multi_process_progressbar
 
 
 class RandomSmiles:
@@ -30,8 +31,8 @@ class RandomSmiles:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['n', 'max_length']))
-        file_name = str(local_parameters['n']) + 'x' + str(local_parameters['max_length']) + '_'\
-            + misc.hash_parameters(hash_parameters) + '.h5'
+        file_name = str(local_parameters['n']) + 'x' + str(local_parameters['max_length']) + '_' \
+                    + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_data_set_folder(global_parameters), file_name)
 
     @staticmethod
@@ -48,9 +49,10 @@ class RandomSmiles:
             temp_data_set_path = file_util.get_temporary_file_path('random_smiles_data')
             chunks = misc.chunk(local_parameters['n'], process_pool.default_number_processes)
             with process_pool.ProcessPool(len(chunks)) as pool:
-                with multi_process_progressbar.MultiProcessProgressbar(local_parameters['n'], value_buffer=100) as progress:
+                with multi_process_progressbar.MultiProcessProgressbar(local_parameters['n'],
+                                                                       value_buffer=100) as progress:
                     for chunk in chunks:
-                        generator = smiles_generator\
+                        generator = smiles_generator \
                             .SmilesGenerator(chunk['size'], local_parameters['max_length'],
                                              global_parameters[constants.GlobalParameters.seed], chunk['start'])
                         pool.submit(generator.generate_smiles_batch, progress=progress.get_slave())

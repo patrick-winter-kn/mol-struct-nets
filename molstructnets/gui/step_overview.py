@@ -1,8 +1,9 @@
 import tkinter
-from steps import steps_repository
-from tkinter import ttk
-from gui import parameter_editor
 from tkinter import messagebox
+from tkinter import ttk
+
+from gui import parameter_editor
+from steps import steps_repository
 
 
 class StepOverview(ttk.Frame):

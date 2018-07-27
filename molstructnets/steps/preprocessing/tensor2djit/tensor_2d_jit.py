@@ -1,12 +1,12 @@
 import h5py
+import numpy
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import numpy
-from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_jit_preprocessor
-from util import data_validation, misc, file_structure, file_util, logger, process_pool, hdf5_util, normalization,\
-    constants, multi_process_progressbar
-from steps.preprocessing.shared.chemicalproperties import chemical_properties
 
+from steps.preprocessing.shared.chemicalproperties import chemical_properties
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_jit_preprocessor
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, hdf5_util, normalization, \
+    constants, multi_process_progressbar
 
 fixed_symbols = {'-', '=', '#', '$', ':'}
 if molecule_2d_tensor.with_empty_bits:
@@ -69,7 +69,7 @@ class Tensor2DJit:
         preprocessed_path = Tensor2DJit.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
-            global_parameters[constants.GlobalParameters.input_dimensions] =\
+            global_parameters[constants.GlobalParameters.input_dimensions] = \
                 tuple(hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions))
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
@@ -83,7 +83,7 @@ class Tensor2DJit:
             chunks = misc.chunk(smiles.shape[0], process_pool.default_number_processes)
             logger.log('Calculating stats')
             with process_pool.ProcessPool(len(chunks)) as pool:
-                needs_min_max = local_parameters['normalization'] == normalization.NormalizationTypes.min_max_1\
+                needs_min_max = local_parameters['normalization'] == normalization.NormalizationTypes.min_max_1 \
                                 or local_parameters['normalization'] == normalization.NormalizationTypes.min_max_2
                 needs_mean_std = local_parameters['normalization'] == normalization.NormalizationTypes.z_score
                 with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
@@ -151,13 +151,15 @@ class Tensor2DJit:
                 if needs_mean_std:
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
                                                        file_structure.PreprocessedTensor2DJit.normalization_mean, means)
-                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_jit_preprocessor.padding, min_x, max_x,
+                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_jit_preprocessor.padding,
+                                                    min_x, max_x,
                                                     min_y, max_y, local_parameters['square'])
                 dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) + len(valid_properties))
                 # Second run: Calculate normalization_std
                 if needs_mean_std:
                     logger.log('Calculating standard deviation')
-                    with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
+                    with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0],
+                                                                           value_buffer=10) as progress:
                         for chunk in chunks:
                             pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end']],
                                         valid_properties, means, progress=progress.get_slave())

@@ -1,9 +1,11 @@
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, thread_pool,\
-    constants, hdf5_util, reference_data_set
-import numpy
-import h5py
-from rdkit import Chem
 import random
+
+import h5py
+import numpy
+from rdkit import Chem
+
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, thread_pool, \
+    constants, hdf5_util, reference_data_set
 
 
 class TensorSmilesTransformation:
@@ -37,7 +39,7 @@ class TensorSmilesTransformation:
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         scale = hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data], 'scale')
         hash_parameters['scale'] = scale
-        file_name = 'tensor_smiles_transformation_' + str(local_parameters['transformations']) + '_'\
+        file_name = 'tensor_smiles_transformation_' + str(local_parameters['transformations']) + '_' \
                     + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_training_folder(global_parameters), file_name)
 
@@ -61,12 +63,13 @@ class TensorSmilesTransformation:
             logger.log('Writing transformed training data')
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             train = partition_h5[file_structure.Partitions.train]
-            preprocessed_training =\
-                hdf5_util.create_dataset(preprocessed_training_h5, file_structure.PreprocessedTraining.preprocessed_training,
+            preprocessed_training = \
+                hdf5_util.create_dataset(preprocessed_training_h5,
+                                         file_structure.PreprocessedTraining.preprocessed_training,
                                          (train.shape[0] * local_parameters['transformations'],
                                           preprocessed.shape[1], len(index)),
                                          dtype='I', chunks=(1, preprocessed.shape[1], len(index)))
-            preprocessed_training_ref =\
+            preprocessed_training_ref = \
                 hdf5_util.create_dataset(preprocessed_training_h5,
                                          file_structure.PreprocessedTraining.preprocessed_training_references,
                                          (preprocessed_training.shape[0],), dtype='I')

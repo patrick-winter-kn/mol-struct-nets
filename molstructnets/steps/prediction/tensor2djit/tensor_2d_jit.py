@@ -1,8 +1,10 @@
-from util import data_validation, file_structure, progressbar, logger, file_util, hdf5_util, misc, thread_pool
-from keras import models
-import h5py
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 import queue
+
+import h5py
+from keras import models
+
+from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from util import data_validation, file_structure, progressbar, logger, file_util, hdf5_util, misc, thread_pool
 
 
 class Tensor2DJit:
@@ -23,7 +25,7 @@ class Tensor2DJit:
                                           ' to faster processing but needs more memory. Default: 50'})
         parameters.append({'id': 'number_predictions', 'name': 'Predictions per data point', 'type': int, 'default': 1,
                            'min': 1, 'description': 'The number of times a data point is predicted (with different'
-                                          ' transformations). The result is the mean of all predictions. Default: 1'})
+                                                    ' transformations). The result is the mean of all predictions. Default: 1'})
         return parameters
 
     @staticmethod

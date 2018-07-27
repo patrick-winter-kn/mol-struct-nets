@@ -1,5 +1,4 @@
 class GlobalParameters:
-
     seed = 'seed'
     root = 'root'
     experiment = 'experiment'

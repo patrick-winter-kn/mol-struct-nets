@@ -1,9 +1,9 @@
 import h5py
+
 from util import hdf5_util, file_util, logger, progressbar, misc, statistics
 
 
 class NormalizationTypes:
-
     min_max_1 = 'Min-Max 0 to 1'
     min_max_2 = 'Min-Max -1 to 1'
     z_score = 'z-Score'
@@ -46,7 +46,7 @@ def normalize_data_set(path, data_set_name, type_, stats=None):
             normalized = chunked_array[:]
             slices = list()
             for length in normalized.shape[:-1]:
-                slices.append(slice(0,length))
+                slices.append(slice(0, length))
             for j in range(stats.shape[0]):
                 index = tuple(slices + [j])
                 if type_ == NormalizationTypes.min_max_1:

@@ -1,5 +1,7 @@
-import progressbar
 import threading
+
+import progressbar
+
 from util import logger
 
 

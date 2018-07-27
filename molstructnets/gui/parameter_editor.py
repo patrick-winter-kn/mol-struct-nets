@@ -1,6 +1,6 @@
+import sys
 import tkinter
 from tkinter import ttk, messagebox
-import sys
 
 
 class ParameterEditor(ttk.Frame):
@@ -149,7 +149,8 @@ class ParameterEditor(ttk.Frame):
                     self.options_frame.pack(side=tkinter.TOP, fill=tkinter.X)
                     self.options['menu'].delete(0, tkinter.END)
                     for choice in param['options']:
-                        self.options['menu'].add_command(label=choice, command=tkinter._setit(self.options_value, choice))
+                        self.options['menu'].add_command(label=choice,
+                                                         command=tkinter._setit(self.options_value, choice))
                     if self.parameter[1] is not None:
                         self.options_value.set(self.parameter[1])
                     elif 'default' in param:

@@ -1,15 +1,14 @@
 import h5py
+import numpy
 from keras import backend
 from keras import models, activations
 from vis.utils import utils
-import numpy
 
 from steps.interpretation.shared.kerasviz import cam
 from util import data_validation, file_structure, file_util, progressbar, misc, constants, hdf5_util, logger
 
 
 class CalculateCams:
-
     iterations_per_clear = 20
 
     @staticmethod
@@ -69,7 +68,7 @@ class CalculateCams:
             cam_h5 = h5py.File(temp_cam_path, 'a')
             modified_model_path = file_util.get_temporary_file_path('modified_model')
             model = models.load_model(file_structure.get_network_file(global_parameters))
-            out_layer_index = len(model.layers)-1
+            out_layer_index = len(model.layers) - 1
             model.layers[out_layer_index].activation = activations.linear
             model = utils.apply_modifications(model)
             model.save(modified_model_path)
@@ -111,7 +110,7 @@ class CalculateCams:
                 cam_shape = list(preprocessed.shape)
                 cam_shape = tuple(cam_shape[:-1])
                 cam_ = hdf5_util.create_dataset(cam_h5, cam_dataset_name,
-                                                          cam_shape)
+                                                cam_shape)
             j = 0
             for i in range(count):
                 index = -1
@@ -129,7 +128,7 @@ class CalculateCams:
                         cam_indices_list.append(index)
             if local_parameters['top_n'] is not None:
                 cam_indices = hdf5_util.create_dataset(cam_h5, indices_data_set_name,
-                                                                 (len(cam_indices_list),), dtype='I')
+                                                       (len(cam_indices_list),), dtype='I')
                 cam_indices_list = sorted(cam_indices_list)
                 cam_indices[:] = cam_indices_list[:]
             with progressbar.ProgressBar(len(cam_indices_list)) as progress:

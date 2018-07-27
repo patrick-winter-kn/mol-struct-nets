@@ -1,6 +1,6 @@
 from steps import repository
-from steps.preprocessingtraining.tensorsmilestransformation import tensor_smiles_transformation
 from steps.preprocessingtraining.tensor2dtransformation import tensor_2d_transformation
+from steps.preprocessingtraining.tensorsmilestransformation import tensor_smiles_transformation
 
 
 class PreprocessingTrainingRepository(repository.Repository):

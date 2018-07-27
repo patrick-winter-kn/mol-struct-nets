@@ -1,5 +1,5 @@
-from tkinter import ttk, filedialog
 import tkinter
+from tkinter import ttk, filedialog
 
 
 class StartDialog(ttk.Frame):

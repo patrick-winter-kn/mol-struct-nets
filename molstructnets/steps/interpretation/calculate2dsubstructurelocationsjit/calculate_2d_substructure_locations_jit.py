@@ -1,9 +1,9 @@
 import h5py
+import numpy
 from rdkit import Chem
 
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, buffered_queue, misc
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-import numpy
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, buffered_queue, misc
 
 
 class Calculate2DSubstructureLocationsJit:
@@ -60,10 +60,11 @@ class Calculate2DSubstructureLocationsJit:
             substructures = substructures.split(';')
             preprocessed = tensor_2d_jit_array.load_array(global_parameters)
             substructure_locations = hdf5_util.create_dataset(cam_h5,
-                                                          file_structure.Cam.substructure_atoms,
-                                                          (len(smiles), preprocessed.shape[1], preprocessed.shape[2]),
-                                                          dtype='uint8',
-                                                          chunks=(1, preprocessed.shape[1], preprocessed.shape[2]))
+                                                              file_structure.Cam.substructure_atoms,
+                                                              (len(smiles), preprocessed.shape[1],
+                                                               preprocessed.shape[2]),
+                                                              dtype='uint8',
+                                                              chunks=(1, preprocessed.shape[1], preprocessed.shape[2]))
             for i in range(len(substructures)):
                 substructures[i] = Chem.MolFromSmiles(substructures[i], sanitize=False)
             with progressbar.ProgressBar(len(smiles)) as progress:

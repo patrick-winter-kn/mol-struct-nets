@@ -1,8 +1,10 @@
-from util import data_validation, file_structure, file_util, misc, process_pool, logger, constants, hdf5_util
-from rdkit import Chem
-import h5py
 import random
+
+import h5py
 import numpy
+from rdkit import Chem
+
+from util import data_validation, file_structure, file_util, misc, process_pool, logger, constants, hdf5_util
 
 
 class Substructure:
@@ -66,7 +68,7 @@ class Substructure:
             if logic is None:
                 logic = 'a'
                 for i in range(1, len(substructures)):
-                    logic += '&' + chr(ord('a')+i)
+                    logic += '&' + chr(ord('a') + i)
             error = local_parameters['error'] * 0.01
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles][:]

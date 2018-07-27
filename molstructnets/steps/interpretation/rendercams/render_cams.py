@@ -4,7 +4,6 @@ from steps.interpretation.shared import tensor_2d_renderer, tensor_smiles_render
 from steps.interpretation.shared.kerasviz import cam
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, constants
 
-
 number_threads = thread_pool.default_number_threads
 
 
@@ -89,13 +88,13 @@ class RenderCams:
 
     @staticmethod
     def render(preprocessed, data_set, indices, smiles, symbols, output_dir_path, renderer, start, end, progress):
-            for i in indices[start:end]:
-                output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svgz')
-                if not file_util.file_exists(output_path):
-                    smiles_string = smiles[i].decode('utf-8')
-                    heatmap = cam.array_to_heatmap([data_set[i]])
-                    if renderer == 'smiles':
-                        tensor_smiles_renderer.render(smiles_string, output_path, 5, heatmap)
-                    elif renderer == '2d':
-                        tensor_2d_renderer.render(output_path, preprocessed[i], symbols, heatmap=heatmap)
-                progress.increment()
+        for i in indices[start:end]:
+            output_path = file_util.resolve_subpath(output_dir_path, str(i) + '.svgz')
+            if not file_util.file_exists(output_path):
+                smiles_string = smiles[i].decode('utf-8')
+                heatmap = cam.array_to_heatmap([data_set[i]])
+                if renderer == 'smiles':
+                    tensor_smiles_renderer.render(smiles_string, output_path, 5, heatmap)
+                elif renderer == '2d':
+                    tensor_2d_renderer.render(output_path, preprocessed[i], symbols, heatmap=heatmap)
+            progress.increment()

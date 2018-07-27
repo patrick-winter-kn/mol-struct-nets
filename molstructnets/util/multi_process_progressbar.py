@@ -1,6 +1,7 @@
-from util import progressbar, logger
 import multiprocessing
 import threading
+
+from util import progressbar, logger
 
 
 class MultiProcessProgressbar():

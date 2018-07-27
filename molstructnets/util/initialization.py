@@ -1,12 +1,10 @@
 import os
 import pathlib
 
-
 cuda_devices_file = str(pathlib.Path.home()) + os.sep + '.cuda_devices'
 if os.path.isfile(cuda_devices_file):
     with open(cuda_devices_file, 'r') as value_file:
         os.environ['CUDA_VISIBLE_DEVICES'] = value_file.read().replace('\n', '')
-
 
 import sys
 import random
@@ -14,8 +12,8 @@ import numpy
 import json
 import matplotlib
 
-
 silent_loading = True
+seed = 1
 
 
 def initialize(args=None):

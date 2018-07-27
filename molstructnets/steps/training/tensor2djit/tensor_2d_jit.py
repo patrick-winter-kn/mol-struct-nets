@@ -1,7 +1,7 @@
 from keras import models
 
-from util import data_validation, file_structure, logger, callbacks, file_util
 from steps.training.tensor2djit import training_array
+from util import data_validation, file_structure, logger, callbacks, file_util
 
 
 class Tensor2DJit:

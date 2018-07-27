@@ -1,14 +1,14 @@
+import math
 import random
 
 import h5py
 from rdkit import Chem
+
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor
 from steps.preprocessing.shared.tensor2d import rasterizer
 from steps.preprocessingtraining.tensor2dtransformation import transformer
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, constants,\
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_set, constants, \
     hdf5_util, reference_data_set, normalization, gauss
-from steps.preprocessing.shared.tensor2d import molecule_2d_tensor
-import math
-
 
 output_rows_per_chunk = 10000
 
@@ -46,9 +46,9 @@ class Tensor2DTransformed:
                                                      'chemical_properties')
         hash_parameters['chemical_properties'] = chemical_properties
         preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
-        hash_parameters['normalize'] =\
+        hash_parameters['normalize'] = \
             hdf5_util.has_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed_normalization_stats)
-        file_name = 'tensor_2d_transformation_' + str(local_parameters['transformations']) + '_'\
+        file_name = 'tensor_2d_transformation_' + str(local_parameters['transformations']) + '_' \
                     + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_training_folder(global_parameters), file_name)
 
@@ -75,9 +75,9 @@ class Tensor2DTransformed:
         else:
             if not file_exists or rows_done is not None:
                 transformations = local_parameters['transformations']
-                chemical_properties =\
+                chemical_properties = \
                     eval(hdf5_util.get_property(global_parameters[constants.GlobalParameters.preprocessed_data],
-                                           'chemical_properties'))
+                                                'chemical_properties'))
                 start = 0
                 if rows_done is not None:
                     start = int(rows_done / transformations)
@@ -130,14 +130,16 @@ class Tensor2DTransformed:
                         as progress:
                     while start < len(train_smiles_data):
                         preprocessed_training_h5 = h5py.File(temp_preprocessed_training_path, 'r+')
-                        preprocessed_training =\
+                        preprocessed_training = \
                             preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training]
-                        preprocessed_training_ref =\
-                            preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training_references]
+                        preprocessed_training_ref = \
+                            preprocessed_training_h5[
+                                file_structure.PreprocessedTraining.preprocessed_training_references]
                         end = min(start + input_rows_per_chunk, len(train_smiles_data))
-                        Tensor2DTransformed.\
+                        Tensor2DTransformed. \
                             write_transformed_2d_tensors(preprocessed_training, preprocessed_training_ref,
-                                                         train_smiles_data, index_lookup, rasterizer_, transformer_, start,
+                                                         train_smiles_data, index_lookup, rasterizer_, transformer_,
+                                                         start,
                                                          end, originals_set, transformations,
                                                          len(train_smiles_data),
                                                          global_parameters[constants.GlobalParameters.seed], train,
@@ -178,12 +180,12 @@ class Tensor2DTransformed:
             for j in range(number_transformations):
                 index = i + offset_per_transformation * j
                 if originals_set.add(smiles):
-                    preprocessed_row =\
+                    preprocessed_row = \
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape,
                                                                  chemical_properties_=chemical_properties)[0]
                 else:
-                    preprocessed_row =\
+                    preprocessed_row = \
                         molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_,
                                                                  preprocessed_training.shape, transformer_=transformer_,
                                                                  random_=random_,

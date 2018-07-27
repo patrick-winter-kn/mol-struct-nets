@@ -1,14 +1,16 @@
-from util import thread_pool, misc
-import queue
 import math
+import queue
+
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from util import thread_pool, misc
 
 
 class TrainingArrays():
 
     def __init__(self, global_parameters, epochs, batch_size):
         self._array = tensor_2d_jit_array.load_array(global_parameters, train=True, transform=True)
-        preprocess_size = misc.max_in_memory_chunk_size(self._array.dtype, self._array.shape, use_swap=False, fraction=1/3)
+        preprocess_size = misc.max_in_memory_chunk_size(self._array.dtype, self._array.shape, use_swap=False,
+                                                        fraction=1 / 3)
         preprocess_size -= preprocess_size % batch_size
         preprocess_size = min(len(self._array), preprocess_size)
         queue_size = math.ceil(preprocess_size / batch_size)

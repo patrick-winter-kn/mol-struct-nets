@@ -1,8 +1,9 @@
-from util import data_validation, file_structure, file_util, logger, misc, progressbar, buffered_queue, hdf5_util
 import h5py
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-from rdkit import Chem
 import numpy
+from rdkit import Chem
+
+from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from util import data_validation, file_structure, file_util, logger, misc, progressbar, buffered_queue, hdf5_util
 
 
 class CamEvaluation2DJit:

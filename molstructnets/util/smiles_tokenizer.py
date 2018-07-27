@@ -1,9 +1,9 @@
 import re
+
 from rdkit import Chem
 
 
 class TokenizedSmiles:
-
     atom_pattern_string = 'SYMBOL|\\[SYMBOL(@|@@)?H?(([0-9]+([+]+|[-]+))|(([+]+|[-]+)[0-9]*))?\\]'
     branch_pattern = re.compile('[()]')
     ring_pattern = re.compile('[0-9]|%[0-9][0-9]+')
@@ -28,7 +28,7 @@ class TokenizedSmiles:
             if type_ == Token.ATOM:
                 atom_index += 1
                 if atom_index < len(atom_symbols):
-                    atom_pattern =\
+                    atom_pattern = \
                         re.compile(TokenizedSmiles.atom_pattern_string.replace('SYMBOL', atom_symbols[atom_index]),
                                    re.IGNORECASE)
             match, type_ = TokenizedSmiles.matching_pattern(rest_string, atom_pattern)
@@ -67,7 +67,6 @@ class TokenizedSmiles:
 
 
 class Token:
-
     ATOM = 'atom'
     BOND = 'bond'
     BRANCH = 'branch'

@@ -1,10 +1,11 @@
+import multiprocessing
+
 import h5py
 
 from steps.interpretation.shared import tensor_2d_renderer
 from steps.interpretation.shared.kerasviz import cam
-from util import data_validation, file_structure, file_util, logger, constants, multi_process_progressbar, process_pool
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-import multiprocessing
+from util import data_validation, file_structure, file_util, logger, constants, multi_process_progressbar, process_pool
 
 
 class RenderCams2DJit:

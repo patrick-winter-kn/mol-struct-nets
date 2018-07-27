@@ -1,9 +1,9 @@
 import h5py
+import numpy
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import numpy
 
-from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants,\
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, \
     hdf5_util, multi_process_progressbar
 
 
@@ -60,7 +60,8 @@ class EcfpFingerprint:
                 with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
                     for chunk in chunks:
                         pool.submit(generate_fingerprints, smiles_data[chunk['start']:chunk['end']],
-                                    local_parameters['radius'], local_parameters['nr_values'], local_parameters['count'],
+                                    local_parameters['radius'], local_parameters['nr_values'],
+                                    local_parameters['count'],
                                     progress=progress.get_slave())
                     results = pool.get_results()
             dtype = 'uint8'
@@ -82,7 +83,7 @@ def generate_fingerprints(smiles_data, radius, nr_values, count, progress=None):
     dtype = 'uint8'
     if count:
         dtype = 'uint16'
-    preprocessed = numpy.zeros((len(smiles_data),nr_values), dtype=dtype)
+    preprocessed = numpy.zeros((len(smiles_data), nr_values), dtype=dtype)
     for i in range(len(smiles_data)):
         smiles = smiles_data[i].decode('utf-8')
         molecule = Chem.MolFromSmiles(smiles)

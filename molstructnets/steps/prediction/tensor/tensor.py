@@ -1,7 +1,9 @@
-from util import data_validation, file_structure, progressbar, logger, file_util, constants, hdf5_util
-from keras import models
-import h5py
 import math
+
+import h5py
+from keras import models
+
+from util import data_validation, file_structure, progressbar, logger, file_util, constants, hdf5_util
 
 
 class Tensor:

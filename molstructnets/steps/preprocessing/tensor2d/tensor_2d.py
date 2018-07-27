@@ -2,11 +2,10 @@ import h5py
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from steps.preprocessing.shared.tensor2d import rasterizer, molecule_2d_tensor
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max,\
-    concurrent_set, thread_pool, constants, hdf5_util, concurrent_min, normalization, gauss
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
-
+from steps.preprocessing.shared.tensor2d import rasterizer, molecule_2d_tensor
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, \
+    concurrent_set, thread_pool, constants, hdf5_util, concurrent_min, normalization, gauss
 
 number_threads = thread_pool.default_number_threads
 fixed_symbols = {'-', '=', '#', '$', ':'}
@@ -80,7 +79,7 @@ class Tensor2D:
             global_parameters[constants.GlobalParameters.input_dimensions] = (preprocessed.shape[1],
                                                                               preprocessed.shape[2],
                                                                               preprocessed.shape[3])
-            if hdf5_util.get_property(preprocessed_path, file_structure.Preprocessed.preprocessed + '_gauss_sigma')\
+            if hdf5_util.get_property(preprocessed_path, file_structure.Preprocessed.preprocessed + '_gauss_sigma') \
                     is not None:
                 needs_gauss = False
             if file_structure.Preprocessed.preprocessed_normalization_stats in preprocessed_h5:
@@ -175,7 +174,6 @@ class Tensor2D:
                 normalization.normalize_data_set(preprocessed_path, file_structure.Preprocessed.preprocessed,
                                                  type_=local_parameters['normalization'])
 
-
     @staticmethod
     def analyze_smiles(smiles_data, symbols, max_nr_atoms, min_x, min_y, max_x, max_y, progress):
         soft_limit = 100
@@ -216,7 +214,7 @@ class Tensor2D:
         for i in range(len(smiles_data)):
             smiles = smiles_data[i].decode('utf-8')
             molecule = Chem.MolFromSmiles(smiles)
-            preprocessed_row, atom_locations_row =\
+            preprocessed_row, atom_locations_row = \
                 molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed.shape,
                                                          atom_locations_shape=atom_locations.shape,
                                                          chemical_properties_=chemical_properties,

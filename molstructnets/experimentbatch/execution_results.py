@@ -2,7 +2,6 @@ from util import file_util
 
 
 class Status:
-
     queued = 'queued'
     failed = 'failed'
     success = 'success'

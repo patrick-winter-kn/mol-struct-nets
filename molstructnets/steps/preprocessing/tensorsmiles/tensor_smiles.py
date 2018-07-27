@@ -1,8 +1,8 @@
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set,\
-    thread_pool, constants, hdf5_util
-import numpy
 import h5py
+import numpy
 
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, concurrent_max, concurrent_set, \
+    thread_pool, constants, hdf5_util
 
 number_threads = thread_pool.default_number_threads
 

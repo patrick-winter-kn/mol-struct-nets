@@ -1,6 +1,7 @@
 import h5py
+
 from steps.training.shared.randomforest import random_forest
-from util import data_validation, file_structure, file_util, logger, constants, reference_data_set, misc
+from util import data_validation, file_structure, file_util, logger, constants
 
 
 class RandomForest:

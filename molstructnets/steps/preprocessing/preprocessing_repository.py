@@ -1,8 +1,8 @@
 from steps import repository
-from steps.preprocessing.tensorsmiles import tensor_smiles
 from steps.preprocessing.image import image
 from steps.preprocessing.tensor2d import tensor_2d
 from steps.preprocessing.tensor2djit import tensor_2d_jit
+from steps.preprocessing.tensorsmiles import tensor_smiles
 
 
 class PreprocessingRepository(repository.Repository):

@@ -1,8 +1,10 @@
-import numpy
 import math
-from matplotlib import pyplot
-from util import logger, progressbar, file_util, misc
 import random
+
+import numpy
+from matplotlib import pyplot
+
+from util import logger, progressbar, file_util
 
 
 def plot(predictions_list, prediction_names, classes, enrichment_factors, enrichment_plot_file, shuffle=True, seed=42):
@@ -24,7 +26,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
     pyplot.plot((0, len(actives) - 1), (0, actives[-1]), ls='-', c='0.75')
     # Plot actives
     for i in range(len(predictions_list)):
-        pyplot.plot(actives_list[i], label=prediction_names[i]+' (AUC: ' + str(round(auc_list[i], 2)) + ')')
+        pyplot.plot(actives_list[i], label=prediction_names[i] + ' (AUC: ' + str(round(auc_list[i], 2)) + ')')
     # Add enrichment factors
     for percent in sorted(enrichment_factors):
         x = percent * 0.01 * len(classes)
@@ -50,7 +52,7 @@ def plot(predictions_list, prediction_names, classes, enrichment_factors, enrich
 
 def stats(predictions, classes, ef_percent, positives=None, shuffle=True, seed=42):
     if positives is None:
-        positives = classes[:,0].sum()
+        positives = classes[:, 0].sum()
     # First axis of first element
     predictions = predictions[:, 0]
     if shuffle:

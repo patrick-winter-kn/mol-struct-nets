@@ -13,7 +13,7 @@ def render(smiles, path, size_factor=1, heatmap=None):
         text = ''
         # heatmap contains RGB values for every letter
         for i in range(len(smiles)):
-            text += '<tspan fill="rgb(' + str(heatmap[i][0]) + ',' + str(heatmap[i][1]) + ',' + str(heatmap[i][2])\
+            text += '<tspan fill="rgb(' + str(heatmap[i][0]) + ',' + str(heatmap[i][1]) + ',' + str(heatmap[i][2]) \
                     + ')">' + smiles[i] + '</tspan>\n'
     else:
         text = smiles

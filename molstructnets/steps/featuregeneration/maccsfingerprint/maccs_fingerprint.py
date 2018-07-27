@@ -1,9 +1,9 @@
 import h5py
+import numpy
 from rdkit import Chem
 from rdkit.Chem import MACCSkeys
-import numpy
 
-from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, hdf5_util,\
+from util import data_validation, misc, file_structure, file_util, logger, process_pool, constants, hdf5_util, \
     multi_process_progressbar
 
 

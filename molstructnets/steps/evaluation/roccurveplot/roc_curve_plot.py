@@ -1,7 +1,8 @@
 import h5py
 import numpy
+
 from steps.evaluation.shared import roc_curve
-from util import data_validation, misc, file_util, file_structure, logger, reference_data_set, constants, csv_file
+from util import data_validation, misc, file_util, file_structure, logger, constants, csv_file
 
 
 class RocCurvePlot:
@@ -39,7 +40,7 @@ class RocCurvePlot:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters, ['shuffle'])
-        file_name = 'roc_curve_plot_' + local_parameters['partition'] + '-' + misc.hash_parameters(hash_parameters) +\
+        file_name = 'roc_curve_plot_' + local_parameters['partition'] + '-' + misc.hash_parameters(hash_parameters) + \
                     '.svgz'
         return file_util.resolve_subpath(file_structure.get_evaluation_folder(global_parameters), file_name)
 
@@ -69,8 +70,8 @@ class RocCurvePlot:
                 predictions = predictions[partition]
                 classes = classes[partition]
             auc_list = roc_curve.plot([predictions], [method_name], classes,
-                                                 roc_curve_plot_path, local_parameters['shuffle'],
-                                                 global_parameters[constants.GlobalParameters.seed])
+                                      roc_curve_plot_path, local_parameters['shuffle'],
+                                      global_parameters[constants.GlobalParameters.seed])
             csv_path = file_structure.get_evaluation_stats_file(global_parameters)
             csv = csv_file.CsvFile(csv_path)
             row = dict()

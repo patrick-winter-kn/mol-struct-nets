@@ -1,13 +1,14 @@
 import random
-import numpy
+
 import h5py
-from util import hdf5_util, file_structure, normalization
+import numpy
 from rdkit import Chem
 from rdkit.Chem import AllChem
+
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols, tensor_2d_jit_preprocessed
 from steps.preprocessingtraining.tensor2dtransformation import transformer
-
+from util import hdf5_util, file_structure, normalization
 
 padding = 2
 
@@ -16,7 +17,7 @@ class Tensor2DJitPreprocessor:
 
     def __init__(self, preprocessed_path):
         preprocessed_h5 = h5py.File(preprocessed_path, 'r')
-        self._shape =\
+        self._shape = \
             tuple(hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions))
         self._with_bonds = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.with_bonds)
         self._scale = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale)
@@ -37,7 +38,7 @@ class Tensor2DJitPreprocessor:
             self._symbol_index_lookup = None
             self._number_symbols = 0
         if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.chemical_properties):
-            self._chemical_properties =\
+            self._chemical_properties = \
                 numpy_array_to_string_list(preprocessed_h5[file_structure.PreprocessedTensor2DJit.chemical_properties])
         else:
             self._chemical_properties = None
@@ -88,7 +89,8 @@ class Tensor2DJitPreprocessor:
                             symbol_index = self._symbol_index_lookup[atom.GetSymbol()]
                     chemical_property_values = None
                     if self._chemical_properties is not None:
-                        chemical_property_values = chemical_properties.get_chemical_properties(atom, self._chemical_properties)
+                        chemical_property_values = chemical_properties.get_chemical_properties(atom,
+                                                                                               self._chemical_properties)
                         self.normalize(chemical_property_values)
                     preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
                         position_x, position_y, symbol=symbol_index, features=chemical_property_values))
@@ -105,7 +107,6 @@ class Tensor2DJitPreprocessor:
             queue.put(preprocessed_molecule)
         if hasattr(queue, 'flush'):
             queue.flush()
-
 
     def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None,
                                only_substructures=False, only_atoms=False):
@@ -165,7 +166,6 @@ class Tensor2DJitPreprocessor:
                 locations_queue.put((i + offset, substructure_locations_, other_locations))
         locations_queue.flush()
 
-
     @property
     def shape(self):
         return self._shape
@@ -183,7 +183,7 @@ class Tensor2DJitPreprocessor:
             values -= self._normalization_mean
             values /= self._normalization_std
         if numpy.inf in values or numpy.NINF in values:
-            values[numpy.logical_or(values==numpy.inf, values==numpy.NINF)] = 0
+            values[numpy.logical_or(values == numpy.inf, values == numpy.NINF)] = 0
 
 
 def numpy_array_to_string_list(numpy_array):

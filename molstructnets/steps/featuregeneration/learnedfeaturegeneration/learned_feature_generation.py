@@ -1,7 +1,8 @@
+import math
+
 import h5py
 import numpy
 from keras import models
-import math
 
 from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util
 

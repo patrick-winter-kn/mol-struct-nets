@@ -1,7 +1,7 @@
 from steps import repository
 from steps.evaluation.enrichmentplot import enrichment_plot
-from steps.evaluation.roccurveplot import roc_curve_plot
 from steps.evaluation.riebedroc import rie_bedroc
+from steps.evaluation.roccurveplot import roc_curve_plot
 
 
 class EvaluationRepository(repository.Repository):

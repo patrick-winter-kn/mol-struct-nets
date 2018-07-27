@@ -1,7 +1,8 @@
-import json
 import copy
-from util import file_util, logger
+import json
+
 from steps import steps_repository
+from util import file_util
 
 
 class Experiment:
@@ -37,7 +38,7 @@ class Experiment:
 
     def remove_step(self, index):
         steps = self._dict['steps']
-        if 0<= index < len(steps):
+        if 0 <= index < len(steps):
             del steps[index]
             return True
         else:
@@ -45,7 +46,7 @@ class Experiment:
 
     def swap_steps(self, index_1, index_2):
         steps = self._dict['steps']
-        if 0 <= index_1 < len(steps) and 0<= index_2 < len(steps):
+        if 0 <= index_1 < len(steps) and 0 <= index_2 < len(steps):
             swap_step = steps[index_1]
             steps[index_1] = steps[index_2]
             steps[index_2] = swap_step

@@ -1,7 +1,6 @@
 import os
 from multiprocessing import pool
 
-
 default_number_processes = os.cpu_count()
 open_process_pools = list()
 

@@ -1,9 +1,8 @@
-import shutil
 import math
+import shutil
 
 
 class LogLevel:
-
     DEBUG = 1
     VERBOSE = 2
     INFO = 3

@@ -1,7 +1,7 @@
 import os
-from os import path
-import tempfile
 import shutil
+import tempfile
+from os import path
 
 
 def get_filename(file_path, with_extension=True):

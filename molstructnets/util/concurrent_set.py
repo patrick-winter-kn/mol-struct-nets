@@ -1,5 +1,5 @@
-import threading
 import copy
+import threading
 
 
 class ConcurrentSet:

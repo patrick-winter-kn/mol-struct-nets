@@ -3,7 +3,6 @@ from rdkit.Chem import rdMolDescriptors, rdPartialCharges
 
 
 class Properties:
-
     atomic_number = 'atomic_number'
     formal_charge = 'formal_charge'
     aromatic = 'aromatic'

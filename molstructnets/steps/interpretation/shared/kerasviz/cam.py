@@ -1,11 +1,11 @@
 # The methods in this class are modified versions of methods in the keras-vis plugin. See LICENSE.txt for license
 # information.
 
-from vis.visualization import saliency
 import numpy
-from vis.utils import utils
-from matplotlib import cm
 from keras import models, activations
+from matplotlib import cm
+from vis.utils import utils
+from vis.visualization import saliency
 
 
 class CAM():
@@ -14,7 +14,7 @@ class CAM():
 
     def __init__(self, model_path, class_index):
         model = models.load_model(model_path)
-        out_layer_index = len(model.layers)-1
+        out_layer_index = len(model.layers) - 1
         model.layers[out_layer_index].activation = activations.linear
         model = utils.apply_modifications(model)
         losses = [(saliency.ActivationMaximization(model.layers[out_layer_index], [class_index]), -1)]

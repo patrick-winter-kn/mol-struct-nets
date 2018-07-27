@@ -1,7 +1,7 @@
-from util import initialization
 import argparse
-from experiments import experiment
 
+from experiments import experiment
+from util import initialization
 
 initialization.initialize()
 

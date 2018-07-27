@@ -1,15 +1,15 @@
 from steps import repository
 from steps.datageneration import data_generation_repository
-from steps.targetgeneration import target_generation_repository
+from steps.evaluation import evaluation_repository
+from steps.featuregeneration import feature_generation_repository
+from steps.interpretation import interpretation_repository
+from steps.networkcreation import network_creation_repository
 from steps.partitioning import partitioning_repository
+from steps.prediction import prediction_repository
 from steps.preprocessing import preprocessing_repository
 from steps.preprocessingtraining import preprocessing_training_repository
-from steps.featuregeneration import feature_generation_repository
-from steps.networkcreation import network_creation_repository
+from steps.targetgeneration import target_generation_repository
 from steps.training import training_repository
-from steps.prediction import prediction_repository
-from steps.evaluation import evaluation_repository
-from steps.interpretation import interpretation_repository
 
 
 class StepsRepository(repository.Repository):

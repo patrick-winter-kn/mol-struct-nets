@@ -1,7 +1,7 @@
 from steps import repository
-from steps.prediction.tensor import tensor
 from steps.prediction.image import image
 from steps.prediction.randomforest import random_forest
+from steps.prediction.tensor import tensor
 from steps.prediction.tensor2djit import tensor_2d_jit
 
 

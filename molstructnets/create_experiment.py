@@ -1,9 +1,9 @@
-from util import initialization
 import argparse
-from experiments import experiment
-from util import file_util, file_structure, input_util
-from steps import steps_repository
 
+from experiments import experiment
+from steps import steps_repository
+from util import file_util, file_structure, input_util
+from util import initialization
 
 initialization.initialize()
 
@@ -22,7 +22,7 @@ args = get_arguments()
 path = input_util.read_string('*Root folder: ')
 name = input_util.read_string('*Experiment name: ', regex='[a-zA-Z0-9_]+')
 new_experiment = experiment.Experiment(file_util.resolve_subpath(file_structure.get_experiment_folder({'root': path}),
-                                                                 name+'.json'))
+                                                                 name + '.json'))
 seed = input_util.read_int('Random seed: ', True)
 if seed is not None:
     new_experiment.set_random_seed(seed)
@@ -31,7 +31,7 @@ selected_step = -1
 while selected_step is not None:
     print()
     list_selections(steps)
-    selected_step = input_util.read_int('Step: ', True, min_=0, max_=len(steps)-1)
+    selected_step = input_util.read_int('Step: ', True, min_=0, max_=len(steps) - 1)
     if selected_step is not None:
         step = {}
         type_ = steps_repository.instance.get_steps()[selected_step].get_id()
@@ -39,7 +39,7 @@ while selected_step is not None:
         implementations = steps_repository.instance.get_step_implementation_names(type_)
         print()
         list_selections(implementations)
-        selected_implementation = input_util.read_int('*Implementation: ', min_=0, max_=len(implementations)-1)
+        selected_implementation = input_util.read_int('*Implementation: ', min_=0, max_=len(implementations) - 1)
         implementation_id = steps_repository.instance.get_step_implementations(type_)[selected_implementation].get_id()
         step['id'] = implementation_id
         implementation = steps_repository.instance.get_step_implementation(type_, implementation_id)

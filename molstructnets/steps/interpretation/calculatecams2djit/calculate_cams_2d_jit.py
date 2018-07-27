@@ -1,10 +1,11 @@
-import h5py
-import numpy
 import queue
 
+import h5py
+import numpy
+
 from steps.interpretation.shared.kerasviz import cam
-from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool
 
 
 class CalculateCams2DJit:
@@ -100,7 +101,8 @@ class CalculateCams2DJit:
                 cam_shape = cam_shape[:-1]
                 chunk_shape = tuple([1] + cam_shape[1:])
                 cam_shape = tuple(cam_shape)
-                cam_ = hdf5_util.create_dataset(cam_h5, cam_dataset_name, cam_shape, chunks=chunk_shape, dtype='float32')
+                cam_ = hdf5_util.create_dataset(cam_h5, cam_dataset_name, cam_shape, chunks=chunk_shape,
+                                                dtype='float32')
             cam_indices_list = list()
             j = 0
             for i in range(count):

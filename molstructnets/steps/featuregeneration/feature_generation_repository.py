@@ -1,8 +1,8 @@
 from steps import repository
 from steps.featuregeneration.ecfpfingerprint import ecfp_fingerprint
-from steps.featuregeneration.maccsfingerprint import maccs_fingerprint
 from steps.featuregeneration.learnedfeaturegeneration import learned_feature_generation
 from steps.featuregeneration.learnedfeaturegenerationtensor2djit import learned_feature_generation_tensor_2d_jit
+from steps.featuregeneration.maccsfingerprint import maccs_fingerprint
 
 
 class FeatureGenerationRepository(repository.Repository):

@@ -1,8 +1,8 @@
-from util import data_validation, file_structure, misc, file_util, logger, constants, hdf5_util
-import random
 import h5py
 import numpy
+
 from steps.partitioning.shared import partitioning
+from util import data_validation, file_structure, misc, file_util, logger, constants, hdf5_util
 
 
 class Postprocessing:
@@ -36,8 +36,8 @@ class Postprocessing:
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['oversample', 'shuffle']))
-        file_name = file_util.get_filename(file_structure.get_partition_file(global_parameters), False)\
-            + '_postprocessed_' + misc.hash_parameters(hash_parameters) + '.h5'
+        file_name = file_util.get_filename(file_structure.get_partition_file(global_parameters), False) \
+                    + '_postprocessed_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_partition_folder(global_parameters), file_name)
 
     @staticmethod

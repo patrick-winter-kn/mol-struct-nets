@@ -1,9 +1,10 @@
+import sys
 import tkinter
+from tkinter import ttk
+
+from gui import step_overview
 from steps import steps_repository
 from util import misc
-import sys
-from gui import step_overview
-from tkinter import ttk
 
 
 class ExperimentOverview(ttk.Frame):
@@ -83,7 +84,6 @@ class ExperimentOverview(ttk.Frame):
             type_name = steps_repository.instance.get_step_name(step_type)
             implementation_name = steps_repository.instance.get_step_implementation(step_type, step_id).get_name()
             self.steps_list.insert(i + 1, type_name + ' - ' + implementation_name)
-
 
     def save_changes(self):
         self.experiment.set_random_seed(self.get_seed())

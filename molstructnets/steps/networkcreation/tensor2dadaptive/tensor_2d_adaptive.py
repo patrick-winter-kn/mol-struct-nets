@@ -1,9 +1,10 @@
-from util import file_structure, file_util, logger, constants
-from keras.models import Model
-from keras.layers import Input
-from keras.layers.core import Dense, Flatten, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras import initializers, optimizers
+from keras.layers import Input
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.layers.core import Dense, Flatten, Dropout
+from keras.models import Model
+
+from util import file_structure, file_util, logger, constants
 
 
 class Tensor2DAdaptive:
@@ -63,6 +64,7 @@ class Tensor2DAdaptive:
 def add_block(layer, iteration, initializer, input_features=None):
     if input_features is None:
         input_features = int(layer.shape[-1])
-    layer = Convolution2D(input_features * 2, 3, activation='relu', padding='same', name='convolution_' + str(iteration),
+    layer = Convolution2D(input_features * 2, 3, activation='relu', padding='same',
+                          name='convolution_' + str(iteration),
                           kernel_initializer=initializer)(layer)
     return MaxPooling2D(2, padding='same', name='max_pool_' + str(iteration))(layer)

@@ -1,5 +1,5 @@
-from util import file_util
 from experimentbatch import batch_entry
+from util import file_util
 
 
 def load_entries_from_csv(csv_path):

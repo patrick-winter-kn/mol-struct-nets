@@ -1,7 +1,9 @@
-from util import data_validation, file_structure, logger, file_util, progressbar, images, constants, hdf5_util
+import math
+
 import h5py
 from keras import models
-import math
+
+from util import data_validation, file_structure, logger, file_util, progressbar, images, constants, hdf5_util
 
 
 class Image:

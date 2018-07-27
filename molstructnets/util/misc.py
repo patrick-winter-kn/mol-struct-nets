@@ -1,10 +1,12 @@
 import hashlib
 import math
-import numpy
-from util import progressbar, logger, chunked_array
-import humanize
-import psutil
 import time
+
+import humanize
+import numpy
+import psutil
+
+from util import progressbar, logger, chunked_array
 
 
 def hash_parameters(parameters):
@@ -54,7 +56,7 @@ def chunk_by_size(number, max_chunk_size):
     return chunks
 
 
-def max_in_memory_chunk_size(dtype, shape, use_swap=True, fraction=1, buffer=2*math.pow(1024,3)):
+def max_in_memory_chunk_size(dtype, shape, use_swap=True, fraction=1, buffer=2 * math.pow(1024, 3)):
     target_type = dtype
     shape = list(shape)
     shape[0] = 1
@@ -68,7 +70,7 @@ def max_in_memory_chunk_size(dtype, shape, use_swap=True, fraction=1, buffer=2*m
     if available_memory < single_size:
         return 0
     else:
-        return math.floor(available_memory/single_size)
+        return math.floor(available_memory / single_size)
 
 
 def get_chunked_array(array, as_bool=False, use_swap=False, fraction=1):
@@ -126,7 +128,7 @@ def copy_ndarray(array, as_bool=False, log_level=logger.LogLevel.INFO, start=Non
         new_array = numpy.zeros(array.shape, dtype=bool)
         with progressbar.ProgressBar(len(array), log_level) as progress:
             for i in range(start, end):
-                new_array[i,:] = array[i,:].astype(bool)
+                new_array[i, :] = array[i, :].astype(bool)
                 progress.increment()
         return new_array
     else:

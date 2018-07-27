@@ -1,10 +1,10 @@
 import h5py
-from steps.interpretation.extractcamsubstructures import substructure_set
-from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util,\
-    smiles_analyzer, constants
-from rdkit import Chem
 import numpy
+from rdkit import Chem
 
+from steps.interpretation.extractcamsubstructures import substructure_set
+from util import data_validation, file_structure, file_util, progressbar, logger, misc, thread_pool, hdf5_util, \
+    smiles_analyzer, constants
 
 number_threads = 1
 
@@ -120,9 +120,9 @@ class ExtractCamSubstructures:
         chunks = misc.chunk(len(smiles), number_threads)
         if predictions is not None:
             if active:
-                probabilities = predictions[:,0]
+                probabilities = predictions[:, 0]
             else:
-                probabilities = predictions[:,1]
+                probabilities = predictions[:, 1]
         else:
             probabilities = None
         with progressbar.ProgressBar(len(indices)) as progress:
@@ -253,6 +253,6 @@ class ExtractCamSubstructures:
                 value_sum += values[list_index]
                 del atom_indices[list_index]
                 del values[list_index]
-            value_mean = value_sum/len(indices)
+            value_mean = value_sum / len(indices)
             smiles = Chem.MolFragmentToSmiles(molecule, indices)
             substructure.add_substructure(smiles, value_mean)

@@ -1,9 +1,10 @@
-from util import file_structure, file_util, logger, constants
-from keras.models import Model
-from keras.layers import Input
-from keras.layers.core import Dense, Flatten, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras import initializers, optimizers
+from keras.layers import Input
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.layers.core import Dense, Flatten, Dropout
+from keras.models import Model
+
+from util import file_structure, file_util, logger, constants
 
 
 class CustomTensor2D:

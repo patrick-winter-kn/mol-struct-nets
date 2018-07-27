@@ -1,5 +1,6 @@
 from util import file_util
 
+
 class BatchEntry:
 
     def __init__(self, csv_line, experiment_location=None):

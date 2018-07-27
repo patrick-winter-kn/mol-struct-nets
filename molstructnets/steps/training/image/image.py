@@ -1,7 +1,8 @@
-from util import data_validation, file_structure, hdf5_util, logger, reference_data_set, callbacks, images, constants
+import h5py
 from keras import models
 from keras.callbacks import ModelCheckpoint, TensorBoard
-import h5py
+
+from util import data_validation, file_structure, hdf5_util, logger, reference_data_set, callbacks, images, constants
 
 
 class Image:

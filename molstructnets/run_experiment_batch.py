@@ -1,6 +1,7 @@
-import sys
 import argparse
 import subprocess
+import sys
+
 from experimentbatch import experiment_batch, execution_results
 from util import file_util, logger
 

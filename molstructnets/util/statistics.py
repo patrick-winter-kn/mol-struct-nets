@@ -1,9 +1,9 @@
 import numpy
+
 from util import logger, progressbar
 
 
 class Statistics:
-
     min = 'minimum'
     max = 'maximum'
     mean = 'mean'
@@ -28,7 +28,7 @@ def get_stds(data_set):
 
 def calculate_additional_memory(shape, stats):
     if Statistics.std in stats:
-        return 1/shape[-1]
+        return 1 / shape[-1]
     else:
         return 0
 
@@ -59,7 +59,7 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
             number_second_run += 1
         number_first_run = number_first_run * array.number_chunks() + array.number_chunks()
         if number_second_run > 0:
-                number_second_run = number_second_run * array.number_chunks() + array.number_chunks()
+            number_second_run = number_second_run * array.number_chunks() + array.number_chunks()
         with progressbar.ProgressBar(number_first_run + number_second_run, log_level) as progress:
             for stat in stats:
                 if stat == Statistics.min:
@@ -101,7 +101,7 @@ def calculate_statistics(array, stats, log_level=logger.LogLevel.INFO):
                     progress.increment()
                     slices = list()
                     for length in array.shape[:-1]:
-                        slices.append(slice(0,length))
+                        slices.append(slice(0, length))
                     for j in range(array.shape[-1]):
                         index = tuple(slices + [j])
                         a = array[index].copy()

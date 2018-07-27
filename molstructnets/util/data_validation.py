@@ -1,6 +1,7 @@
-from util import file_util, file_structure, constants
 import h5py
 from keras import models
+
+from util import file_util, file_structure, constants
 
 
 def validate_data_set(global_parameters):

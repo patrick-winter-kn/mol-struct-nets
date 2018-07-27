@@ -1,8 +1,10 @@
 import random
-from util import misc
 import re
-from rdkit import Chem, RDLogger
+
 import numpy
+from rdkit import Chem, RDLogger
+
+from util import misc
 
 
 # Available SMILES string elements
@@ -219,4 +221,3 @@ class SmilesGenerator:
         # Turn error logging of RDKit back on
         logger.setLevel(RDLogger.DEBUG)
         return array
-    

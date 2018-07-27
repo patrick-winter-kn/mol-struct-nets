@@ -1,15 +1,15 @@
+import numpy
 from sklearn import ensemble
 from sklearn.externals import joblib
-import numpy
-from util import file_util, misc
-import math
+
+from util import file_util
 
 
 def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=1, seed=None):
     if len(train_data_input.shape) > 2:
         nr_features = numpy.prod(train_data_input.shape[1:])
         train_data_input = train_data_input.reshape((train_data_input.shape[0], nr_features))
-    train_data_output = train_data_output[:,1]
+    train_data_output = train_data_output[:, 1]
     random_forest = ensemble.RandomForestClassifier(n_estimators=nr_trees, min_samples_leaf=min_samples_leaf, n_jobs=-1,
                                                     class_weight='balanced', verbose=1, criterion='gini',
                                                     random_state=seed)

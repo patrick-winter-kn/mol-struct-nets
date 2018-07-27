@@ -7,7 +7,6 @@ try:
     from gui import experiment_overview, start_dialog
     import sys
 
-
     initialization.initialize()
 
 
@@ -15,11 +14,11 @@ try:
         root.quit()
 
 
-    def edit_experiment(file_path):
-        if not isinstance(file_path, str):
+    def edit_experiment(file_path_):
+        if not isinstance(file_path_, str):
             logger.log('No experiment file selected')
             exit(0)
-        experiment_ = experiment.Experiment(file_path)
+        experiment_ = experiment.Experiment(file_path_)
         experiment_window = experiment_overview.ExperimentOverview(root, experiment_)
         experiment_window.winfo_toplevel().protocol('WM_DELETE_WINDOW', close_application)
 
@@ -38,5 +37,6 @@ try:
         root.mainloop()
 except Exception as e:
     from tkinter import messagebox
+
     messagebox.showerror('Error', str(e))
     raise e

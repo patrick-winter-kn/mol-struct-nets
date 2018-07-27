@@ -1,7 +1,7 @@
-from util import data_validation, misc, file_structure, file_util, logger, progressbar, thread_pool, constants
 import h5py
-from steps.preprocessing.image import image_renderer
 
+from steps.preprocessing.image import image_renderer
+from util import data_validation, misc, file_structure, file_util, logger, progressbar, thread_pool, constants
 
 number_threads = thread_pool.default_number_threads
 

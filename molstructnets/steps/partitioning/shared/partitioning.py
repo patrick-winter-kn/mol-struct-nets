@@ -1,12 +1,14 @@
-from util import logger, progressbar, hdf5_util
 import math
+
 import numpy
+
+from util import logger, progressbar
 
 
 def oversample(partition, classes, log_level=logger.LogLevel.INFO):
     logger.log('Oversampling data', log_level=log_level)
-    class_zero_count = int(classes[partition,0].sum(0))
-    class_one_count = int(classes[partition,1].sum(0))
+    class_zero_count = int(classes[partition, 0].sum(0))
+    class_one_count = int(classes[partition, 1].sum(0))
     if class_zero_count == 0 or class_one_count == 0:
         raise ValueError('One of the classes is not represented')
     difference = abs(class_zero_count - class_one_count)

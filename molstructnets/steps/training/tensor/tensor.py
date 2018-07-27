@@ -3,7 +3,7 @@ import math
 import h5py
 import numpy
 from keras import models
-from keras.callbacks import ModelCheckpoint, TensorBoard, Callback
+from keras.callbacks import ModelCheckpoint, Callback
 
 from steps.evaluation.shared import enrichment
 from util import data_validation, file_structure, reference_data_set, hdf5_util, logger, callbacks, constants, \
@@ -57,7 +57,7 @@ class Tensor:
             preprocessed_training_h5 = None
             only_boolean = len(preprocessed_h5[file_structure.Preprocessed.index]) == preprocessed.shape[-1]
             if constants.GlobalParameters.preprocessed_training_data in global_parameters:
-                preprocessed_training_h5 =\
+                preprocessed_training_h5 = \
                     h5py.File(global_parameters[constants.GlobalParameters.preprocessed_training_data], 'r')
                 train = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training_references]
                 input_ = preprocessed_training_h5[file_structure.PreprocessedTraining.preprocessed_training]
@@ -77,7 +77,7 @@ class Tensor:
             model = models.load_model(model_path)
             callback_list.append(ModelCheckpoint(model_path))
             callback_list.append(callbacks.CustomCheckpoint(model_path))
-            #callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
+            # callback_list.append(TensorBoard(log_dir=model_path[:-3] + '-tensorboard', histogram_freq=1,
             #                                 write_graph=True, write_images=False, embeddings_freq=1))
             input_ = misc.copy_into_memory(input_, as_bool=only_boolean)
             output = misc.copy_into_memory(output, as_bool=True)
@@ -113,7 +113,7 @@ class DrugDiscoveryEval(Callback):
         logger.log('\nPredicting with intermediate model')
         predictions = numpy.zeros((self.input.shape[0], 2))
         with progressbar.ProgressBar(len(self.input)) as progress:
-            for i in range(int(math.ceil(len(self.input)/self.batch_size))):
+            for i in range(int(math.ceil(len(self.input) / self.batch_size))):
                 start = i * self.batch_size
                 end = min(len(self.input), (i + 1) * self.batch_size)
                 results = self.model.predict(self.input[start:end])
@@ -132,4 +132,4 @@ class DrugDiscoveryEval(Callback):
         results = set()
         for i in range(len(predictions)):
             results.add(predictions[i][0])
-        return len(results)/len(predictions)
+        return len(results) / len(predictions)

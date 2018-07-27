@@ -1,6 +1,7 @@
 import numpy
-from util import progressbar, file_util
 from keras.preprocessing import image
+
+from util import progressbar, file_util
 
 
 def load_images(image_directory, width, height, start, end, show_progress_bar=False):

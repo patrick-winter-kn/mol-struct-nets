@@ -1,7 +1,6 @@
-import os
 from concurrent import futures
-from util import process_pool
 
+from util import process_pool
 
 default_number_threads = process_pool.default_number_processes
 

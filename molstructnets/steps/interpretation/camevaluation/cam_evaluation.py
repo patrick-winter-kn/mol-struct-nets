@@ -1,7 +1,9 @@
-from util import data_validation, file_structure, file_util, logger, hdf5_util, smiles_analyzer, progressbar, constants
+import warnings
+
 import h5py
 import numpy
-import warnings
+
+from util import data_validation, file_structure, file_util, logger, hdf5_util, smiles_analyzer, progressbar, constants
 
 
 class CamEvaluation:
@@ -91,8 +93,8 @@ class CamEvaluation:
                 locations = None
                 if atom_locations is not None:
                     locations = atom_locations[i]
-                characters[index], mean[index], std_deviation[index], substructure_characters[index],\
-                substructure_mean[index], substructure_std_deviation[index] =\
+                characters[index], mean[index], std_deviation[index], substructure_characters[index], \
+                substructure_mean[index], substructure_std_deviation[index] = \
                     CamEvaluation.calculate_single_cam_evaluation(smiles[i].decode('utf-8'),
                                                                   substructure_atoms[i],
                                                                   cam[i], locations)
@@ -143,8 +145,8 @@ class CamEvaluation:
                         not_substructure_values.append(cam[position])
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            return len(not_substructure_values), numpy.mean(not_substructure_values),\
-                   numpy.std(not_substructure_values), len(substructure_values), numpy.mean(substructure_values),\
+            return len(not_substructure_values), numpy.mean(not_substructure_values), \
+                   numpy.std(not_substructure_values), len(substructure_values), numpy.mean(substructure_values), \
                    numpy.std(substructure_values)
 
     @staticmethod

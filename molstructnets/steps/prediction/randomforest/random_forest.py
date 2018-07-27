@@ -1,8 +1,8 @@
-from util import data_validation, file_structure, progressbar, logger, file_util, constants, hdf5_util
 import h5py
-import math
 from sklearn.externals import joblib
+
 from steps.training.shared.randomforest import random_forest
+from util import data_validation, file_structure, logger, file_util, constants, hdf5_util
 
 
 class RandomForest:
@@ -40,7 +40,7 @@ class RandomForest:
             preprocessed_h5.close()
             temp_prediction_path = file_util.get_temporary_file_path('random_forest_prediction')
             model_path = file_util.resolve_subpath(file_structure.get_result_folder(global_parameters),
-                                                       'randomforest.pkl.gz')
+                                                   'randomforest.pkl.gz')
             model = joblib.load(model_path)
             predictions = random_forest.predict(preprocessed, model)
             prediction_h5 = h5py.File(temp_prediction_path, 'w')

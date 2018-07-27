@@ -1,25 +1,22 @@
-from util import file_util, constants
 import re
+
+from util import file_util, constants
 
 
 class DataSet:
-
     smiles = 'smiles'
 
 
 class Target:
-
     classes = 'classes'
 
 
 class Partitions:
-
     train = 'train'
     test = 'test'
 
 
 class Preprocessed:
-
     atom_locations = 'atom_locations'
     index = 'index'
     preprocessed = 'preprocessed'
@@ -27,18 +24,15 @@ class Preprocessed:
 
 
 class PreprocessedTraining:
-
     preprocessed_training = 'preprocessed_training'
     preprocessed_training_references = 'preprocessed_training_references'
 
 
 class Predictions:
-
     prediction = 'prediction'
 
 
 class Cam:
-
     substructure_atoms = 'substructure_atoms'
     cam_active = 'cam_active'
     cam_inactive = 'cam_inactive'
@@ -47,7 +41,6 @@ class Cam:
 
 
 class PreprocessedTensor2DJit:
-
     dimensions = 'dimensions'
     min_x = 'min_x'
     max_x = 'max_x'

@@ -1,10 +1,12 @@
-from numpy import random
-import numpy
-from util import file_structure, constants, process_pool, misc, buffered_queue
-import h5py
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
-import random
 import queue
+import random
+
+import h5py
+import numpy
+from numpy import random
+
+from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
+from util import file_structure, constants, process_pool, misc, buffered_queue
 
 
 class Tensor2DJitArray():

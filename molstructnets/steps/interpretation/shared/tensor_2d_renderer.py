@@ -17,7 +17,7 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
                 render_y = y * render_factor - render_factor
                 pixel_size = str(render_factor * 1.01)
                 color = '(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' + str(heatmap[x, y, 2]) + ')'
-                background += '<rect x="' + str(render_x) + '" y="' + str(render_y) + '" width="' + pixel_size\
+                background += '<rect x="' + str(render_x) + '" y="' + str(render_y) + '" width="' + pixel_size \
                               + '" height="' + pixel_size + '" style="fill:rgb' + color + '" />\n'
     grid = ''
     if show_grid:
@@ -46,7 +46,7 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
                     if background_heatmap:
                         color = ' fill="rgb(255,255,255)" stroke="rgb(0,0,0)"'
                     else:
-                        color = ' fill="rgb(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' +\
+                        color = ' fill="rgb(' + str(heatmap[x, y, 0]) + ',' + str(heatmap[x, y, 1]) + ',' + \
                                 str(heatmap[x, y, 2]) + ')"'
                 text += '<tspan x="' + str(render_x) + '" y="' + str(render_y) + '"' + color + '>' + symbols[
                     symbol_index].decode('utf-8') + '</tspan>\n'

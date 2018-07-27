@@ -1,8 +1,8 @@
 import numpy
 from rdkit.Chem import AllChem
 
-from steps.preprocessing.shared.tensor2d import bond_positions, bond_symbols
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
+from steps.preprocessing.shared.tensor2d import bond_positions, bond_symbols
 
 with_empty_bits = False
 padding = 2
@@ -40,7 +40,7 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                     symbol_index = index_lookup[atom.GetSymbol()]
                     preprocessed_row[x, y, symbol_index] = 1
                 if len(chemical_properties_) > 0:
-                    preprocessed_row[x, y, len(index_lookup):] =\
+                    preprocessed_row[x, y, len(index_lookup):] = \
                         chemical_properties.get_chemical_properties(atom, chemical_properties_)[:]
                 if atom_locations_row is not None:
                     atom_locations_row[atom.GetIdx(), 0] = x

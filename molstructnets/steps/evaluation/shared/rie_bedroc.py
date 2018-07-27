@@ -1,7 +1,6 @@
-import numpy
-from rdkit.ML.Scoring import Scoring
-from util import logger, progressbar, file_util, misc
 import random
+
+from rdkit.ML.Scoring import Scoring
 
 
 def stats(predictions, classes, alphas, positives=None, shuffle=True, seed=42):
