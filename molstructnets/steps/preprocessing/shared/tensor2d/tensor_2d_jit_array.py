@@ -81,6 +81,17 @@ class Tensor2DJitArray():
                 self._pool.submit(self._preprocessor.substructure_locations, self._smiles[indices_chunk], substructures,
                                   chunk['start'], location_queue, random_seed, only_substructures, only_atoms)
 
+    def calc_atom_locations(self, start, end, location_queue):
+        random_seed = None
+        if self._pool is not None and len(self._smiles) > 1:
+            chunks = misc.chunk(end - start, self._pool.get_number_threads())
+            for chunk in chunks:
+                indices_chunk = range(start + chunk['start'], start + chunk['end'])
+                if self._random_seed is not None:
+                    random_seed = self._random_seed + start + chunk['start'] + self._iteration * len(self)
+                self._pool.submit(self._preprocessor.atom_locations, self._smiles[indices_chunk], chunk['start'],
+                                  location_queue, random_seed)
+
     @property
     def shape(self):
         return self._shape
@@ -89,7 +100,14 @@ class Tensor2DJitArray():
     def dtype(self):
         return numpy.float32
 
-    def classes(self, item):
+    def smiles(self, item=None):
+        if item is None:
+            item = slice(0, len(self._indices))
+        return self._smiles[self._indices[item]]
+
+    def classes(self, item=None):
+        if item is None:
+            item = slice(0, len(self._indices))
         return self._classes[self._indices[item]]
 
     def close(self):

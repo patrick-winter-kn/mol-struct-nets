@@ -176,10 +176,8 @@ def to_int(string):
 
 
 def normalize(values):
-    offset = -values.min()
-    factor = 1 / (values.max() + offset)
-    for i in range(len(values)):
-        values[i] = (values[i] + offset) * factor
+    values -= values.min()
+    values /= values.max()
 
 
 def be_busy(seconds):

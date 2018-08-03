@@ -166,6 +166,37 @@ class Tensor2DJitPreprocessor:
                 locations_queue.put((i + offset, substructure_locations_, other_locations))
         locations_queue.flush()
 
+    def atom_locations(self, smiles_array, offset, locations_queue, random_seed=None):
+        for i in range(len(smiles_array)):
+            if random_seed is not None:
+                random_ = random.Random(random_seed + i)
+            smiles = smiles_array[i].decode('utf-8')
+            molecule = Chem.MolFromSmiles(smiles)
+            AllChem.Compute2DCoords(molecule)
+            successful = False
+            while not successful:
+                successful = True
+                atom_positions = dict()
+                if random_seed is not None:
+                    rotation = random_.randint(0, 359)
+                    flip = bool(random_.randint(0, 1))
+                    shift_x = random_.randint(0, 1) / self._scale - 0.5 / self._scale
+                    shift_y = random_.randint(0, 1) / self._scale - 0.5 / self._scale
+                for atom in molecule.GetAtoms():
+                    position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
+                    position_x = position.x
+                    position_y = position.y
+                    if random_seed is not None:
+                        position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation,
+                                                                         shift_x, shift_y)
+                    position_x, position_y = self._rasterizer.apply(position_x, position_y)
+                    if position_x >= self.shape[0] or position_y >= self.shape[1]:
+                        successful = False
+                        break
+                    atom_positions[atom.GetIdx()] = [position_x, position_y]
+            locations_queue.put((i + offset, atom_positions))
+        locations_queue.flush()
+
     @property
     def shape(self):
         return self._shape

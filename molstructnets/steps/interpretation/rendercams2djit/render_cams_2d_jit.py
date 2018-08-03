@@ -24,6 +24,7 @@ class RenderCams2DJit:
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
+        data_validation.validate_data_set(global_parameters)
         data_validation.validate_preprocessed_jit(global_parameters)
         data_validation.validate_cam(global_parameters)
 
@@ -87,6 +88,6 @@ def render(global_parameters, symbols, output_dir_path, queue, progress):
         if not file_util.file_exists(output_path):
             heatmap = cam.array_to_heatmap([data])
             tensor_2d_renderer.render(output_path, preprocessed[index], symbols, heatmap=heatmap)
-            progress.increment()
+        progress.increment()
     progress.finish()
     preprocessed.close()
