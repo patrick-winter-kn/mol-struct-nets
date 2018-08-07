@@ -12,8 +12,8 @@ class TrainingArrays():
         preprocess_size = misc.max_in_memory_chunk_size(self._array.dtype, self._array.shape, use_swap=False,
                                                         fraction=1 / 3)
         preprocess_size -= preprocess_size % batch_size
-        preprocess_size = min(len(self._array), preprocess_size)
         queue_size = math.ceil(preprocess_size / batch_size)
+        preprocess_size = min(len(self._array), preprocess_size)
         input_queue = queue.Queue(queue_size)
         output_queue = queue.Queue(queue_size)
         self._input_array = QueueArray(self._array.shape, input_queue)
