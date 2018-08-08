@@ -35,6 +35,7 @@ class MossFeatureGeneration:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_target(global_parameters)
+        data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
@@ -51,14 +52,17 @@ class MossFeatureGeneration:
             feature_dimensions = features_h5[file_structure.Preprocessed.preprocessed].shape[1]
             features_h5.close()
         else:
-            # TODO only training data
+            partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+            train_indices = numpy.unique(partition_h5[file_structure.Partitions.train][:])
+            partition_h5.close()
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+            smiles_train_data = numpy.take(data_h5[file_structure.DataSet.smiles][:], train_indices, axis=0)
             smiles_data = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
-            classes = target_h5[file_structure.Target.classes][:]
+            train_classes = numpy.take(target_h5[file_structure.Target.classes][:], train_indices, axis=0)
             target_h5.close()
-            substructures = moss_integration.calculate_substructures(smiles_data, classes,
+            substructures = moss_integration.calculate_substructures(smiles_train_data, train_classes,
                                                                      local_parameters['min_focus']/100,
                                                                      local_parameters['max_complement']/100)
             feature_dimensions = len(substructures)
