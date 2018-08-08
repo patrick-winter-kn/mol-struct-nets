@@ -149,17 +149,22 @@ def get_preprocessed_training_folder(global_parameters):
 
 def get_network_file(global_parameters):
     return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     'network.h5')
+                                     feature_prefix(global_parameters) + 'network.h5')
+
+
+def get_random_forest_file(global_parameters):
+    return file_util.resolve_subpath(get_result_folder(global_parameters),
+                                     feature_prefix(global_parameters) + 'randomforest.pkl.gz')
 
 
 def get_prediction_file(global_parameters):
     return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     'predictions.h5')
+                                     feature_prefix(global_parameters) + 'predictions.h5')
 
 
 def get_evaluation_folder(global_parameters):
     return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     'evaluation')
+                                     feature_prefix(global_parameters) + 'evaluation')
 
 
 def get_evaluation_stats_file(global_parameters):
@@ -169,13 +174,11 @@ def get_evaluation_stats_file(global_parameters):
 
 def get_interpretation_folder(global_parameters):
     return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     'interpretation')
+                                     feature_prefix(global_parameters) + 'interpretation')
 
 
 def get_cam_file(global_parameters):
-    return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     'interpretation',
-                                     'cam.h5')
+    return file_util.resolve_subpath(get_interpretation_folder(global_parameters), 'cam.h5')
 
 
 def get_commit_hash_file(global_parameters):
@@ -191,6 +194,14 @@ def get_result_folder(global_parameters):
                                      global_parameters[constants.GlobalParameters.target],
                                      global_parameters[constants.GlobalParameters.partition_data],
                                      str(global_parameters[constants.GlobalParameters.seed]))
+
+
+def feature_prefix(global_parameters):
+    if constants.GlobalParameters.feature_id in global_parameters:
+        return global_parameters[constants.GlobalParameters.feature_id] + '_'
+    else:
+        return ''
+
 
 
 def find_file(folder_path, name):

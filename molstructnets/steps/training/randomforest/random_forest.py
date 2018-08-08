@@ -32,7 +32,7 @@ class RandomForest:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        return file_util.resolve_subpath(file_structure.get_result_folder(global_parameters), 'randomforest.pkl.gz')
+        return file_structure.get_random_forest_file(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):

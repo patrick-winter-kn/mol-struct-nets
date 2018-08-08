@@ -66,6 +66,7 @@ class Tensor2DJit:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
+        global_parameters[constants.GlobalParameters.feature_id] = '2d_tensor'
         preprocessed_path = Tensor2DJit.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):

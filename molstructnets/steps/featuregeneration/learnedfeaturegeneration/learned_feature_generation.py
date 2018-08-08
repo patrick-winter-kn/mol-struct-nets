@@ -37,6 +37,7 @@ class LearnedFeatureGeneration:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
+        global_parameters[constants.GlobalParameters.feature_id] = 'learned_features'
         learned_features_path = LearnedFeatureGeneration.get_result_file(global_parameters, local_parameters)
         model_path = file_structure.get_network_file(global_parameters)
         model = models.load_model(model_path)

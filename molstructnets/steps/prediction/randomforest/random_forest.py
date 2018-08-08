@@ -24,10 +24,9 @@ class RandomForest:
         data_validation.validate_target(global_parameters)
         data_validation.validate_partition(global_parameters)
         data_validation.validate_preprocessed(global_parameters)
-        random_forest_path = file_util.resolve_subpath(file_structure.get_result_folder(global_parameters),
-                                                       'randomforest.pkl.gz')
-        if not file_util.file_exists(random_forest_path):
-            raise ValueError('File ' + random_forest_path + ' does not exist.')
+        model_path = file_structure.get_random_forest_file(global_parameters)
+        if not file_util.file_exists(model_path):
+            raise ValueError('File ' + model_path + ' does not exist.')
 
     @staticmethod
     def execute(global_parameters, local_parameters):
@@ -39,8 +38,7 @@ class RandomForest:
             preprocessed = preprocessed_h5[file_structure.Preprocessed.preprocessed][:]
             preprocessed_h5.close()
             temp_prediction_path = file_util.get_temporary_file_path('random_forest_prediction')
-            model_path = file_util.resolve_subpath(file_structure.get_result_folder(global_parameters),
-                                                   'randomforest.pkl.gz')
+            model_path = file_structure.get_random_forest_file(global_parameters)
             model = joblib.load(model_path)
             predictions = random_forest.predict(preprocessed, model)
             prediction_h5 = h5py.File(temp_prediction_path, 'w')

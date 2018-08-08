@@ -41,6 +41,7 @@ class CamSubstructureFeatureGeneration:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
+        global_parameters[constants.GlobalParameters.feature_id] = 'cam_substructures'
         features_path = CamSubstructureFeatureGeneration.get_result_file(global_parameters, local_parameters)
         if file_util.file_exists(features_path):
             logger.log('Skipping step: ' + features_path + ' already exists')
