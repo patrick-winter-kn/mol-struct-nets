@@ -4,7 +4,8 @@ from rdkit import Chem
 
 from steps.interpretation.extractcamsubstructures2djit import substructure_set
 from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
-from util import data_validation, file_structure, file_util, progressbar, logger, misc, hdf5_util, buffered_queue
+from util import data_validation, file_structure, file_util, progressbar, logger, misc, hdf5_util, buffered_queue,\
+    constants
 
 
 class ExtractCamSubstructures2DJit:
@@ -41,6 +42,7 @@ class ExtractCamSubstructures2DJit:
     def execute(global_parameters, local_parameters):
         cam_substructures_path = file_util.resolve_subpath(
             file_structure.get_interpretation_folder(global_parameters), 'cam_substructures.h5')
+        global_parameters[constants.GlobalParameters.cam_substructures_data] = cam_substructures_path
         if file_util.file_exists(cam_substructures_path):
             logger.log('Skipping step: ' + cam_substructures_path + ' already exists')
         else:
@@ -65,20 +67,22 @@ class ExtractCamSubstructures2DJit:
             log_message = 'Extracting active CAM substructures'
             cam_dataset_name = file_structure.Cam.cam_active
             cam_indices_dataset_name = file_structure.Cam.cam_active_indices
-            substructures_dataset_name = 'active_substructures'
-            substructures_occurrences_dataset_name = 'active_substructures_occurrences'
-            substructures_value_dataset_name = 'active_substructures_value'
-            substructures_number_heavy_atoms_dataset_name = 'active_substructures_number_heavy_atoms'
-            substructures_score_dataset_name = 'active_substructures_score'
+            substructures_dataset_name = file_structure.CamSubstructures.active_substructures
+            substructures_occurrences_dataset_name = file_structure.CamSubstructures.active_substructures_occurrences
+            substructures_value_dataset_name = file_structure.CamSubstructures.active_substructures_value
+            substructures_number_heavy_atoms_dataset_name =\
+                file_structure.CamSubstructures.active_substructures_number_heavy_atoms
+            substructures_score_dataset_name = file_structure.CamSubstructures.active_substructures_score
         else:
             log_message = 'Extracting inactive CAM substructures'
             cam_dataset_name = file_structure.Cam.cam_inactive
             cam_indices_dataset_name = file_structure.Cam.cam_inactive_indices
-            substructures_dataset_name = 'inactive_substructures'
-            substructures_occurrences_dataset_name = 'inactive_substructures_occurrences'
-            substructures_value_dataset_name = 'inactive_substructures_value'
-            substructures_number_heavy_atoms_dataset_name = 'inactive_substructures_number_heavy_atoms'
-            substructures_score_dataset_name = 'inactive_substructures_score'
+            substructures_dataset_name = file_structure.CamSubstructures.inactive_substructures
+            substructures_occurrences_dataset_name = file_structure.CamSubstructures.inactive_substructures_occurrences
+            substructures_value_dataset_name = file_structure.CamSubstructures.inactive_substructures_value
+            substructures_number_heavy_atoms_dataset_name =\
+                file_structure.CamSubstructures.inactive_substructures_number_heavy_atoms
+            substructures_score_dataset_name = file_structure.CamSubstructures.inactive_substructures_score
         cam = cam_h5[cam_dataset_name]
         if cam_indices_dataset_name in cam_h5.keys():
             indices = cam_h5[cam_indices_dataset_name]

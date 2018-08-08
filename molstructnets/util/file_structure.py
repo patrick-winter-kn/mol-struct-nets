@@ -59,6 +59,19 @@ class PreprocessedTensor2DJit:
     normalization_std = 'normalization_std'
 
 
+class CamSubstructures:
+    active_substructures = 'active_substructures'
+    active_substructures_occurrences = 'active_substructures_occurrences'
+    active_substructures_value = 'active_substructures_value'
+    active_substructures_number_heavy_atoms = 'active_substructures_number_heavy_atoms'
+    active_substructures_score = 'active_substructures_score'
+    inactive_substructures = 'inactive_substructures'
+    inactive_substructures_occurrences = 'inactive_substructures_occurrences'
+    inactive_substructures_value = 'inactive_substructures_value'
+    inactive_substructures_number_heavy_atoms = 'inactive_substructures_number_heavy_atoms'
+    inactive_substructures_score = 'inactive_substructures_score'
+
+
 def get_root_from_experiment_file(experiment_file_path):
     return file_util.get_parent(file_util.get_parent(experiment_file_path))
 

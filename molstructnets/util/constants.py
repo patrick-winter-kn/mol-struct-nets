@@ -9,3 +9,4 @@ class GlobalParameters:
     preprocessed_training_data = 'preprocessed_training_data'
     input_dimensions = 'input_dimensions'
     n = 'n'
+    cam_substructures_data = 'cam_substructures_data'
