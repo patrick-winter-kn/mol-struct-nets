@@ -108,6 +108,42 @@ class Tensor2DJitPreprocessor:
         if hasattr(queue, 'flush'):
             queue.flush()
 
+    def preprocess_single_smiles(self, smiles, flip=False, rotation=0, shift_x=0, shift_y=0):
+        molecule = Chem.MolFromSmiles(smiles)
+        AllChem.Compute2DCoords(molecule)
+        preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed(0)
+        atom_positions = dict()
+        for atom in molecule.GetAtoms():
+            position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
+            position_x = position.x
+            position_y = position.y
+            position_x, position_y = self._transformer.apply(position_x, position_y, flip, rotation, shift_x, shift_y)
+            position_x, position_y = self._rasterizer.apply(position_x, position_y)
+            if position_x >= self.shape[0] or position_y >= self.shape[1]:
+                raise ValueError('Position out of bounds')
+            symbol_index = None
+            if self._symbol_index_lookup is not None:
+                if atom.GetSymbol() in self._symbol_index_lookup:
+                    symbol_index = self._symbol_index_lookup[atom.GetSymbol()]
+            chemical_property_values = None
+            if self._chemical_properties is not None:
+                chemical_property_values = chemical_properties.get_chemical_properties(atom,
+                                                                                       self._chemical_properties)
+                self.normalize(chemical_property_values)
+            preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                position_x, position_y, symbol=symbol_index, features=chemical_property_values))
+            atom_positions[atom.GetIdx()] = [position_x, position_y]
+        if self._with_bonds:
+            bond_positions_ = bond_positions.calculate(molecule, atom_positions)
+            for bond in molecule.GetBonds():
+                bond_symbol = bond_symbols.get_bond_symbol(bond.GetBondType())
+                if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
+                    bond_symbol_index = self._symbol_index_lookup[bond_symbol]
+                    for position in bond_positions_[bond.GetIdx()]:
+                        preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                            position[0], position[1], symbol=bond_symbol_index))
+        return preprocessed_molecule
+
     def substructure_locations(self, smiles_array, substructures, offset, locations_queue, random_seed=None,
                                only_substructures=False, only_atoms=False):
         for i in range(len(smiles_array)):
