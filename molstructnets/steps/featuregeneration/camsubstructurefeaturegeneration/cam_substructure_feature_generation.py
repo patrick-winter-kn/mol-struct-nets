@@ -28,6 +28,8 @@ class CamSubstructureFeatureGeneration:
         parameters.append({'id': 'active', 'name': 'Active class', 'type': bool, 'default': True,
                            'description': 'Use substructures for the active class (True) or inactive class (False).'
                                           ' Default: Active'})
+        parameters.append({'id': 'count', 'name': 'Use counts', 'type': bool, 'default': True,
+                           'description': 'Use counts instead of bits. Default: True'})
         return parameters
 
     @staticmethod
@@ -67,13 +69,20 @@ class CamSubstructureFeatureGeneration:
                                     smiles_data[chunk['start']:chunk['end']], substructures,
                                     progress=progress.get_slave())
                     results = pool.get_results()
+            if local_parameters['count']:
+                dtype = 'uint16'
+            else:
+                dtype = 'uint8'
             features_h5 = h5py.File(temp_features_path, 'w')
             features = hdf5_util.create_dataset(features_h5, file_structure.Preprocessed.preprocessed,
-                                                (len(smiles_data), len(substructures)), dtype='uint16',
+                                                (len(smiles_data), len(substructures)), dtype=dtype,
                                                 chunks=(1, len(substructures)))
             offset = 0
             for result in results:
-                features[offset:offset + len(result)] = result[:]
+                if local_parameters['count']:
+                    features[offset:offset + len(result)] = result[:]
+                else:
+                    features[offset:offset + len(result)] = result[:] > 0
                 offset += len(result)
             features_h5.close()
             file_util.move_file(temp_features_path, features_path)
