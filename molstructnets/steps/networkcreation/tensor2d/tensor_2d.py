@@ -42,27 +42,27 @@ class Tensor2D:
             # Block 1
             layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_1',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_1')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max_pool_1')(layer)
 
             # Block 2
             layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_2',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_2')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max_pool_2')(layer)
 
             # Block 3
             layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_3',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_3')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max_pool_3')(layer)
 
             # Block 4
             layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_4',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_4')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max_pool_4')(layer)
 
             # Block 5
             layer = Convolution2D(512, 3, activation='relu', padding='same', name='convolution_5',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D((2, 2), strides=(2, 2), name='max_pool_5')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max_pool_5')(layer)
 
             layer = Flatten(name='features')(layer)
             layer = Dropout(0.75, name='dropout_1')(layer)
