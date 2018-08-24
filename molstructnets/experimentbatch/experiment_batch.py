@@ -20,9 +20,11 @@ def load_entries_from_csv(csv_path):
                 if '-' in seeds:
                     seeds = seeds.split('-')
                     seeds = list(range(int(seeds[0]), int(seeds[1]) + 1))
-                if ',' in seeds:
+                elif ',' in seeds:
                     seeds = seeds.split(',')
                     seeds = list(map(int, seeds))
+                else:
+                    seeds = [seeds]
         else:
             entries.append(batch_entry.BatchEntry(line, experiment_location))
     return entries, seeds
