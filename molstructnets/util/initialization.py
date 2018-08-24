@@ -42,6 +42,7 @@ def initialize(args=None):
         sys.stderr = open(os.devnull, 'w')
 
     import tensorflow
+    tensorflow.set_random_seed(seed)
     config = tensorflow.ConfigProto()
     config.gpu_options.allow_growth = True
     # config.gpu_options.per_process_gpu_memory_fraction = 0.75
