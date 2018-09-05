@@ -1,7 +1,13 @@
 from keras import models
+import queue
+import numpy
 
 from steps.training.tensor2djit import training_array
-from util import data_validation, file_structure, logger, callbacks, file_util
+from keras.callbacks import Callback
+from util import data_validation, file_structure, logger, callbacks, file_util, misc, thread_pool, progressbar,\
+    constants, process_pool
+from steps.evaluation.shared import enrichment
+from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
 
 
 class Tensor2DJit:
@@ -22,6 +28,8 @@ class Tensor2DJit:
         parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 100, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory. Default: 100'})
+        parameters.append({'id': 'evaluate', 'name': 'Evaluate', 'type': bool, 'default': False,
+                           'description': 'Evaluate on the test data after each epoch. Default: False'})
         return parameters
 
     @staticmethod
@@ -46,7 +54,51 @@ class Tensor2DJit:
             epochs = local_parameters['epochs']
             batch_size = local_parameters['batch_size']
             model = models.load_model(model_path)
-            arrays = training_array.TrainingArrays(global_parameters, epochs, batch_size)
+            process_pool_ = process_pool.ProcessPool()
+            arrays = training_array.TrainingArrays(global_parameters, epochs, batch_size, multi_process=process_pool_)
+            callbacks_ = [callbacks.CustomCheckpoint(model_path)]
+            pool = None
+            if local_parameters['evaluate']:
+                test_data = tensor_2d_jit_array.load_array(global_parameters, multi_process=process_pool_)
+                pool = thread_pool.ThreadPool(1)
+                chunks = misc.chunk_by_size(len(test_data), local_parameters['batch_size'])
+                data_queue = queue.Queue(10)
+                pool.submit(generate_data, test_data, chunks, epochs - epoch, data_queue)
+                callbacks_ = [EvaluationCallback(test_data, chunks, data_queue,
+                                                 global_parameters[constants.GlobalParameters.seed],
+                                                 model_path[:-3] + '-eval.txt')] + callbacks_
             model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
-                      callbacks=[callbacks.CustomCheckpoint(model_path)], initial_epoch=epoch)
+                      callbacks=callbacks_, initial_epoch=epoch)
+            if pool is not None:
+                pool.close()
             arrays.close()
+
+
+class EvaluationCallback(Callback):
+
+    def __init__(self, test_data, chunks, data_queue, seed, file_path):
+        self.test_data = test_data
+        self.seed = seed
+        self.file_path = file_path
+        self.data_queue = data_queue
+        self.chunks = chunks
+
+    def on_epoch_end(self, epoch, logs=None):
+        # TODO only test data
+        predictions = numpy.zeros((len(self.test_data), 2))
+        with progressbar.ProgressBar(len(self.test_data)) as progress:
+            for chunk in self.chunks:
+                predictions_chunk = self.model.predict(self.data_queue.get())
+                predictions[chunk['start']:chunk['end']] = predictions_chunk[:]
+                progress.increment(chunk['size'])
+        actives, auc, efs = enrichment.stats(predictions, self.test_data.classes(), [5], shuffle=True, seed=self.seed)
+        ef5 = efs[5]
+        with open(self.file_path, 'a') as file:
+            file.write(str(epoch + 1) + ',' + str(auc) + ',' + str(ef5) + '\n')
+        logger.log('AUC: ' + str(round(auc, 2)) + '    EF5: ' + str(round(ef5, 2)))
+
+
+def generate_data(array, chunks, epochs, data_queue):
+    for i in range(epochs):
+        for chunk in chunks:
+            data_queue.put(array[chunk['start']:chunk['end']])

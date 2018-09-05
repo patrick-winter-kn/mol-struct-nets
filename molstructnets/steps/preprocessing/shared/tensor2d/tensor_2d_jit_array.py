@@ -15,7 +15,9 @@ class Tensor2DJitArray():
         self._smiles = smiles
         self._classes = classes
         self._indices = indices
-        if multi_process:
+        if isinstance(multi_process, process_pool.ProcessPool):
+            self._pool = multi_process
+        elif multi_process:
             self._pool = process_pool.ProcessPool()
         else:
             self._pool = None
