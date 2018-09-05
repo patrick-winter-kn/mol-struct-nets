@@ -117,7 +117,7 @@ class Tensor2DJitArray():
             self._pool.close()
 
 
-def load_array(global_parameters, train=False, transform=False, multi_process=True):
+def load_array(global_parameters, train=False, test=False, transform=False, multi_process=True):
     smiles_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
     smiles = smiles_h5[file_structure.DataSet.smiles][:]
     smiles_h5.close()
@@ -127,6 +127,10 @@ def load_array(global_parameters, train=False, transform=False, multi_process=Tr
     if train:
         partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
         partition = partition_h5[file_structure.Partitions.train][:]
+        partition_h5.close()
+    elif test:
+        partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
+        partition = partition_h5[file_structure.Partitions.test][:]
         partition_h5.close()
     else:
         partition = numpy.arange(len(smiles), dtype='uint32')

@@ -59,7 +59,7 @@ class Tensor2DJit:
             callbacks_ = [callbacks.CustomCheckpoint(model_path)]
             pool = None
             if local_parameters['evaluate']:
-                test_data = tensor_2d_jit_array.load_array(global_parameters, multi_process=process_pool_)
+                test_data = tensor_2d_jit_array.load_array(global_parameters, test=True, multi_process=process_pool_)
                 pool = thread_pool.ThreadPool(1)
                 chunks = misc.chunk_by_size(len(test_data), local_parameters['batch_size'])
                 data_queue = queue.Queue(10)
@@ -84,7 +84,6 @@ class EvaluationCallback(Callback):
         self.chunks = chunks
 
     def on_epoch_end(self, epoch, logs=None):
-        # TODO only test data
         predictions = numpy.zeros((len(self.test_data), 2))
         with progressbar.ProgressBar(len(self.test_data)) as progress:
             for chunk in self.chunks:
