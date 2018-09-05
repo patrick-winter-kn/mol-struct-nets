@@ -7,7 +7,7 @@ from rdkit.Chem import AllChem
 
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
 from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols, tensor_2d_jit_preprocessed
-from steps.preprocessingtraining.tensor2dtransformation import transformer
+from steps.preprocessing.shared.tensor2d import transformer
 from util import hdf5_util, file_structure, normalization
 
 padding = 2

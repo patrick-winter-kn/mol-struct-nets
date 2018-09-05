@@ -6,11 +6,12 @@ if os.path.isfile(cuda_devices_file):
     with open(cuda_devices_file, 'r') as value_file:
         os.environ['CUDA_VISIBLE_DEVICES'] = value_file.read().replace('\n', '')
 
+import matplotlib
+matplotlib.use('Agg')
 import sys
 import random
 import numpy
 import json
-import matplotlib
 
 silent_loading = True
 seed = 1
@@ -31,7 +32,6 @@ def initialize(args=None):
                 seed = dict_['seed']
     random.seed(seed)
     numpy.random.seed(seed)
-    matplotlib.use('Agg')
 
     stdout = None
     stderr = None
