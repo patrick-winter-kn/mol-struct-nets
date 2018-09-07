@@ -2,21 +2,21 @@ import h5py
 import numpy
 from rdkit import Chem
 
-from steps.interpretation.extractcamsubstructures2djit import substructure_set
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.interpretation.extractcamsubstructures2d import substructure_set
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, hdf5_util, buffered_queue,\
     constants
 
 
-class ExtractCamSubstructures2DJit:
+class ExtractCamSubstructures2D:
 
     @staticmethod
     def get_id():
-        return 'extract_cam_substructures_2d_jit'
+        return 'extract_cam_substructures_2d'
 
     @staticmethod
     def get_name():
-        return 'Extract CAM Substructures 2D JIT'
+        return 'Extract CAM Substructures 2D'
 
     @staticmethod
     def get_parameters():
@@ -47,15 +47,15 @@ class ExtractCamSubstructures2DJit:
             logger.log('Skipping step: ' + cam_substructures_path + ' already exists')
         else:
             cam_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
-            array = tensor_2d_jit_array.load_array(global_parameters)
+            array = tensor_2d_array.load_array(global_parameters)
             temp_cam_substructures_path = file_util.get_temporary_file_path(
                 'cam_substructures')
             cam_substructures_h5 = h5py.File(temp_cam_substructures_path, 'w')
             if file_structure.Cam.cam_active in cam_h5.keys():
-                ExtractCamSubstructures2DJit.extract_cam_substructures(
+                ExtractCamSubstructures2D.extract_cam_substructures(
                     cam_h5, array, global_parameters, local_parameters, cam_substructures_h5, True)
             if file_structure.Cam.cam_inactive in cam_h5.keys():
-                ExtractCamSubstructures2DJit.extract_cam_substructures(
+                ExtractCamSubstructures2D.extract_cam_substructures(
                     cam_h5, array, global_parameters, local_parameters, cam_substructures_h5, False)
             cam_substructures_h5.close()
             file_util.move_file(temp_cam_substructures_path, cam_substructures_path)
@@ -100,8 +100,8 @@ class ExtractCamSubstructures2DJit:
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = substructure_set.SubstructureSet()
         with progressbar.ProgressBar(len(indices)) as progress:
-            ExtractCamSubstructures2DJit.extract(cam, indices, array, substructures, local_parameters['threshold'],
-                                                 progress)
+            ExtractCamSubstructures2D.extract(cam, indices, array, substructures, local_parameters['threshold'],
+                                              progress)
         substructures_dict = substructures.get_dict()
         substructures = list(substructures_dict.keys())
         max_length = 0
@@ -154,10 +154,10 @@ class ExtractCamSubstructures2DJit:
             index, locations = location_queue.get()
             if index in indices:
                 smiles_string = array.smiles(index).decode('utf-8')
-                atom_indices, values = ExtractCamSubstructures2DJit.pick_atoms(cam[index], threshold, locations)
+                atom_indices, values = ExtractCamSubstructures2D.pick_atoms(cam[index], threshold, locations)
                 if len(atom_indices) > 0:
                     molecule = Chem.MolFromSmiles(smiles_string)
-                    ExtractCamSubstructures2DJit.add_substructures(molecule, atom_indices, values, substructures)
+                    ExtractCamSubstructures2D.add_substructures(molecule, atom_indices, values, substructures)
                 progress.increment()
 
     @staticmethod

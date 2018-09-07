@@ -5,11 +5,11 @@ import h5py
 import numpy
 from numpy import random
 
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
+from steps.preprocessing.shared.tensor2d import tensor_2d_preprocessor
 from util import file_structure, constants, process_pool, misc, buffered_queue
 
 
-class Tensor2DJitArray():
+class Tensor2DArray():
 
     def __init__(self, smiles, classes, indices, preprocessed_path, random_seed, multi_process=True):
         self._smiles = smiles
@@ -21,7 +21,7 @@ class Tensor2DJitArray():
             self._pool = process_pool.ProcessPool()
         else:
             self._pool = None
-        self._preprocessor = tensor_2d_jit_preprocessor.Tensor2DJitPreprocessor(preprocessed_path)
+        self._preprocessor = tensor_2d_preprocessor.Tensor2DPreprocessor(preprocessed_path)
         self._shape = tuple([len(self._indices)] + list(self._preprocessor.shape))
         self._random_seed = random_seed
         self._iteration = 0
@@ -139,4 +139,4 @@ def load_array(global_parameters, train=False, test=False, transform=False, mult
     else:
         random_seed = None
     preprocessed_path = global_parameters[constants.GlobalParameters.preprocessed_data]
-    return Tensor2DJitArray(smiles, classes, partition, preprocessed_path, random_seed, multi_process=multi_process)
+    return Tensor2DArray(smiles, classes, partition, preprocessed_path, random_seed, multi_process=multi_process)

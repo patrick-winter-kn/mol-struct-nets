@@ -4,7 +4,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
-from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_jit_preprocessor
+from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, bond_symbols, rasterizer, tensor_2d_preprocessor
 from util import data_validation, misc, file_structure, file_util, logger, process_pool, hdf5_util, normalization, \
     constants, multi_process_progressbar
 
@@ -13,15 +13,15 @@ if molecule_2d_tensor.with_empty_bits:
     fixed_symbols.add(' ')
 
 
-class Tensor2DJit:
+class Tensor2D:
 
     @staticmethod
     def get_id():
-        return 'tensor_2d_jit'
+        return 'tensor_2d'
 
     @staticmethod
     def get_name():
-        return '2D Tensor JIT'
+        return '2D Tensor'
 
     @staticmethod
     def get_parameters():
@@ -67,11 +67,11 @@ class Tensor2DJit:
     @staticmethod
     def execute(global_parameters, local_parameters):
         global_parameters[constants.GlobalParameters.feature_id] = '2d_tensor'
-        preprocessed_path = Tensor2DJit.get_result_file(global_parameters, local_parameters)
+        preprocessed_path = Tensor2D.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
         if file_util.file_exists(preprocessed_path):
             global_parameters[constants.GlobalParameters.input_dimensions] = \
-                tuple(hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2DJit.dimensions))
+                tuple(hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2D.dimensions))
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
             temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')
@@ -89,7 +89,7 @@ class Tensor2DJit:
                 needs_mean_std = local_parameters['normalization'] == normalization.NormalizationTypes.z_score
                 with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0], value_buffer=10) as progress:
                     for chunk in chunks:
-                        pool.submit(Tensor2DJit.first_run, smiles[chunk['start']:chunk['end']],
+                        pool.submit(Tensor2D.first_run, smiles[chunk['start']:chunk['end']],
                                     chemical_properties_=local_parameters['chemical_properties'],
                                     with_atom_symbols=local_parameters['atom_symbols'],
                                     with_bonds=local_parameters['bonds'],
@@ -141,18 +141,18 @@ class Tensor2DJit:
                 if needs_mean_std:
                     means /= len(chunks)
                 if len(symbols) > 0:
-                    symbols = Tensor2DJit.string_list_to_numpy_array(sorted(symbols))
-                    hdf5_util.create_dataset_from_data(preprocessed_h5, file_structure.PreprocessedTensor2DJit.symbols,
+                    symbols = Tensor2D.string_list_to_numpy_array(sorted(symbols))
+                    hdf5_util.create_dataset_from_data(preprocessed_h5, file_structure.PreprocessedTensor2D.symbols,
                                                        symbols)
                 if needs_min_max:
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                       file_structure.PreprocessedTensor2DJit.normalization_min, mins)
+                                                       file_structure.PreprocessedTensor2D.normalization_min, mins)
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                       file_structure.PreprocessedTensor2DJit.normalization_max, maxs)
+                                                       file_structure.PreprocessedTensor2D.normalization_max, maxs)
                 if needs_mean_std:
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                       file_structure.PreprocessedTensor2DJit.normalization_mean, means)
-                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_jit_preprocessor.padding,
+                                                       file_structure.PreprocessedTensor2D.normalization_mean, means)
+                rasterizer_ = rasterizer.Rasterizer(local_parameters['scale'], tensor_2d_preprocessor.padding,
                                                     min_x, max_x,
                                                     min_y, max_y, local_parameters['square'])
                 dimensions = (rasterizer_.size_x, rasterizer_.size_y, len(symbols) + len(valid_properties))
@@ -162,7 +162,7 @@ class Tensor2DJit:
                     with multi_process_progressbar.MultiProcessProgressbar(smiles.shape[0],
                                                                            value_buffer=10) as progress:
                         for chunk in chunks:
-                            pool.submit(Tensor2DJit.second_run, smiles[chunk['start']:chunk['end']],
+                            pool.submit(Tensor2D.second_run, smiles[chunk['start']:chunk['end']],
                                         valid_properties, means, progress=progress.get_slave())
                         results = pool.get_results()
                     stds = numpy.zeros(len(valid_properties), dtype='float32')
@@ -174,26 +174,26 @@ class Tensor2DJit:
                     stds /= atom_counter
                     stds = numpy.sqrt(stds)
                     hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                       file_structure.PreprocessedTensor2DJit.normalization_std, stds)
+                                                       file_structure.PreprocessedTensor2D.normalization_std, stds)
             # Write chemical properties
             if number_chemical_properties > 0:
-                chemical_properties_array = Tensor2DJit.string_list_to_numpy_array(valid_properties)
+                chemical_properties_array = Tensor2D.string_list_to_numpy_array(valid_properties)
                 hdf5_util.create_dataset_from_data(preprocessed_h5,
-                                                   file_structure.PreprocessedTensor2DJit.chemical_properties,
+                                                   file_structure.PreprocessedTensor2D.chemical_properties,
                                                    chemical_properties_array)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions, dimensions)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_x, min_x)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_x, max_x)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_y, min_y)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_y, max_y)
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale,
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.dimensions, dimensions)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.min_x, min_x)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.max_x, max_x)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.min_y, min_y)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.max_y, max_y)
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.scale,
                                    local_parameters['scale'])
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.with_bonds,
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.with_bonds,
                                    local_parameters['bonds'])
-            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square,
+            hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.square,
                                    local_parameters['square'])
             if local_parameters['normalization'] is not None:
-                hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_type,
+                hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_type,
                                        local_parameters['normalization'])
             preprocessed_h5.close()
             data_set_h5.close()

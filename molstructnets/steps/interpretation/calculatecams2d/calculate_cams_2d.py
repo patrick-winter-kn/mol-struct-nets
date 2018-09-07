@@ -4,19 +4,19 @@ import h5py
 import numpy
 
 from steps.interpretation.shared.kerasviz import cam
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, thread_pool
 
 
-class CalculateCams2DJit:
+class CalculateCams2D:
 
     @staticmethod
     def get_id():
-        return 'calculate_cams_2d_jit'
+        return 'calculate_cams_2d'
 
     @staticmethod
     def get_name():
-        return 'Calculate CAMs 2D JIT'
+        return 'Calculate CAMs 2D'
 
     @staticmethod
     def get_parameters():
@@ -69,7 +69,7 @@ class CalculateCams2DJit:
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes][:]
             target_h5.close()
-            preprocessed = tensor_2d_jit_array.load_array(global_parameters)
+            preprocessed = tensor_2d_array.load_array(global_parameters)
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
                 references = partition_h5[file_structure.Partitions.train][:]

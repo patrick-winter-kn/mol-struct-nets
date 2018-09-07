@@ -40,7 +40,7 @@ class Cam:
     cam_inactive_indices = 'cam_inactive_indices'
 
 
-class PreprocessedTensor2DJit:
+class PreprocessedTensor2D:
     dimensions = 'dimensions'
     min_x = 'min_x'
     max_x = 'max_x'

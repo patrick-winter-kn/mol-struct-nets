@@ -1,4 +1,4 @@
-class Tensor2DJitPreprocessed():
+class Tensor2DPreprocessed():
 
     def __init__(self, position):
         self._position = position
@@ -12,7 +12,7 @@ class Tensor2DJitPreprocessed():
             atom.fill_array(array, self._position)
 
 
-class Tensor2DJitPreprocessedAtom():
+class Tensor2DPreprocessedAtom():
 
     def __init__(self, position_x, position_y, symbol=None, features=None):
         self._position_x = position_x

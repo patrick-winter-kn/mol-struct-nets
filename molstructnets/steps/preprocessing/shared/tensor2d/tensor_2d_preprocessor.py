@@ -6,30 +6,30 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from steps.preprocessing.shared.chemicalproperties import chemical_properties
-from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols, tensor_2d_jit_preprocessed
+from steps.preprocessing.shared.tensor2d import rasterizer, bond_positions, bond_symbols, tensor_2d_preprocessed
 from steps.preprocessing.shared.tensor2d import transformer
 from util import hdf5_util, file_structure, normalization
 
 padding = 2
 
 
-class Tensor2DJitPreprocessor:
+class Tensor2DPreprocessor:
 
     def __init__(self, preprocessed_path):
         preprocessed_h5 = h5py.File(preprocessed_path, 'r')
         self._shape = \
-            tuple(hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.dimensions))
-        self._with_bonds = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.with_bonds)
-        self._scale = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.scale)
-        square = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.square)
-        min_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_x)
-        min_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.min_y)
-        max_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_x)
-        max_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.max_y)
+            tuple(hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.dimensions))
+        self._with_bonds = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.with_bonds)
+        self._scale = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.scale)
+        square = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.square)
+        min_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.min_x)
+        min_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.min_y)
+        max_x = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.max_x)
+        max_y = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.max_y)
         self._rasterizer = rasterizer.Rasterizer(self._scale, padding, min_x, max_x, min_y, max_y, square)
         self._transformer = transformer.Transformer(min_x, max_x, min_y, max_y)
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.symbols):
-            symbols = preprocessed_h5[file_structure.PreprocessedTensor2DJit.symbols]
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.symbols):
+            symbols = preprocessed_h5[file_structure.PreprocessedTensor2D.symbols]
             self._symbol_index_lookup = dict()
             for i in range(len(symbols)):
                 self._symbol_index_lookup[symbols[i].decode('utf-8')] = i
@@ -37,22 +37,22 @@ class Tensor2DJitPreprocessor:
         else:
             self._symbol_index_lookup = None
             self._number_symbols = 0
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.chemical_properties):
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.chemical_properties):
             self._chemical_properties = \
-                numpy_array_to_string_list(preprocessed_h5[file_structure.PreprocessedTensor2DJit.chemical_properties])
+                numpy_array_to_string_list(preprocessed_h5[file_structure.PreprocessedTensor2D.chemical_properties])
         else:
             self._chemical_properties = None
-        self._gauss_sigma = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2DJit.gauss_sigma)
+        self._gauss_sigma = hdf5_util.get_property(preprocessed_h5, file_structure.PreprocessedTensor2D.gauss_sigma)
         self._normalization_type = hdf5_util.get_property(preprocessed_h5,
-                                                          file_structure.PreprocessedTensor2DJit.normalization_type)
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_min):
-            self._normalization_min = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_min][:]
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_max):
-            self._normalization_max = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_max][:]
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_mean):
-            self._normalization_mean = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_mean][:]
-        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2DJit.normalization_std):
-            self._normalization_std = preprocessed_h5[file_structure.PreprocessedTensor2DJit.normalization_std][:]
+                                                          file_structure.PreprocessedTensor2D.normalization_type)
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_min):
+            self._normalization_min = preprocessed_h5[file_structure.PreprocessedTensor2D.normalization_min][:]
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_max):
+            self._normalization_max = preprocessed_h5[file_structure.PreprocessedTensor2D.normalization_max][:]
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_mean):
+            self._normalization_mean = preprocessed_h5[file_structure.PreprocessedTensor2D.normalization_mean][:]
+        if hdf5_util.has_data_set(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_std):
+            self._normalization_std = preprocessed_h5[file_structure.PreprocessedTensor2D.normalization_std][:]
         preprocessed_h5.close()
 
     def preprocess(self, smiles_array, offset, queue, random_seed=None):
@@ -64,7 +64,7 @@ class Tensor2DJitPreprocessor:
             AllChem.Compute2DCoords(molecule)
             successful = False
             while not successful:
-                preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed(i + offset)
+                preprocessed_molecule = tensor_2d_preprocessed.Tensor2DPreprocessed(i + offset)
                 successful = True
                 atom_positions = dict()
                 if random_seed is not None:
@@ -92,7 +92,7 @@ class Tensor2DJitPreprocessor:
                         chemical_property_values = chemical_properties.get_chemical_properties(atom,
                                                                                                self._chemical_properties)
                         self.normalize(chemical_property_values)
-                    preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                    preprocessed_molecule.add_atom(tensor_2d_preprocessed.Tensor2DPreprocessedAtom(
                         position_x, position_y, symbol=symbol_index, features=chemical_property_values))
                     atom_positions[atom.GetIdx()] = [position_x, position_y]
             if self._with_bonds:
@@ -102,7 +102,7 @@ class Tensor2DJitPreprocessor:
                     if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
                         bond_symbol_index = self._symbol_index_lookup[bond_symbol]
                         for position in bond_positions_[bond.GetIdx()]:
-                            preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                            preprocessed_molecule.add_atom(tensor_2d_preprocessed.Tensor2DPreprocessedAtom(
                                 position[0], position[1], symbol=bond_symbol_index))
             queue.put(preprocessed_molecule)
         if hasattr(queue, 'flush'):
@@ -111,7 +111,7 @@ class Tensor2DJitPreprocessor:
     def preprocess_single_smiles(self, smiles, flip=False, rotation=0, shift_x=0, shift_y=0):
         molecule = Chem.MolFromSmiles(smiles)
         AllChem.Compute2DCoords(molecule)
-        preprocessed_molecule = tensor_2d_jit_preprocessed.Tensor2DJitPreprocessed(0)
+        preprocessed_molecule = tensor_2d_preprocessed.Tensor2DPreprocessed(0)
         atom_positions = dict()
         for atom in molecule.GetAtoms():
             position = molecule.GetConformer().GetAtomPosition(atom.GetIdx())
@@ -130,7 +130,7 @@ class Tensor2DJitPreprocessor:
                 chemical_property_values = chemical_properties.get_chemical_properties(atom,
                                                                                        self._chemical_properties)
                 self.normalize(chemical_property_values)
-            preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+            preprocessed_molecule.add_atom(tensor_2d_preprocessed.Tensor2DPreprocessedAtom(
                 position_x, position_y, symbol=symbol_index, features=chemical_property_values))
             atom_positions[atom.GetIdx()] = [position_x, position_y]
         if self._with_bonds:
@@ -140,7 +140,7 @@ class Tensor2DJitPreprocessor:
                 if bond_symbol is not None and bond_symbol in self._symbol_index_lookup:
                     bond_symbol_index = self._symbol_index_lookup[bond_symbol]
                     for position in bond_positions_[bond.GetIdx()]:
-                        preprocessed_molecule.add_atom(tensor_2d_jit_preprocessed.Tensor2DJitPreprocessedAtom(
+                        preprocessed_molecule.add_atom(tensor_2d_preprocessed.Tensor2DPreprocessedAtom(
                             position[0], position[1], symbol=bond_symbol_index))
         return preprocessed_molecule
 

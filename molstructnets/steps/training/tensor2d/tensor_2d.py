@@ -2,23 +2,23 @@ from keras import models
 import queue
 import numpy
 
-from steps.training.tensor2djit import training_array
+from steps.training.tensor2d import training_array
 from keras.callbacks import Callback
 from util import data_validation, file_structure, logger, callbacks, file_util, misc, thread_pool, progressbar,\
     constants, process_pool
 from steps.evaluation.shared import enrichment
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 
 
-class Tensor2DJit:
+class Tensor2D:
 
     @staticmethod
     def get_id():
-        return 'tensor_2d_jit'
+        return 'tensor_2d'
 
     @staticmethod
     def get_name():
-        return 'Tensor 2D JIT'
+        return 'Tensor 2D'
 
     @staticmethod
     def get_parameters():
@@ -59,7 +59,7 @@ class Tensor2DJit:
             callbacks_ = [callbacks.CustomCheckpoint(model_path)]
             pool = None
             if local_parameters['evaluate']:
-                test_data = tensor_2d_jit_array.load_array(global_parameters, test=True, multi_process=process_pool_)
+                test_data = tensor_2d_array.load_array(global_parameters, test=True, multi_process=process_pool_)
                 pool = thread_pool.ThreadPool(1)
                 chunks = misc.chunk_by_size(len(test_data), local_parameters['batch_size'])
                 data_queue = queue.Queue(10)

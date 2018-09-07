@@ -2,19 +2,19 @@ import h5py
 import numpy
 from rdkit import Chem
 
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, progressbar, hdf5_util, logger, buffered_queue, misc
 
 
-class Calculate2DSubstructureLocationsJit:
+class Calculate2DSubstructureLocations:
 
     @staticmethod
     def get_id():
-        return 'calculate_2d_substructure_locations_jit'
+        return 'calculate_2d_substructure_locations'
 
     @staticmethod
     def get_name():
-        return 'Calculate 2D Substructure Locations JIT'
+        return 'Calculate 2D Substructure Locations'
 
     @staticmethod
     def get_parameters():
@@ -58,7 +58,7 @@ class Calculate2DSubstructureLocationsJit:
                 substructures = hdf5_util.get_property(file_structure.get_target_file(global_parameters),
                                                        'substructures')
             substructures = substructures.split(';')
-            preprocessed = tensor_2d_jit_array.load_array(global_parameters)
+            preprocessed = tensor_2d_array.load_array(global_parameters)
             substructure_locations = hdf5_util.create_dataset(cam_h5,
                                                               file_structure.Cam.substructure_atoms,
                                                               (len(smiles), preprocessed.shape[1],

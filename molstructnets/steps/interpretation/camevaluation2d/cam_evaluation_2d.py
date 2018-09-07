@@ -2,19 +2,19 @@ import h5py
 import numpy
 from rdkit import Chem
 
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, logger, misc, progressbar, buffered_queue, hdf5_util
 
 
-class CamEvaluation2DJit:
+class CamEvaluation2D:
 
     @staticmethod
     def get_id():
-        return 'cam_evaluation_2d_jit'
+        return 'cam_evaluation_2d'
 
     @staticmethod
     def get_name():
-        return 'CAM Evaluation 2D JIT'
+        return 'CAM Evaluation 2D'
 
     @staticmethod
     def get_parameters():
@@ -33,7 +33,7 @@ class CamEvaluation2DJit:
     @staticmethod
     def execute(global_parameters, local_parameters):
         cam_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
-        array = tensor_2d_jit_array.load_array(global_parameters)
+        array = tensor_2d_array.load_array(global_parameters)
         if file_structure.Cam.cam_active in cam_h5.keys():
             cam_evaluation_active_path = file_util.resolve_subpath(
                 file_structure.get_interpretation_folder(global_parameters), 'cam_evaluation_active.h5')
@@ -50,8 +50,8 @@ class CamEvaluation2DJit:
                     indices = cam_h5[file_structure.Cam.cam_active_indices][:]
                 temp_cam_evaluation_active_path = file_util.get_temporary_file_path('cam_evaluation_active')
                 cam_active = cam_h5[file_structure.Cam.cam_active]
-                CamEvaluation2DJit.calculate_cam_evaluation(cam_active, array, temp_cam_evaluation_active_path,
-                                                            substructures, indices, not local_parameters['with_bonds'])
+                CamEvaluation2D.calculate_cam_evaluation(cam_active, array, temp_cam_evaluation_active_path,
+                                                         substructures, indices, not local_parameters['with_bonds'])
                 file_util.move_file(temp_cam_evaluation_active_path, cam_evaluation_active_path)
         if file_structure.Cam.cam_inactive in cam_h5.keys():
             cam_evaluation_inactive_path = file_util.resolve_subpath(
@@ -70,8 +70,8 @@ class CamEvaluation2DJit:
                 temp_cam_evaluation_inactive_path = file_util.get_temporary_file_path(
                     'cam_evaluation_inactive')
                 cam_inactive = cam_h5[file_structure.Cam.cam_inactive]
-                CamEvaluation2DJit.calculate_cam_evaluation(cam_inactive, array, temp_cam_evaluation_inactive_path,
-                                                            substructures, indices, not local_parameters['with_bonds'])
+                CamEvaluation2D.calculate_cam_evaluation(cam_inactive, array, temp_cam_evaluation_inactive_path,
+                                                         substructures, indices, not local_parameters['with_bonds'])
                 file_util.move_file(temp_cam_evaluation_inactive_path, cam_evaluation_inactive_path)
         array.close()
         cam_h5.close()

@@ -4,20 +4,20 @@ import h5py
 import numpy
 from keras import models
 
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, logger, progressbar, constants, hdf5_util, misc, \
     thread_pool
 
 
-class LearnedFeatureGenerationTensor2DJit:
+class LearnedFeatureGenerationTensor2D:
 
     @staticmethod
     def get_id():
-        return 'learned_feature_generation_tensor_2d_jit'
+        return 'learned_feature_generation_tensor_2d'
 
     @staticmethod
     def get_name():
-        return 'Learned Feature Generation Tensor 2D JIT'
+        return 'Learned Feature Generation Tensor 2D'
 
     @staticmethod
     def get_parameters():
@@ -40,7 +40,7 @@ class LearnedFeatureGenerationTensor2DJit:
     @staticmethod
     def execute(global_parameters, local_parameters):
         global_parameters[constants.GlobalParameters.feature_id] = 'learned_features'
-        learned_features_path = LearnedFeatureGenerationTensor2DJit.get_result_file(global_parameters, local_parameters)
+        learned_features_path = LearnedFeatureGenerationTensor2D.get_result_file(global_parameters, local_parameters)
         model_path = file_structure.get_network_file(global_parameters)
         model = models.load_model(model_path)
         feature_layer = model.get_layer('features')
@@ -49,7 +49,7 @@ class LearnedFeatureGenerationTensor2DJit:
             logger.log('Skipping step: ' + learned_features_path + ' already exists')
         else:
             feature_model = models.Model(inputs=model.input, outputs=feature_layer.output)
-            array = tensor_2d_jit_array.load_array(global_parameters)
+            array = tensor_2d_array.load_array(global_parameters)
             data_queue = queue.Queue(10)
             temp_learned_features_path = file_util.get_temporary_file_path('learned_features')
             learned_features_h5 = h5py.File(temp_learned_features_path, 'w')

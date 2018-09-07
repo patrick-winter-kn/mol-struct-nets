@@ -1,5 +1,5 @@
 from steps import repository
-from steps.preprocessing.tensor2djit import tensor_2d_jit
+from steps.preprocessing.tensor2d import tensor_2d
 
 
 class PreprocessingRepository(repository.Repository):
@@ -14,4 +14,4 @@ class PreprocessingRepository(repository.Repository):
 
 
 instance = PreprocessingRepository()
-instance.add_implementation(tensor_2d_jit.Tensor2DJit)
+instance.add_implementation(tensor_2d.Tensor2D)

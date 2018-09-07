@@ -18,7 +18,7 @@ initialization.initialize(args)
 import gc
 import time
 from util import file_util, progressbar, file_structure
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_preprocessor
+from steps.preprocessing.shared.tensor2d import tensor_2d_preprocessor
 import numpy
 from steps.interpretation.shared.kerasviz import cam
 from keras import models
@@ -30,9 +30,9 @@ network_path = file_util.resolve_path(args.network)
 network = models.load_model(network_path)
 preprocessing_path = file_util.resolve_path(args.preprocessing)
 preprocessed_h5 = h5py.File(preprocessing_path, 'r')
-symbols = preprocessed_h5[file_structure.PreprocessedTensor2DJit.symbols][:]
+symbols = preprocessed_h5[file_structure.PreprocessedTensor2D.symbols][:]
 preprocessed_h5.close()
-preprocessor = tensor_2d_jit_preprocessor.Tensor2DJitPreprocessor(preprocessing_path)
+preprocessor = tensor_2d_preprocessor.Tensor2DPreprocessor(preprocessing_path)
 output_dir_path = file_util.resolve_subpath(args.output, smiles)
 file_util.make_folders(output_dir_path, including_this=True)
 cam_calc = cam.CAM(network_path, 0)

@@ -3,19 +3,19 @@ import queue
 import h5py
 from keras import models
 
-from steps.preprocessing.shared.tensor2d import tensor_2d_jit_array
+from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, progressbar, logger, file_util, hdf5_util, misc, thread_pool
 
 
-class Tensor2DJit:
+class Tensor2D:
 
     @staticmethod
     def get_id():
-        return 'tensor_2d_jit'
+        return 'tensor_2d'
 
     @staticmethod
     def get_name():
-        return 'Tensor 2D JIT'
+        return 'Tensor 2D'
 
     @staticmethod
     def get_parameters():
@@ -40,7 +40,7 @@ class Tensor2DJit:
             logger.log('Skipping step: ' + prediction_path + ' already exists')
         else:
             multiple = local_parameters['number_predictions'] > 1
-            array = tensor_2d_jit_array.load_array(global_parameters, transform=multiple)
+            array = tensor_2d_array.load_array(global_parameters, transform=multiple)
             data_queue = queue.Queue(10)
             temp_prediction_path = file_util.get_temporary_file_path('tensor_prediction')
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
