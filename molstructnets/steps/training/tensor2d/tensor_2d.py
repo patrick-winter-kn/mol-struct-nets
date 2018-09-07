@@ -30,6 +30,9 @@ class Tensor2D:
                                           ' to faster processing but needs more memory. Default: 100'})
         parameters.append({'id': 'evaluate', 'name': 'Evaluate', 'type': bool, 'default': False,
                            'description': 'Evaluate on the test data after each epoch. Default: False'})
+        parameters.append({'id': 'eval_partition_size', 'name': 'Evaluation partition size', 'type': int,
+                           'default': 100, 'min': 1, 'max': 100, 'description':
+                               'The size in percent of the test partition used for evaluation. Default: 100'})
         return parameters
 
     @staticmethod
@@ -59,7 +62,8 @@ class Tensor2D:
             callbacks_ = [callbacks.CustomCheckpoint(model_path)]
             pool = None
             if local_parameters['evaluate']:
-                test_data = tensor_2d_array.load_array(global_parameters, test=True, multi_process=process_pool_)
+                test_data = tensor_2d_array.load_array(global_parameters, test=True, multi_process=process_pool_,
+                                                       percent=local_parameters['eval_partition_size'] * 0.01)
                 pool = thread_pool.ThreadPool(1)
                 chunks = misc.chunk_by_size(len(test_data), local_parameters['batch_size'])
                 data_queue = queue.Queue(10)

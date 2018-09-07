@@ -117,7 +117,7 @@ class Tensor2DArray():
             self._pool.close()
 
 
-def load_array(global_parameters, train=False, test=False, transform=False, multi_process=True):
+def load_array(global_parameters, train=False, test=False, transform=False, multi_process=True, percent=1):
     smiles_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
     smiles = smiles_h5[file_structure.DataSet.smiles][:]
     smiles_h5.close()
@@ -134,6 +134,17 @@ def load_array(global_parameters, train=False, test=False, transform=False, mult
         partition_h5.close()
     else:
         partition = numpy.arange(len(smiles), dtype='uint32')
+    if percent < 1:
+        target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
+        classes = target_h5[file_structure.Target.classes][:]
+        target_h5.close()
+        classes = classes.astype('bool')
+        classes = classes[list(partition)]
+        active_partition = partition[classes[:, 0].nonzero()]
+        inactive_partition = partition[classes[:, 1].nonzero()]
+        active_partition = active_partition[:round(len(active_partition)*percent)]
+        inactive_partition = inactive_partition[:round(len(inactive_partition)*percent)]
+        partition = numpy.append(active_partition, inactive_partition)
     if transform:
         random_seed = global_parameters[constants.GlobalParameters.seed]
     else:
