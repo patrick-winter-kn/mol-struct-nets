@@ -29,7 +29,7 @@ class Calculate2DSubstructureLocations:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_target(global_parameters)
-        data_validation.validate_preprocessed_jit(global_parameters)
+        data_validation.validate_preprocessed_specs(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):

@@ -25,7 +25,7 @@ class RenderCams2D:
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
-        data_validation.validate_preprocessed_jit(global_parameters)
+        data_validation.validate_preprocessed_specs(global_parameters)
         data_validation.validate_cam(global_parameters)
 
     @staticmethod

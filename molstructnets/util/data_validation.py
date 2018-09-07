@@ -24,7 +24,7 @@ def validate_preprocessed(global_parameters):
     validate_hdf5_file(path, file_structure.Preprocessed.preprocessed)
 
 
-def validate_preprocessed_jit(global_parameters):
+def validate_preprocessed_specs(global_parameters):
     path = global_parameters[constants.GlobalParameters.preprocessed_data]
     validate_hdf5_file(path)
 
