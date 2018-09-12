@@ -15,10 +15,12 @@ class Tensor2DArray():
         self._smiles = smiles
         self._classes = classes
         self._indices = indices
+        self._close_pool = False
         if isinstance(multi_process, process_pool.ProcessPool):
             self._pool = multi_process
         elif multi_process:
             self._pool = process_pool.ProcessPool()
+            self._close_pool = True
         else:
             self._pool = None
         self._preprocessor = tensor_2d_preprocessor.Tensor2DPreprocessor(preprocessed_path)
@@ -113,7 +115,7 @@ class Tensor2DArray():
         return self._classes[self._indices[item]]
 
     def close(self):
-        if self._pool is not None:
+        if self._close_pool:
             self._pool.close()
 
 
