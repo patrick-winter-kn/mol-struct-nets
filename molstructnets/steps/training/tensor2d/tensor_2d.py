@@ -94,7 +94,7 @@ class EvaluationCallback(Callback):
         roc_auc = roc_curve.stats(predictions, self.test_data.output, seed=self.seed)[2]
         ef5 = efs[5]
         ef10 = efs[10]
-        write_headline = file_util.file_exists(self.file_path)
+        write_headline = not file_util.file_exists(self.file_path)
         with open(self.file_path, 'a') as file:
             if write_headline:
                 file.write('epoch,e_auc,ef_5,ef_10,roc_auc')
