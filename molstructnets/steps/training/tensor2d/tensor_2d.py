@@ -5,7 +5,7 @@ from steps.training.tensor2d import training_array
 from keras.callbacks import Callback
 from util import data_validation, file_structure, logger, callbacks, file_util, misc, progressbar, constants,\
     process_pool
-from steps.evaluation.shared import enrichment
+from steps.evaluation.shared import enrichment, roc_curve
 from steps.prediction.shared.tensor2d import prediction_array
 
 
@@ -90,8 +90,14 @@ class EvaluationCallback(Callback):
                 predictions_chunk = self.model.predict(self.test_data.input.next())
                 predictions[chunk['start']:chunk['end']] = predictions_chunk[:]
                 progress.increment(chunk['size'])
-        actives, auc, efs = enrichment.stats(predictions, self.test_data.output, [5], shuffle=True, seed=self.seed)
+        actives, e_auc, efs = enrichment.stats(predictions, self.test_data.output, [5, 10], seed=self.seed)
+        roc_auc = roc_curve.stats(predictions, self.test_data.output, seed=self.seed)[2]
         ef5 = efs[5]
+        ef10 = efs[10]
+        write_headline = file_util.file_exists(self.file_path)
         with open(self.file_path, 'a') as file:
-            file.write(str(epoch + 1) + ',' + str(auc) + ',' + str(ef5) + '\n')
-        logger.log('AUC: ' + str(round(auc, 2)) + '    EF5: ' + str(round(ef5, 2)))
+            if write_headline:
+                file.write('epoch,e_auc,ef_5,ef_10,roc_auc')
+            file.write(str(epoch + 1) + ',' + str(e_auc) + ',' + str(ef5) + ',' + str(ef10) + ',' + str(roc_auc) + '\n')
+        logger.log('E AUC: ' + str(round(e_auc, 2)) + '    EF5: ' + str(round(ef5, 2)) + '    EF10: '
+                   + str(round(ef10, 2)) + '    ROC AUC: ' + str(round(roc_auc, 2)))
