@@ -75,3 +75,12 @@ def remove_file(file_path):
             shutil.rmtree(file_path)
         else:
             os.remove(file_path)
+
+
+def read_file(file_path):
+    file_path = resolve_path(file_path)
+    if not file_exists(file_path):
+        return None
+    with open(file_path, 'r') as file:
+        string = file.read()
+    return string

@@ -47,17 +47,6 @@ def validate_network(global_parameters):
         raise ValueError('Could not load network in ' + path)
 
 
-def validate_preprocessed_images(global_parameters):
-    path = global_parameters[constants.GlobalParameters.preprocessed_data]
-    if not file_util.file_exists(path):
-        raise ValueError('Folder ' + path + ' with preprocessed data does not exist')
-    nr_files = len(file_util.list_files(path))
-    n = global_parameters[constants.GlobalParameters.n]
-    if nr_files < n:
-        raise ValueError('Folder ' + path + ' with preprocessed data contains less files than expected ('
-                         + str(nr_files) + '<' + str(n) + ')')
-
-
 def validate_hdf5_file(path, *data_set_names):
     if not file_util.file_exists(path):
         raise ValueError('File ' + path + ' does not exist.')
