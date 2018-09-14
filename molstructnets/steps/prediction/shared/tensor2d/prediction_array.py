@@ -13,7 +13,7 @@ class PredictionArrays():
         preprocess_size = misc.max_in_memory_chunk_size(self._array.dtype, self._array.shape, use_swap=False,
                                                         fraction=1 / 3)
         preprocess_size -= preprocess_size % batch_size
-        queue_size = math.ceil(preprocess_size / batch_size)
+        queue_size = int(preprocess_size / batch_size)
         preprocess_size = min(len(self._array), preprocess_size)
         input_queue = queue.Queue(queue_size)
         self._input_array = QueueArray(self._array.shape, input_queue)
@@ -57,11 +57,12 @@ class QueueArray():
         return self._queue.get()
 
 
-def preprocess_batches(array, batch_size, input_queue, runs=1, transforamtions=1, preprocess_size=None):
+def preprocess_batches(array, batch_size, input_queue, runs=1, transformations=1, preprocess_size=None):
     if preprocess_size is None:
         preprocess_size = len(array)
     for run in range(runs):
-        for i in range(transforamtions):
+        for i in range(transformations):
+            array.set_iteration(i)
             preprocess_offset = 0
             while preprocess_offset < len(array):
                 preprocess_next = preprocess_offset + min(preprocess_size, len(array) - preprocess_offset)
@@ -72,4 +73,3 @@ def preprocess_batches(array, batch_size, input_queue, runs=1, transforamtions=1
                     input_queue.put(data[offset:next])
                     offset = next
                 preprocess_offset = preprocess_next
-            array.set_iteration(i + 1)
