@@ -13,7 +13,8 @@ class ThreadPool:
         self.futures = []
 
     def submit(self, function_, *args, **kwargs):
-        self.futures.append(self.pool.submit(function_, *args, **kwargs))
+        args = tuple([function_] + list(args))
+        self.futures.append(self.pool.submit(process_pool.run_function, *args, **kwargs))
         return self.futures[-1]
 
     def wait(self):

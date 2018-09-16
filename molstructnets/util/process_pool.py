@@ -57,4 +57,5 @@ def run_function(function_, *args, **kwargs):
     except BaseException as e:
         logger.log('Error while running ' + function_.__name__ + '()', log_level=logger.LogLevel.ERROR)
         traceback.print_exc()
-        raise e
+        #raise e
+        return None
