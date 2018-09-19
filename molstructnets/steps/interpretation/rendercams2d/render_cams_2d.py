@@ -1,11 +1,10 @@
-import multiprocessing
-
 import h5py
 
 from steps.interpretation.shared import tensor_2d_renderer
 from steps.interpretation.shared.kerasviz import cam
 from steps.preprocessing.shared.tensor2d import tensor_2d_array
-from util import data_validation, file_structure, file_util, logger, constants, multi_process_progressbar, process_pool
+from util import data_validation, file_structure, file_util, logger, constants, multi_process_progressbar,\
+    process_pool, manager
 
 
 class RenderCams2D:
@@ -44,7 +43,7 @@ class RenderCams2D:
             else:
                 indices = range(len(cam_active))
             logger.log('Rendering active CAMs', logger.LogLevel.INFO)
-            queue = multiprocessing.Manager().Queue(10)
+            queue = manager.instance.Queue(10)
             with multi_process_progressbar.MultiProcessProgressbar(len(indices), value_buffer=10) as progress:
                 with process_pool.ProcessPool(process_pool.default_number_processes) as pool:
                     for i in range(process_pool.default_number_processes):
@@ -64,7 +63,7 @@ class RenderCams2D:
             else:
                 indices = range(cam_inactive)
             logger.log('Rendering inactive CAMs', logger.LogLevel.INFO)
-            queue = multiprocessing.Manager().Queue(10)
+            queue = manager.instance.Queue(10)
             with multi_process_progressbar.MultiProcessProgressbar(len(indices), value_buffer=10) as progress:
                 with process_pool.ProcessPool(process_pool.default_number_processes) as pool:
                     for i in range(process_pool.default_number_processes):

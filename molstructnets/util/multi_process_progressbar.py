@@ -1,7 +1,6 @@
-import multiprocessing
 import threading
 
-from util import progressbar, logger
+from util import progressbar, logger, manager
 
 
 class MultiProcessProgressbar:
@@ -9,7 +8,7 @@ class MultiProcessProgressbar:
     def __init__(self, max_value, log_level=logger.LogLevel.INFO, value_buffer=1):
         self._value_buffer = value_buffer
         if log_level >= logger.global_log_level:
-            self._queue = multiprocessing.Manager().Queue()
+            self._queue = manager.instance.Queue()
             self._listener = threading.Thread(target=run_progressbar_listener, args=(max_value, log_level, self._queue))
             self._listener.start()
             self._value = 0
