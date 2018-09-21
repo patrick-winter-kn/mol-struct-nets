@@ -17,7 +17,10 @@ class RandomForest:
 
     @staticmethod
     def get_parameters():
-        return list()
+        parameters = list()
+        parameters.append({'id': 'hard_vote', 'name': 'Hard Vote', 'type': bool, 'default': False,
+                           'description': 'If a majority vote is used. Default: False'})
+        return parameters
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
@@ -40,7 +43,7 @@ class RandomForest:
             temp_prediction_path = file_util.get_temporary_file_path('random_forest_prediction')
             model_path = file_structure.get_random_forest_file(global_parameters)
             model = joblib.load(model_path)
-            predictions = random_forest.predict(preprocessed, model)
+            predictions = random_forest.predict(preprocessed, model, local_parameters['hard_vote'])
             prediction_h5 = h5py.File(temp_prediction_path, 'w')
             hdf5_util.create_dataset_from_data(prediction_h5, file_structure.Predictions.prediction, predictions)
             prediction_h5.close()
