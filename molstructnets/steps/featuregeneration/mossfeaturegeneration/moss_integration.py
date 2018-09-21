@@ -5,12 +5,16 @@ from rdkit import Chem
 from util import file_util
 
 
-def calculate_substructures(smiles_data, classes, min_focus_support, max_complement_support):
+def calculate_substructures(smiles_data, classes, min_focus_support, max_complement_support, active):
     input_file_path = file_util.get_temporary_file_path('moss_input')
     output_file_path = file_util.get_temporary_file_path('moss_output')
+    if active:
+        class_index = 1
+    else:
+        class_index = 0
     with open(input_file_path, 'w') as input_file:
         for i in range(len(smiles_data)):
-            input_file.write(str(i) + ',' + str(classes[i,1]) + ',' + smiles_data[i].decode('UTF-8') + '\n')
+            input_file.write(str(i) + ',' + str(classes[i, class_index]) + ',' + smiles_data[i].decode('UTF-8') + '\n')
     moss_jar = [sys.argv[0][:sys.argv[0].rfind('/') + 1] +
                 'steps/featuregeneration/mossfeaturegeneration/moss/moss.jar']
     params = ['java', '-cp'] + moss_jar + ['moss.Miner', input_file_path, output_file_path]

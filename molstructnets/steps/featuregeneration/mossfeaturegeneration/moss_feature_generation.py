@@ -23,12 +23,12 @@ class MossFeatureGeneration:
         parameters = list()
         parameters.append({'id': 'min_focus', 'name': 'Minimum focus support', 'type': int, 'default': 10, 'min': 0,
                            'max': 100,
-                           'description': 'The minimum (in percent) of how many active molecules need to contain a'
-                                          ' substructure, for it to be valid. Default: 10'})
+                           'description': 'The minimum (in percent) of how many molecules of the focus class need to'
+                                          ' contain a substructure, for it to be valid. Default: 10'})
         parameters.append({'id': 'max_complement', 'name': 'Maximum complement support', 'type': int, 'default': 5,
                            'min': 0, 'max': 100,
-                           'description': 'The maximum (in percent) of how many inactive molecules can contain a'
-                                          ' substructure, for it to be valid. Default: 5'})
+                           'description': 'The maximum (in percent) of how many molecules of the complement class can'
+                                          ' contain a substructure, for it to be valid. Default: 5'})
         parameters.append({'id': 'count', 'name': 'Use counts', 'type': bool, 'default': True,
                            'description': 'Use counts instead of bits. Default: True'})
         return parameters
@@ -64,9 +64,15 @@ class MossFeatureGeneration:
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             train_classes = numpy.take(target_h5[file_structure.Target.classes][:], train_indices, axis=0)
             target_h5.close()
-            substructures = moss_integration.calculate_substructures(smiles_train_data, train_classes,
-                                                                     local_parameters['min_focus']/100,
-                                                                     local_parameters['max_complement']/100)
+            substructures_active = moss_integration.calculate_substructures(smiles_train_data, train_classes,
+                                                                     local_parameters['min_focus'],
+                                                                     local_parameters['max_complement'],
+                                                                     True)
+            substructures_inactive = moss_integration.calculate_substructures(smiles_train_data, train_classes,
+                                                                     local_parameters['min_focus'],
+                                                                     local_parameters['max_complement'],
+                                                                     False)
+            substructures = substructures_active + substructures_inactive
             feature_dimensions = len(substructures)
             temp_features_path = file_util.get_temporary_file_path('moss_features')
             chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
