@@ -8,6 +8,8 @@ from steps.prediction import prediction_repository
 from steps.preprocessing import preprocessing_repository
 from steps.targetgeneration import target_generation_repository
 from steps.training import training_repository
+from steps.trainingmultitarget import training_multitarget_repository
+from steps.trainingrefinement import training_refinement_repository
 
 
 class StepsRepository(repository.Repository):
@@ -44,6 +46,8 @@ instance.add_implementation(preprocessing_repository.instance)
 instance.add_implementation(feature_generation_repository.instance)
 instance.add_implementation(network_creation_repository.instance)
 instance.add_implementation(training_repository.instance)
+instance.add_implementation(training_multitarget_repository.instance)
+instance.add_implementation(training_refinement_repository.instance)
 instance.add_implementation(prediction_repository.instance)
 instance.add_implementation(evaluation_repository.instance)
 instance.add_implementation(interpretation_repository.instance)

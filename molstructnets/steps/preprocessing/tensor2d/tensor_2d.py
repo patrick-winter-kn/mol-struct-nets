@@ -61,6 +61,7 @@ class Tensor2D:
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
                                                    ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
                                                     'normalization'])
+        hash_parameters['data_set'] = global_parameters[constants.GlobalParameters.data_set]
         file_name = 'tensor_2d_jit_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
 
@@ -74,14 +75,23 @@ class Tensor2D:
                 tuple(hdf5_util.get_property(preprocessed_path, file_structure.PreprocessedTensor2D.dimensions))
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
         else:
+            if isinstance(global_parameters[constants.GlobalParameters.data_set], list):
+                # Concatenate all data sets in the list into one
+                smiles = numpy.ndarray(shape=[0], dtype='|S0')
+                for i in range(len(global_parameters[constants.GlobalParameters.data_set])):
+                    data_set_h5 = h5py.File(file_structure.get_data_set_file(global_parameters, n=i), 'r')
+                    smiles = numpy.concatenate((smiles, data_set_h5[file_structure.DataSet.smiles][:]))
+                    data_set_h5.close()
+            else:
+                data_set_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
+                smiles = data_set_h5[file_structure.DataSet.smiles][:]
+                data_set_h5.close()
             temp_preprocessed_path = file_util.get_temporary_file_path('tensor_2d')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             number_chemical_properties = len(local_parameters['chemical_properties'])
+            chunks = misc.chunk(smiles.shape[0], process_pool.default_number_processes)
             # First run: Calculate gridsize_x, gridsize_y, symbols, normalization_min, normalization_max,
             # normalization_mean
-            data_set_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
-            smiles = data_set_h5[file_structure.DataSet.smiles][:]
-            chunks = misc.chunk(smiles.shape[0], process_pool.default_number_processes)
             logger.log('Calculating stats')
             with process_pool.ProcessPool(len(chunks)) as pool:
                 needs_min_max = local_parameters['normalization'] == normalization.NormalizationTypes.min_max_1 \
@@ -196,7 +206,6 @@ class Tensor2D:
                 hdf5_util.set_property(preprocessed_h5, file_structure.PreprocessedTensor2D.normalization_type,
                                        local_parameters['normalization'])
             preprocessed_h5.close()
-            data_set_h5.close()
             file_util.move_file(temp_preprocessed_path, preprocessed_path)
             global_parameters[constants.GlobalParameters.input_dimensions] = dimensions
 

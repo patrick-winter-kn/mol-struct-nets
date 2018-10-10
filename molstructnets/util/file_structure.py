@@ -86,10 +86,11 @@ def get_data_set_folder(global_parameters):
                                      'data_sets')
 
 
-def get_data_set_file(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'data_sets',
-                                     global_parameters[constants.GlobalParameters.data_set] + '.h5')
+def get_data_set_file(global_parameters, n=None):
+    data_set = global_parameters[constants.GlobalParameters.data_set]
+    if n is not None:
+        data_set = data_set[n]
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root], 'data_sets', data_set + '.h5')
 
 
 def get_target_folder(global_parameters):

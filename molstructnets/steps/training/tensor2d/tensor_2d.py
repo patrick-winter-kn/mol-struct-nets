@@ -44,6 +44,7 @@ class Tensor2D:
     @staticmethod
     def execute(global_parameters, local_parameters):
         model_path = file_structure.get_network_file(global_parameters)
+        global_parameters[constants.GlobalParameters.shared_network] = model_path
         epoch_path = model_path[:-3] + '-epochs.txt'
         if file_util.file_exists(epoch_path):
             with open(epoch_path, 'r') as file:
