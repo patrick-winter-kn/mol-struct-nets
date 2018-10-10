@@ -1,4 +1,5 @@
 from steps import repository
+from steps.trainingrefinement.tensor2d import tensor_2d
 
 
 class TrainingRefinementRepository(repository.Repository):
@@ -13,3 +14,4 @@ class TrainingRefinementRepository(repository.Repository):
 
 
 instance = TrainingRefinementRepository()
+instance.add_implementation(tensor_2d.Tensor2D)

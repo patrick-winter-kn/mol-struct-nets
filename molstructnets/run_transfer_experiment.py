@@ -115,6 +115,7 @@ for i in range(nr_steps):
             global_parameters_list[j][constants.GlobalParameters.preprocessed_data] = global_params[constants.GlobalParameters.preprocessed_data]
             global_parameters_list[j][constants.GlobalParameters.input_dimensions] = global_params[constants.GlobalParameters.input_dimensions]
     elif type_id == training_repository.instance.get_id():
+        # TODO this needs to write to a different network
         if len(data_sets_train) != 1:
             raise ValueError('Normal training does not support ' + str(len(data_sets_train)) + ' training data sets.')
         run_step(step, type_name, global_parameters_list[0], parameters)
