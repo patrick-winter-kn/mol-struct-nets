@@ -109,13 +109,13 @@ for i in range(nr_steps):
         for parameter in step_config['parameters']:
             parameters[parameter] = step_config['parameters'][parameter]
     if type_id == preprocessing_repository.instance.get_id():
-        data_sets = list()
+        data_sets = set()
         for j in range(len(data_sets_train)):
-            data_sets.append(data_sets_train[j][0])
+            data_sets.add(data_sets_train[j][0])
         for j in range(len(data_sets_eval)):
-            data_sets.append(data_sets_eval[j][0])
+            data_sets.add(data_sets_eval[j][0])
         global_params = global_parameters.copy()
-        global_params[constants.GlobalParameters.data_set] = data_sets
+        global_params[constants.GlobalParameters.data_set] = sorted(data_sets)
         run_step(step, type_name, global_params, parameters)
         for j in range(len(global_parameters_list)):
             global_parameters_list[j][constants.GlobalParameters.feature_id] = global_params[constants.GlobalParameters.feature_id]
