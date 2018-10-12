@@ -45,7 +45,10 @@ def add_last_commit_hash(script_path, global_parameters_):
 def run_step(step, type_name, global_parameters, parameters):
         logger.divider()
         logger.header(type_name + ': ' + step.get_name())
-        logger.header('Data set(s): ' + str(global_parameters[constants.GlobalParameters.data_set]))
+        data_set = global_parameters[constants.GlobalParameters.data_set]
+        if not isinstance(data_set, list):
+            logger.header('Data set: ' + data_set)
+            logger.header('Target: ' + global_parameters[constants.GlobalParameters.target])
         logger.log('')
         step.check_prerequisites(global_parameters, parameters)
         step.execute(global_parameters, parameters)
