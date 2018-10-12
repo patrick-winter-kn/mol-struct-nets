@@ -68,15 +68,22 @@ global_parameters = dict()
 global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
+transfer_data_sets = args.data_sets
+transfer_data_sets = transfer_data_sets[transfer_data_sets.rfind('/') + 1 : transfer_data_sets.rfind('.')]
+global_parameters[constants.GlobalParameters.transfer_data_sets] = transfer_data_sets
 data_sets_object = json.loads(file_util.read_file(args.data_sets))
 data_sets_train = data_sets_object['train']
 for i in range(len(data_sets_train)):
-    data_sets_train[i][0] = file_structure.find_data_set(global_parameters, data_sets_train[i][0])
-    data_sets_train[i][1] = file_structure.find_target(global_parameters, data_sets_train[i][1])
+    tmp_global_parameters = global_parameters.copy()
+    data_sets_train[i][0] = file_structure.find_data_set(tmp_global_parameters, data_sets_train[i][0])
+    tmp_global_parameters[constants.GlobalParameters.data_set] = data_sets_train[i][0]
+    data_sets_train[i][1] = file_structure.find_target(tmp_global_parameters, data_sets_train[i][1])
 data_sets_eval = data_sets_object['eval']
 for i in range(len(data_sets_eval)):
-    data_sets_eval[i][0] = file_structure.find_data_set(global_parameters, data_sets_eval[i][0])
-    data_sets_eval[i][1] = file_structure.find_target(global_parameters, data_sets_eval[i][1])
+    tmp_global_parameters = global_parameters.copy()
+    data_sets_eval[i][0] = file_structure.find_data_set(tmp_global_parameters, data_sets_eval[i][0])
+    tmp_global_parameters[constants.GlobalParameters.data_set] = data_sets_eval[i][0]
+    data_sets_eval[i][1] = file_structure.find_target(tmp_global_parameters, data_sets_eval[i][1])
 global_parameters_list = list()
 for i in range(len(data_sets_train) + len(data_sets_eval)):
     if i < len(data_sets_train):
@@ -104,9 +111,9 @@ for i in range(nr_steps):
     if type_id == preprocessing_repository.instance.get_id():
         data_sets = list()
         for j in range(len(data_sets_train)):
-            data_sets.append(data_sets_train[j])
+            data_sets.append(data_sets_train[j][0])
         for j in range(len(data_sets_eval)):
-            data_sets.append(data_sets_eval[j])
+            data_sets.append(data_sets_eval[j][0])
         global_params = global_parameters.copy()
         global_params[constants.GlobalParameters.data_set] = data_sets
         run_step(step, type_name, global_params, parameters)
@@ -115,9 +122,12 @@ for i in range(nr_steps):
             global_parameters_list[j][constants.GlobalParameters.preprocessed_data] = global_params[constants.GlobalParameters.preprocessed_data]
             global_parameters_list[j][constants.GlobalParameters.input_dimensions] = global_params[constants.GlobalParameters.input_dimensions]
     elif type_id == training_repository.instance.get_id():
-        # TODO this needs to write to a different network
         if len(data_sets_train) != 1:
             raise ValueError('Normal training does not support ' + str(len(data_sets_train)) + ' training data sets.')
+        shared_network_path = file_structure.get_shared_network_file(global_parameters_list[0])
+        if not file_util.file_exists(shared_network_path):
+            file_util.copy_file(file_structure.get_network_file(global_parameters_list[0]), shared_network_path)
+        global_parameters_list[0][constants.GlobalParameters.shared_network] = shared_network_path
         run_step(step, type_name, global_parameters_list[0], parameters)
         for j in range(1, len(global_parameters_list)):
             global_parameters_list[j][constants.GlobalParameters.shared_network] = global_parameters_list[0][constants.GlobalParameters.shared_network]

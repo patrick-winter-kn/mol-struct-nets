@@ -15,7 +15,7 @@ def get_weight_range(model, start_layer_name, end_layer_name):
             break
     for i in range(len(model.weights)):
         name = model.weights[i].name
-        name = name[:name.rfind('/')]
+        name = name[:name.rfind('_')]
         if name in names:
             start_index = misc.minimum(start_index, i)
             end_index = misc.maximum(end_index, i)

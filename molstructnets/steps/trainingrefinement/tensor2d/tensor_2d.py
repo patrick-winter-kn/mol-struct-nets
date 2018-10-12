@@ -58,8 +58,10 @@ class Tensor2D:
         if epoch >= local_parameters['epochs']:
             logger.log('Skipping step: ' + model_path + ' has already been trained for ' + str(epoch) + ' epochs')
         else:
-            # TODO freeze weights for x epochs
             epochs = local_parameters['epochs']
+            frozen_epochs = local_parameters['frozen_epochs']
+            if frozen_epochs is None:
+                frozen_epochs = epochs
             batch_size = local_parameters['batch_size']
             model = models.load_model(model_path)
             shared_model = models.load_model(shared_model_path)
@@ -76,8 +78,17 @@ class Tensor2D:
                 chunks = misc.chunk_by_size(len(test_data.input), local_parameters['batch_size'])
                 callbacks_ = [EvaluationCallback(test_data, chunks, global_parameters[constants.GlobalParameters.seed],
                                                  model_path[:-3] + '-eval.txt')] + callbacks_
-            model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
-                      callbacks=callbacks_, initial_epoch=epoch)
+            if epoch < frozen_epochs:
+                weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, True)
+                logger.log('Training ' + str(frozen_epochs - epoch) + ' with frozen features')
+                model.fit(arrays.input, arrays.output, epochs=frozen_epochs, shuffle=False, batch_size=batch_size,
+                          callbacks=callbacks_, initial_epoch=epoch)
+                epoch = frozen_epochs
+            if epoch < epochs:
+                weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, False)
+                logger.log('Training ' + str(epochs - epoch) + ' with trainable features')
+                model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
+                          callbacks=callbacks_, initial_epoch=epoch)
             if test_data is not None:
                 test_data.close()
             arrays.close()

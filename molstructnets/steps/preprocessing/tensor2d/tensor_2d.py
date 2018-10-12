@@ -54,7 +54,13 @@ class Tensor2D:
 
     @staticmethod
     def check_prerequisites(global_parameters, local_parameters):
-        data_validation.validate_data_set(global_parameters)
+        if isinstance(global_parameters[constants.GlobalParameters.data_set], list):
+            for data_set in global_parameters[constants.GlobalParameters.data_set]:
+                tmp_global_parameters = global_parameters.copy()
+                tmp_global_parameters[constants.GlobalParameters.data_set] = data_set
+                data_validation.validate_data_set(tmp_global_parameters)
+        else:
+            data_validation.validate_data_set(global_parameters)
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
@@ -63,7 +69,9 @@ class Tensor2D:
                                                     'normalization'])
         hash_parameters['data_set'] = global_parameters[constants.GlobalParameters.data_set]
         file_name = 'tensor_2d_jit_' + misc.hash_parameters(hash_parameters) + '.h5'
-        return file_util.resolve_subpath(file_structure.get_preprocessed_folder(global_parameters), file_name)
+        tmp_global_parameters = global_parameters.copy()
+        tmp_global_parameters[constants.GlobalParameters.data_set] = '_'.join(global_parameters[constants.GlobalParameters.data_set])
+        return file_util.resolve_subpath(file_structure.get_preprocessed_folder(tmp_global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):

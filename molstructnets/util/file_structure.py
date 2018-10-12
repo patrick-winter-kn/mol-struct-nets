@@ -148,9 +148,12 @@ def get_preprocessed_training_folder(global_parameters):
                                      preprocessed[preprocessed.rfind('/') + 1:preprocessed.rfind('.')])
 
 
-def get_network_file(global_parameters):
-    return file_util.resolve_subpath(get_result_folder(global_parameters),
-                                     feature_prefix(global_parameters) + 'network.h5')
+def get_network_file(global_parameters, shared_network=False):
+    if shared_network and constants.GlobalParameters.shared_network in global_parameters:
+        return global_parameters[constants.GlobalParameters.shared_network]
+    else:
+        return file_util.resolve_subpath(get_result_folder(global_parameters),
+                                         feature_prefix(global_parameters) + 'network.h5')
 
 
 def get_random_forest_file(global_parameters):
@@ -195,6 +198,15 @@ def get_result_folder(global_parameters):
                                      global_parameters[constants.GlobalParameters.target],
                                      global_parameters[constants.GlobalParameters.partition_data],
                                      str(global_parameters[constants.GlobalParameters.seed]))
+
+
+def get_shared_network_file(global_parameters):
+    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                     'experiments',
+                                     global_parameters[constants.GlobalParameters.experiment],
+                                     global_parameters[constants.GlobalParameters.transfer_data_sets],
+                                     str(global_parameters[constants.GlobalParameters.seed]),
+                                     'shared_network.h5')
 
 
 def feature_prefix(global_parameters):

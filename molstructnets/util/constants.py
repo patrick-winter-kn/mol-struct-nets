@@ -12,3 +12,4 @@ class GlobalParameters:
     cam_substructures_data = 'cam_substructures_data'
     feature_id = 'feature_id'
     shared_network = 'shared_network'
+    transfer_data_sets = 'transfer_data_sets'
