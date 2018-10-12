@@ -80,13 +80,13 @@ class Tensor2D:
                                                  model_path[:-3] + '-eval.txt')] + callbacks_
             if epoch < frozen_epochs:
                 weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, True)
-                logger.log('Training ' + str(frozen_epochs - epoch) + ' with frozen features')
+                logger.log('Training ' + str(frozen_epochs - epoch) + ' epochs with frozen features')
                 model.fit(arrays.input, arrays.output, epochs=frozen_epochs, shuffle=False, batch_size=batch_size,
                           callbacks=callbacks_, initial_epoch=epoch)
                 epoch = frozen_epochs
             if epoch < epochs:
                 weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, False)
-                logger.log('Training ' + str(epochs - epoch) + ' with trainable features')
+                logger.log('Training ' + str(epochs - epoch) + ' epochs with trainable features')
                 model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
                           callbacks=callbacks_, initial_epoch=epoch)
             if test_data is not None:
