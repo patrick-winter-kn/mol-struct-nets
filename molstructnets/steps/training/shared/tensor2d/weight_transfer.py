@@ -22,13 +22,26 @@ def get_weight_range(model, start_layer_name, end_layer_name):
     return start_index, end_index + 1
 
 
-def transfer_weights(source_model, destination_model, start_index, end_index):
+def get_layer_range(model, start_layer_name, end_layer_name):
+    start_index = None
+    end_index = None
+    for i in range(len(model.layers)):
+        name = model.layers[i].name
+        if name == start_layer_name:
+            start_index = i
+        if name == end_layer_name:
+            end_index = i
+            break
+    return start_index, end_index + 1
+
+
+def transfer_weights(source_model, destination_model, weight_start_index, weight_end_index):
     destination_weights = destination_model.get_weights()
-    destination_weights[start_index:end_index] = source_model.get_weights()[start_index:end_index]
+    destination_weights[weight_start_index:weight_end_index] = source_model.get_weights()[weight_start_index:weight_end_index]
     destination_model.set_weights(destination_weights)
 
 
-def set_weight_freeze(model, start_index, end_index, freeze):
-    for i in range(start_index, end_index):
+def set_weight_freeze(model, layer_start_index, layer_end_index, freeze):
+    for i in range(layer_start_index, layer_end_index):
         model.layers[i].trainable = not freeze
     model.compile(optimizer=model.optimizer, loss=model.loss, metrics=model.metrics)

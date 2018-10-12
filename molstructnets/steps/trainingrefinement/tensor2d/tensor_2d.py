@@ -66,6 +66,7 @@ class Tensor2D:
             model = models.load_model(model_path)
             shared_model = models.load_model(shared_model_path)
             weight_start_index, weight_end_index = weight_transfer.get_weight_range(shared_model, 'input', 'features')
+            layer_start_index, layer_end_index = weight_transfer.get_layer_range(shared_model, 'input', 'features')
             weight_transfer.transfer_weights(shared_model, model, weight_start_index, weight_end_index)
             process_pool_ = process_pool.ProcessPool()
             arrays = training_array.TrainingArrays(global_parameters, epochs, batch_size, multi_process=process_pool_)
@@ -79,13 +80,13 @@ class Tensor2D:
                 callbacks_ = [EvaluationCallback(test_data, chunks, global_parameters[constants.GlobalParameters.seed],
                                                  model_path[:-3] + '-eval.txt')] + callbacks_
             if epoch < frozen_epochs:
-                weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, True)
+                weight_transfer.set_weight_freeze(model, layer_start_index, layer_end_index, True)
                 logger.log('Training ' + str(frozen_epochs - epoch) + ' epochs with frozen features')
                 model.fit(arrays.input, arrays.output, epochs=frozen_epochs, shuffle=False, batch_size=batch_size,
                           callbacks=callbacks_, initial_epoch=epoch)
                 epoch = frozen_epochs
             if epoch < epochs:
-                weight_transfer.set_weight_freeze(model, weight_start_index, weight_end_index, False)
+                weight_transfer.set_weight_freeze(model, layer_start_index, layer_end_index, False)
                 logger.log('Training ' + str(epochs - epoch) + ' epochs with trainable features')
                 model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
                           callbacks=callbacks_, initial_epoch=epoch)
