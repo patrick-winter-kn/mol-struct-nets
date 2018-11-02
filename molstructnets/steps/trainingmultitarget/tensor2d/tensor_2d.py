@@ -82,7 +82,6 @@ class Tensor2D:
                             model_list[k].fit(arrays.input, arrays.output, epochs=1, shuffle=False, batch_size=batch_size, verbose=0)
                             progress.increment(batch_size)
                             prev_model = model_list[k]
-                            arrays.next_data_set()
                         weight_transfer.transfer_weights(prev_model, shared_model, weight_start_index, weight_end_index)
                     callbacks.save_model(shared_model, model_path, epoch)
             arrays.close()

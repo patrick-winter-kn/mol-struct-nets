@@ -10,8 +10,6 @@ class MultitargetTrainingArrays():
 
     def __init__(self, global_parameters, epochs, batch_size, frozen_runs, number_batches, multi_process=True):
         self._arrays = list()
-        input_shapes = list()
-        output_shapes = list()
         data_sets = global_parameters[constants.GlobalParameters.data_set]
         for i in range(len(data_sets)):
             global_params = global_parameters.copy()
@@ -20,8 +18,6 @@ class MultitargetTrainingArrays():
             global_params[constants.GlobalParameters.partition_data] = global_parameters[constants.GlobalParameters.partition_data][i]
             array = tensor_2d_array.load_array(global_params, train=True, transform=True, multi_process=multi_process)
             self._arrays.append(array)
-            input_shapes.append(array.shape)
-            output_shapes.append((len(array), 2))
         preprocess_size = misc.max_in_memory_chunk_size(self._arrays[0].dtype, self._arrays[0].shape, use_swap=False,
                                                         fraction=1 / 3)
         preprocess_size = math.floor(preprocess_size/len(self._arrays))
@@ -33,8 +29,12 @@ class MultitargetTrainingArrays():
         self._batches_per_epoch = math.ceil(max_length / batch_size)
         input_queue = queue.Queue(queue_size)
         output_queue = queue.Queue(queue_size)
-        self._input_array = QueueArray(input_shapes, batch_size, input_queue)
-        self._output_array = QueueArray(output_shapes, batch_size, output_queue)
+        input_shape = list(self._arrays[0].shape)
+        input_shape[0] = batch_size
+        input_shape = tuple(input_shape)
+        output_shape = (batch_size, 2)
+        self._input_array = QueueArray(input_shape, input_queue)
+        self._output_array = QueueArray(output_shape, output_queue)
         self._pool = thread_pool.ThreadPool(1)
         self._pool.submit(preprocess_batches, self._arrays, epochs, batch_size, frozen_runs, number_batches,
                           self._batches_per_epoch, input_queue, output_queue, preprocess_size)
@@ -50,10 +50,6 @@ class MultitargetTrainingArrays():
     def batches_per_epoch(self):
         return self._batches_per_epoch
 
-    def next_data_set(self):
-        self._input_array.next_data_set()
-        self._output_array.next_data_set()
-
     def close(self):
         self._pool.close()
         for array in self._arrays:
@@ -62,41 +58,23 @@ class MultitargetTrainingArrays():
 
 class QueueArray():
 
-    def __init__(self, shapes, slice_size, queue):
-        self._current_shape = None
-        self._shapes = shapes
-        self._shape_index = 0
-        self._slice_start = list()
-        for i in range(len(shapes)):
-            self._slice_start.append(0)
+    def __init__(self, shape, queue):
+        self._shape = shape
         self._queue = queue
-        self._slice_size = slice_size
-        self.update_current_shape()
 
     @property
     def shape(self):
-        return self._current_shape
+        return self._shape
 
     @property
     def ndim(self):
-        return len(self._current_shape)
+        return len(self._shape)
 
     def __len__(self):
-        return self._current_shape[0]
+        return self._shape[0]
 
     def __getitem__(self, item):
         return self._queue.get()
-
-    def next_data_set(self):
-        self._shape_index = (self._shape_index + 1) % len(self._shapes)
-        self._slice_start[self._shape_index] = (self._slice_start[self._shape_index] + self._slice_size)\
-                                               % self._shapes[self._shape_index][0]
-        self.update_current_shape()
-
-    def update_current_shape(self):
-        self._current_shape = list(self._shapes[self._shape_index])
-        self._current_shape[0] = min(self._slice_size, self._current_shape[0] - self._slice_start[self._shape_index])
-        self._current_shape = tuple(self._current_shape)
 
 
 def preprocess_batches(arrays, epochs, batch_size, frozen_runs, number_batches, batches_per_epoch, input_queue, output_queue, preprocess_size=None):
