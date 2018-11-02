@@ -1,4 +1,5 @@
 from steps import repository
+from steps.trainingmultitarget.tensor2d import tensor_2d
 
 
 class TrainingMultitargetRepository(repository.Repository):
@@ -13,3 +14,4 @@ class TrainingMultitargetRepository(repository.Repository):
 
 
 instance = TrainingMultitargetRepository()
+instance.add_implementation(tensor_2d.Tensor2D)

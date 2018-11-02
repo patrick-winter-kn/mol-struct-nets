@@ -191,13 +191,23 @@ def get_commit_hash_file(global_parameters):
 
 
 def get_result_folder(global_parameters):
-    return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
-                                     'experiments',
-                                     global_parameters[constants.GlobalParameters.experiment],
-                                     global_parameters[constants.GlobalParameters.data_set],
-                                     global_parameters[constants.GlobalParameters.target],
-                                     global_parameters[constants.GlobalParameters.partition_data],
-                                     str(global_parameters[constants.GlobalParameters.seed]))
+    if constants.GlobalParameters.transfer_data_sets in global_parameters:
+        return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                         'experiments',
+                                         global_parameters[constants.GlobalParameters.experiment],
+                                         global_parameters[constants.GlobalParameters.transfer_data_sets],
+                                         global_parameters[constants.GlobalParameters.data_set],
+                                         global_parameters[constants.GlobalParameters.target],
+                                         global_parameters[constants.GlobalParameters.partition_data],
+                                         str(global_parameters[constants.GlobalParameters.seed]))
+    else:
+        return file_util.resolve_subpath(global_parameters[constants.GlobalParameters.root],
+                                         'experiments',
+                                         global_parameters[constants.GlobalParameters.experiment],
+                                         global_parameters[constants.GlobalParameters.data_set],
+                                         global_parameters[constants.GlobalParameters.target],
+                                         global_parameters[constants.GlobalParameters.partition_data],
+                                         str(global_parameters[constants.GlobalParameters.seed]))
 
 
 def get_shared_network_file(global_parameters):

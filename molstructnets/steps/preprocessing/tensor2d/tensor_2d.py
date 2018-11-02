@@ -70,7 +70,8 @@ class Tensor2D:
         hash_parameters['data_set'] = global_parameters[constants.GlobalParameters.data_set]
         file_name = 'tensor_2d_jit_' + misc.hash_parameters(hash_parameters) + '.h5'
         tmp_global_parameters = global_parameters.copy()
-        tmp_global_parameters[constants.GlobalParameters.data_set] = '_'.join(global_parameters[constants.GlobalParameters.data_set])
+        if constants.GlobalParameters.transfer_data_sets in global_parameters:
+            tmp_global_parameters[constants.GlobalParameters.data_set] = global_parameters[constants.GlobalParameters.transfer_data_sets]
         return file_util.resolve_subpath(file_structure.get_preprocessed_folder(tmp_global_parameters), file_name)
 
     @staticmethod

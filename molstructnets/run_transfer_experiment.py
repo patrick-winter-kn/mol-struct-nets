@@ -57,6 +57,12 @@ def run_step(step, type_name, global_parameters, parameters):
         gc.collect()
 
 
+def clean():
+    process_pool.close_all_pools()
+    backend.clear_session()
+    gc.collect()
+
+
 if not file_util.file_exists(args.experiment):
     logger.log('Experiment file ' + args.experiment + ' does not exist.', logger.LogLevel.ERROR)
     exit(1)
@@ -138,14 +144,24 @@ for i in range(nr_steps):
         data_sets = list()
         for j in range(len(data_sets_train)):
             data_sets.append(data_sets_train[j])
-        global_params = global_parameters.copy()
         global_params[constants.GlobalParameters.data_set] = data_sets
+        shared_network_path = file_structure.get_shared_network_file(global_params)
+        if not file_util.file_exists(shared_network_path):
+            temp_global_params = global_parameters_list[0].copy()
+            file_util.copy_file(file_structure.get_network_file(temp_global_params), shared_network_path)
+        global_params[constants.GlobalParameters.shared_network] = shared_network_path
+        partition_data_list = list()
+        for j in range(len(global_parameters_list)):
+            partition_data_list.append(global_parameters_list[j][constants.GlobalParameters.partition_data])
+        global_params[constants.GlobalParameters.partition_data] = partition_data_list
         run_step(step, type_name, global_params, parameters)
         for j in range(len(global_parameters_list)):
             global_parameters_list[j][constants.GlobalParameters.shared_network] = global_params[constants.GlobalParameters.shared_network]
     else:
         for j in range(len(data_sets_train) + len(data_sets_eval)):
             run_step(step, type_name, global_parameters_list[j], parameters)
+            clean()
+    clean()
 logger.divider()
 add_last_commit_hash(sys.argv[0], global_parameters)
 end_time = datetime.datetime.now()

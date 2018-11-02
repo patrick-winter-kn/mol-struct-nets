@@ -37,37 +37,37 @@ class Tensor2D:
             initializer = initializers.he_uniform()
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
-            layer = Dropout(0.3, name='input_dropout')(layer)
+            layer = Dropout(0.3, name='input-dropout')(layer)
 
             # Block 1
-            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution_1',
+            layer = Convolution2D(32, 3, activation='relu', padding='same', name='convolution-1',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D(2, padding='same', name='max_pool_1')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max-pool-1')(layer)
 
             # Block 2
-            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution_2',
+            layer = Convolution2D(64, 3, activation='relu', padding='same', name='convolution-2',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D(2, padding='same', name='max_pool_2')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max-pool-2')(layer)
 
             # Block 3
-            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution_3',
+            layer = Convolution2D(128, 3, activation='relu', padding='same', name='convolution-3',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D(2, padding='same', name='max_pool_3')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max-pool-3')(layer)
 
             # Block 4
-            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution_4',
+            layer = Convolution2D(256, 3, activation='relu', padding='same', name='convolution-4',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D(2, padding='same', name='max_pool_4')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max-pool-4')(layer)
 
             # Block 5
-            layer = Convolution2D(512, 3, activation='relu', padding='same', name='convolution_5',
+            layer = Convolution2D(512, 3, activation='relu', padding='same', name='convolution-5',
                                   kernel_initializer=initializer)(layer)
-            layer = MaxPooling2D(2, padding='same', name='max_pool_5')(layer)
+            layer = MaxPooling2D(2, padding='same', name='max-pool-5')(layer)
 
             layer = Flatten(name='features')(layer)
-            layer = Dropout(0.75, name='dropout_1')(layer)
+            layer = Dropout(0.75, name='dropout-1')(layer)
             layer = Dense(128, activation='relu', name='dense', kernel_initializer=initializer)(layer)
-            layer = Dropout(0.75, name='dropout_2')(layer)
+            layer = Dropout(0.75, name='dropout-2')(layer)
             output_layer = Dense(2, activation='softmax', name='output', kernel_initializer=initializer)(layer)
             model = Model(inputs=input_layer, outputs=output_layer)
             optimizer = optimizers.Adam(lr=0.0001)

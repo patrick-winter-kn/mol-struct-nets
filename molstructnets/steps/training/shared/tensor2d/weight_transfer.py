@@ -15,7 +15,9 @@ def get_weight_range(model, start_layer_name, end_layer_name):
             break
     for i in range(len(model.weights)):
         name = model.weights[i].name
-        name = name[:name.rfind('_')]
+        name = name[:name.rfind('/')]
+        if '_' in name:
+            name = name[:name.rfind('_')]
         if name in names:
             start_index = misc.minimum(start_index, i)
             end_index = misc.maximum(end_index, i)
@@ -44,4 +46,5 @@ def transfer_weights(source_model, destination_model, weight_start_index, weight
 def set_weight_freeze(model, layer_start_index, layer_end_index, freeze):
     for i in range(layer_start_index, layer_end_index):
         model.layers[i].trainable = not freeze
-    model.compile(optimizer=model.optimizer, loss=model.loss, metrics=model.metrics)
+    model._collected_trainable_weights = model.trainable_weights
+    model._make_train_function()
