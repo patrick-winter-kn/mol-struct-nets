@@ -54,7 +54,7 @@ class Tensor2D:
             # TODO number batches is currently ignored
             #number_batches = local_parameters['number_batches']
             number_batches = 1
-            arrays = multitarget_training_array.MultitargetTrainingArrays(global_parameters, epochs, batch_size,
+            arrays = multitarget_training_array.MultitargetTrainingArrays(global_parameters, epochs - epoch, batch_size,
                                                                           frozen_runs, number_batches)
             shared_model = models.load_model(model_path)
             model_list = list()
@@ -83,5 +83,5 @@ class Tensor2D:
                             progress.increment(batch_size)
                             prev_model = model_list[k]
                         weight_transfer.transfer_weights(prev_model, shared_model, weight_start_index, weight_end_index)
-                    callbacks.save_model(shared_model, model_path, epoch)
+                    callbacks.save_model(shared_model, model_path, i)
             arrays.close()
