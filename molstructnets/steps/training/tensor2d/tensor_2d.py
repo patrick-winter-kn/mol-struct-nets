@@ -57,7 +57,7 @@ class Tensor2D:
             batch_size = local_parameters['batch_size']
             model = models.load_model(model_path)
             process_pool_ = process_pool.ProcessPool()
-            arrays = training_array.TrainingArrays(global_parameters, epochs, batch_size, multi_process=process_pool_)
+            arrays = training_array.TrainingArrays(global_parameters, epochs - epoch, batch_size, multi_process=process_pool_)
             callbacks_ = [callbacks.CustomCheckpoint(model_path)]
             test_data = None
             if local_parameters['evaluate']:
