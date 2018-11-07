@@ -67,7 +67,7 @@ if not file_util.file_exists(args.experiment):
     logger.log('Experiment file ' + args.experiment + ' does not exist.', logger.LogLevel.ERROR)
     exit(1)
 if not file_util.file_exists(args.data_sets):
-    logger.log('Data sets file ' + args.args + ' does not exist.', logger.LogLevel.ERROR)
+    logger.log('Data sets file ' + args.data_sets + ' does not exist.', logger.LogLevel.ERROR)
     exit(1)
 start_time = datetime.datetime.now()
 logger.divider()
