@@ -69,7 +69,7 @@ class Tensor2D:
             layer_start_index, layer_end_index = weight_transfer.get_layer_range(shared_model, 'input', 'features')
             weight_transfer.transfer_weights(shared_model, model, weight_start_index, weight_end_index)
             process_pool_ = process_pool.ProcessPool()
-            arrays = training_array.TrainingArrays(global_parameters, epochs - epoch, batch_size, multi_process=process_pool_)
+            arrays = training_array.TrainingArrays(global_parameters, epochs - epoch, epoch, batch_size, multi_process=process_pool_)
             callbacks_ = [callbacks.CustomCheckpoint(model_path)]
             test_data = None
             if local_parameters['evaluate']:

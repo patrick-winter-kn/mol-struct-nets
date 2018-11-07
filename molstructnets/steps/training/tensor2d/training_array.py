@@ -7,9 +7,11 @@ from util import thread_pool, misc
 
 class TrainingArrays():
 
-    def __init__(self, global_parameters, epochs, batch_size, multi_process=True):
+    def __init__(self, global_parameters, epochs, previous_epochs, batch_size, multi_process=True):
         self._array = tensor_2d_array.load_array(global_parameters, train=True, transform=True,
                                                  multi_process=multi_process)
+        for i in range(previous_epochs):
+            self._array.shuffle()
         preprocess_size = misc.max_in_memory_chunk_size(self._array.dtype, self._array.shape, use_swap=False,
                                                         fraction=1 / 3)
         preprocess_size -= preprocess_size % batch_size
