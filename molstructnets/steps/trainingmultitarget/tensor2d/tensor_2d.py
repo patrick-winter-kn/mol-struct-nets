@@ -23,9 +23,6 @@ class Tensor2D:
         parameters.append({'id': 'batch_size', 'name': 'Batch Size', 'type': int, 'default': 100, 'min': 1,
                            'description': 'Number of data points that will be processed together. A higher number leads'
                                           ' to faster processing but needs more memory. Default: 100'})
-        #parameters.append({'id': 'number_batches', 'name': 'Number Batches', 'type': int, 'default': 1, 'min': 1,
-        #                   'description': 'Number of batches that will be trained before switching to the next target. '
-        #                                  'Default: 1'})
         parameters.append({'id': 'frozen_runs', 'name': 'Frozen Runs', 'type': int, 'default': 1, 'min': 0,
                            'description': 'Number of times the network will be trained with frozen feature layers '
                                           'before they are unfrozen and the real training run is started. Default: 1'})
@@ -51,11 +48,8 @@ class Tensor2D:
             epochs = local_parameters['epochs']
             batch_size = local_parameters['batch_size']
             frozen_runs = local_parameters['frozen_runs']
-            # TODO number batches is currently ignored
-            #number_batches = local_parameters['number_batches']
-            number_batches = 1
-            arrays = multitarget_training_array.MultitargetTrainingArrays(global_parameters, epochs - epoch, batch_size,
-                                                                          frozen_runs, number_batches)
+            arrays = multitarget_training_array.MultitargetTrainingArrays(global_parameters, epochs - epoch, epoch,
+                                                                          batch_size, frozen_runs)
             shared_model = models.load_model(model_path)
             model_list = list()
             for i in range(len(data_sets)):

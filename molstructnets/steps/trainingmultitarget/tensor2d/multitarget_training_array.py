@@ -8,7 +8,7 @@ from util import thread_pool, misc, constants
 
 class MultitargetTrainingArrays():
 
-    def __init__(self, global_parameters, epochs, batch_size, frozen_runs, number_batches, multi_process=True):
+    def __init__(self, global_parameters, epochs, previous_epochs, batch_size, frozen_runs, multi_process=True):
         self._arrays = list()
         data_sets = global_parameters[constants.GlobalParameters.data_set]
         for i in range(len(data_sets)):
@@ -36,7 +36,7 @@ class MultitargetTrainingArrays():
         self._input_array = QueueArray(input_shape, input_queue)
         self._output_array = QueueArray(output_shape, output_queue)
         self._pool = thread_pool.ThreadPool(1)
-        self._pool.submit(preprocess_batches, self._arrays, epochs, batch_size, frozen_runs, number_batches,
+        self._pool.submit(preprocess_batches, self._arrays, epochs, previous_epochs, batch_size, frozen_runs,
                           self._batches_per_epoch, input_queue, output_queue, preprocess_size)
 
     @property
@@ -77,7 +77,7 @@ class QueueArray():
         return self._queue.get()
 
 
-def preprocess_batches(arrays, epochs, batch_size, frozen_runs, number_batches, batches_per_epoch, input_queue, output_queue, preprocess_size=None):
+def preprocess_batches(arrays, epochs, previous_epochs, batch_size, frozen_runs, batches_per_epoch, input_queue, output_queue, preprocess_size=None):
     if preprocess_size is None:
         preprocess_size = batch_size * batches_per_epoch
     dtype = arrays[0].dtype
@@ -91,6 +91,12 @@ def preprocess_batches(arrays, epochs, batch_size, frozen_runs, number_batches, 
         inputs.append(numpy.zeros(shape, dtype))
         outputs.append(numpy.zeros((preprocess_size, 2), 'float32'))
         offsets.append(0)
+    done_points = batches_per_epoch * batch_size * previous_epochs
+    for i in range(len(arrays)):
+        shuffles = math.floor(done_points / len(arrays[i]))
+        for j in range(shuffles):
+            arrays[i].shuffle()
+        offsets[i] += done_points % len(arrays[i])
     for epoch in range(epochs):
         for i in range(math.ceil((batches_per_epoch * batch_size) / preprocess_size)):
             remaining_batches = batches_per_epoch - (i * int(preprocess_size/batch_size))
