@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import sys
+import datetime
 
 from experimentbatch import experiment_batch, execution_results
 from util import file_util, logger
@@ -25,6 +26,9 @@ results = execution_results.ExecutionResults(result_path, len(experiments))
 run_experiment = [sys.executable, sys.argv[0][:sys.argv[0].rfind('/') + 1] + 'run_experiment.py']
 logger.log('\n')
 i = 0
+start_time = datetime.datetime.now()
+logger.divider()
+logger.log('Starting experiment batch at ' + str(start_time))
 while i < len(experiments):
     if results.get_status(i) != execution_results.Status.success:
         successes = 0
@@ -55,3 +59,7 @@ while i < len(experiments):
         nr_seeds = len(seeds)
     results.update_number_experiments(len(experiments))
     i += 1
+end_time = datetime.datetime.now()
+logger.log('Finished execution of experiment batch at ' + str(end_time))
+logger.log('Duration of experiment batch: ' + str(end_time - start_time))
+logger.divider()
