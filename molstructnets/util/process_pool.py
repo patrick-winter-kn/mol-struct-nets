@@ -2,6 +2,7 @@ import os
 from multiprocessing import pool
 from util import logger
 import traceback
+import sys
 
 default_number_processes = os.cpu_count()
 open_process_pools = list()
@@ -17,7 +18,7 @@ class ProcessPool:
 
     def submit(self, function_, *args, **kwargs):
         args = tuple([function_] + list(args))
-        self.futures.append(self.pool.apply_async(run_function, args, kwargs))
+        self.futures.append(self.pool.apply_async(run_function, args, kwargs, error_callback=on_error))
         return self.futures[-1]
 
     def wait(self):
@@ -58,3 +59,7 @@ def run_function(function_, *args, **kwargs):
         logger.log('Error while running ' + function_.__name__ + '()', log_level=logger.LogLevel.ERROR)
         traceback.print_exc()
         raise e
+
+
+def on_error(error):
+    sys.exit(1)
