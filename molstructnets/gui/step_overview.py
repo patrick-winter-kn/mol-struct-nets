@@ -120,6 +120,8 @@ class StepOverview(ttk.Frame):
             self.id_option['menu'].delete(0, tkinter.END)
             for choice in id_options:
                 self.id_option['menu'].add_command(label=choice, command=tkinter._setit(self.id_value, choice))
+            self.step['id'] = None
+            self.implementation_changed(None)
 
     def implementation_changed(self, *args):
         id_ = self.get_impl_id()
