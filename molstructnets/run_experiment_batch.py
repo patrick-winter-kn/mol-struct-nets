@@ -13,6 +13,7 @@ def get_arguments():
                                                     'experiment, data set, target, partition. Unused parameters can be '
                                                     'left empty.')
     parser.add_argument('--retries', type=int, default=0, help='Number of retries if an experiment fails')
+    parser.add_argument('--card', type=int, default=None, help='Number of the GPU that is used')
     return parser.parse_args()
 
 
@@ -36,6 +37,8 @@ while i < len(experiments):
             params = run_experiment + experiments[i].get_execution_arguments()
             if seeds is not None:
                 params += ['--seed', str(seeds[j])]
+            if args.card is not None:
+                params += ['--card', str(args.card)]
             retry_text = ''
             for k in range(args.retries + 1):
                 logger.divider('•', nr_lines=2)

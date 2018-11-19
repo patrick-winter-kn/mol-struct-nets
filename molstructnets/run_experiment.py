@@ -12,6 +12,7 @@ def get_arguments():
     parser.add_argument('--step', type=int, default=None, help='Run the experiment up to the given step')
     parser.add_argument('--seed', type=int, default=None, help='The random seed (will overwrite seed set in experiment'
                                                                ' file)')
+    parser.add_argument('--card', type=int, default=None, help='Number of the GPU that is used')
     return parser.parse_args()
 
 
