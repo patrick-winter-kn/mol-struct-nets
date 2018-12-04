@@ -66,7 +66,7 @@ class Tensor2D:
                                                               percent=local_parameters['eval_partition_size'] * 0.01)
                 chunks = misc.chunk_by_size(len(test_data.input), local_parameters['batch_size'])
                 callbacks_ = [EvaluationCallback(test_data, chunks, global_parameters[constants.GlobalParameters.seed],
-                                                 model_path[:-3] + '-eval.txt')] + callbacks_
+                                                 model_path[:-3] + '-eval.csv')] + callbacks_
             model.fit(arrays.input, arrays.output, epochs=epochs, shuffle=False, batch_size=batch_size,
                       callbacks=callbacks_, initial_epoch=epoch)
             if test_data is not None:
@@ -97,7 +97,7 @@ class EvaluationCallback(Callback):
         write_headline = not file_util.file_exists(self.file_path)
         with open(self.file_path, 'a') as file:
             if write_headline:
-                file.write('epoch,e_auc,ef_5,ef_10,roc_auc')
+                file.write('epoch,e_auc,ef_5,ef_10,roc_auc\n')
             file.write(str(epoch + 1) + ',' + str(e_auc) + ',' + str(ef5) + ',' + str(ef10) + ',' + str(roc_auc) + '\n')
         logger.log('E AUC: ' + str(round(e_auc, 2)) + '    EF5: ' + str(round(ef5, 2)) + '    EF10: '
                    + str(round(ef10, 2)) + '    ROC AUC: ' + str(round(roc_auc, 2)))
