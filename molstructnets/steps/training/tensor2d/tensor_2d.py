@@ -47,7 +47,7 @@ class Tensor2D:
         epoch_path = model_path[:-3] + '-epochs.txt'
         if file_util.file_exists(epoch_path):
             with open(epoch_path, 'r') as file:
-                epoch = int(file.read())
+                epoch = int(file.readline())
         else:
             epoch = 0
         if epoch >= local_parameters['epochs']:
