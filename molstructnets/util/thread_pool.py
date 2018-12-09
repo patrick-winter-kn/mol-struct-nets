@@ -1,6 +1,7 @@
 from concurrent import futures
 
 from util import process_pool
+import os
 
 default_number_threads = process_pool.default_number_processes
 
@@ -13,8 +14,10 @@ class ThreadPool:
         self.futures = []
 
     def submit(self, function_, *args, **kwargs):
-        args = tuple([function_] + list(args))
-        self.futures.append(self.pool.submit(process_pool.run_function, *args, **kwargs))
+        pid = os.getpid()
+        args = tuple([function_, pid] + list(args))
+        self.futures.append(self.pool.submit(process_pool.run_function, *args, **kwargs,
+                                             error_callback=process_pool.on_error))
         return self.futures[-1]
 
     def wait(self):

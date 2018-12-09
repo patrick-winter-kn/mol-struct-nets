@@ -3,6 +3,8 @@ from multiprocessing import pool
 from util import logger
 import traceback
 import sys
+import signal
+from util import manager
 
 default_number_processes = os.cpu_count()
 open_process_pools = list()
@@ -17,7 +19,8 @@ class ProcessPool:
         open_process_pools.append(self)
 
     def submit(self, function_, *args, **kwargs):
-        args = tuple([function_] + list(args))
+        pid = os.getpid()
+        args = tuple([function_, pid] + list(args))
         self.futures.append(self.pool.apply_async(run_function, args, kwargs, error_callback=on_error))
         return self.futures[-1]
 
@@ -52,14 +55,16 @@ def close_all_pools():
         process_pool.close()
 
 
-def run_function(function_, *args, **kwargs):
+def run_function(function_, pid, *args, **kwargs):
     try:
         return function_(*args, **kwargs)
     except BaseException as e:
         logger.log('Error while running ' + function_.__name__ + '()', log_level=logger.LogLevel.ERROR)
         traceback.print_exc()
-        raise e
+        manager.instance.shutdown()
+        os.kill(pid, signal.SIGKILL)
 
 
 def on_error(error):
+    manager.instance.shutdown()
     sys.exit(1)
