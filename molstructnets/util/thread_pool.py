@@ -16,8 +16,7 @@ class ThreadPool:
     def submit(self, function_, *args, **kwargs):
         pid = os.getpid()
         args = tuple([function_, pid] + list(args))
-        self.futures.append(self.pool.submit(process_pool.run_function, *args, **kwargs,
-                                             error_callback=process_pool.on_error))
+        self.futures.append(self.pool.submit(process_pool.run_function, *args, **kwargs))
         return self.futures[-1]
 
     def wait(self):
