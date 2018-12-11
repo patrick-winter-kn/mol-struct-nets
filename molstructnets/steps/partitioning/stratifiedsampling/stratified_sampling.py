@@ -28,6 +28,8 @@ class StratifiedSampling:
                                           ' distribution in the training set is equal. Default: True'})
         parameters.append({'id': 'shuffle', 'name': 'Shuffle Training Partition', 'type': bool, 'default': True,
                            'description': 'If this is set the training data will be shuffled. Default: True'})
+        parameters.append({'id': 'seed', 'name': 'Random Seed', 'type': int, 'default': None,
+                           'description': 'The used random seed. Default: Use global seed'})
         return parameters
 
     @staticmethod
@@ -36,9 +38,12 @@ class StratifiedSampling:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
+        if local_parameters['seed'] is None:
+            hash_parameters = misc.copy_dict_from_keys(global_parameters, [constants.GlobalParameters.seed])
+        else:
+            hash_parameters = dict()
         hash_parameters.update(misc.copy_dict_from_keys(local_parameters, ['train_percentage', 'oversample',
-                                                                           'shuffle']))
+                                                                           'shuffle', 'seed']))
         file_name = 'stratified_sampling_' + misc.hash_parameters(hash_parameters) + '.h5'
         return file_util.resolve_subpath(file_structure.get_partition_folder(global_parameters), file_name)
 
@@ -53,7 +58,11 @@ class StratifiedSampling:
         if file_util.file_exists(partition_path):
             logger.log('Skipping step: ' + partition_path + ' already exists')
         else:
-            random_ = random.Random(global_parameters[constants.GlobalParameters.seed])
+            if local_parameters['seed'] is None:
+                seed = global_parameters[constants.GlobalParameters.seed]
+            else:
+                seed = local_parameters['seed']
+            random_ = random.Random(seed)
             target_h5 = h5py.File(file_structure.get_target_file(global_parameters), 'r')
             classes = target_h5[file_structure.Target.classes]
             classes = classes[:].astype('bool')
@@ -103,6 +112,7 @@ class StratifiedSampling:
             if local_parameters['oversample']:
                 partition_train = partitioning.oversample(partition_train, classes, log_level=logger.LogLevel.VERBOSE)
             if local_parameters['shuffle']:
+                numpy.random.seed(seed)
                 numpy.random.shuffle(partition_train)
             hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.train, partition_train)
             hdf5_util.create_dataset_from_data(partition_h5, file_structure.Partitions.test, partition_test)
