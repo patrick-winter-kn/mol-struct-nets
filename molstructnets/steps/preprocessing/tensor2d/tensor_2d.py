@@ -65,8 +65,8 @@ class Tensor2D:
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
         hash_parameters = misc.copy_dict_from_keys(local_parameters,
-                                                   ['scale', 'symbols', 'square', 'bonds', 'chemical_properties',
-                                                    'normalization'])
+                                                   ['scale', 'symbols', 'square', 'bonds', 'atom_symbols',
+                                                    'chemical_properties', 'normalization'])
         hash_parameters['data_set'] = global_parameters[constants.GlobalParameters.data_set]
         file_name = 'tensor_2d_jit_' + misc.hash_parameters(hash_parameters) + '.h5'
         tmp_global_parameters = global_parameters.copy()
