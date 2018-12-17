@@ -34,7 +34,7 @@ class Tensor2D:
         if file_util.file_exists(network_path):
             logger.log('Skipping step: ' + network_path + ' already exists')
         else:
-            initializer = initializers.he_uniform()
+            initializer = initializers.he_uniform(global_parameters[constants.GlobalParameters.seed])
             input_layer = Input(shape=global_parameters[constants.GlobalParameters.input_dimensions], name='input')
             layer = input_layer
             layer = Dropout(0.3, name='input-dropout')(layer)
