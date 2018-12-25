@@ -5,7 +5,7 @@ from rdkit import Chem
 from steps.interpretation.shared import tensor_2d_renderer
 from steps.preprocessing.shared.tensor2d import molecule_2d_tensor, rasterizer
 from steps.preprocessing.tensor2d import tensor_2d
-from steps.preprocessingtraining.tensor2dtransformation import transformer
+from steps.preprocessing.shared.tensor2d import transformer
 from util import initialization
 
 initialization.initialize()
