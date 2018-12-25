@@ -2,7 +2,7 @@ import numpy
 from sklearn import ensemble
 from sklearn.externals import joblib
 
-from util import file_util, progressbar
+from util import file_util, progressbar, logger
 
 
 def train(train_data_input, train_data_output, model_path, nr_trees=1000, min_samples_leaf=1, seed=None):
@@ -27,12 +27,12 @@ def predict(test_data_input, model, hard_vote=False):
     if hard_vote:
         probabilities = numpy.zeros((len(test_data_input), 2))
         predictions = list()
-        print('Predicting:')
+        logger.log('Predicting:')
         with progressbar.ProgressBar(len(model.estimators_)) as progress:
             for estimator in model.estimators_:
                 predictions.append(estimator.predict(test_data_input))
                 progress.increment()
-        print('Voting:')
+        logger.log('Voting:')
         with progressbar.ProgressBar(len(test_data_input)) as progress:
             for i in range(len(test_data_input)):
                 active_votes = 0
