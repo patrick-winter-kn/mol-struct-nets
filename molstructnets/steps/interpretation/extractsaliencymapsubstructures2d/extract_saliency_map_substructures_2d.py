@@ -2,27 +2,27 @@ import h5py
 import numpy
 from rdkit import Chem
 
-from steps.interpretation.extractcamsubstructures2d import substructure_set
+from steps.interpretation.extractsaliencymapsubstructures2d import substructure_set
 from steps.preprocessing.shared.tensor2d import tensor_2d_array
 from util import data_validation, file_structure, file_util, progressbar, logger, misc, hdf5_util, buffered_queue,\
     constants
 
 
-class ExtractCamSubstructures2D:
+class ExtractSaliencyMapSubstructures2D:
 
     @staticmethod
     def get_id():
-        return 'extract_cam_substructures_2d'
+        return 'extract_saliency_map_substructures_2d'
 
     @staticmethod
     def get_name():
-        return 'Extract CAM Substructures 2D'
+        return 'Extract Saliency Map Substructures 2D'
 
     @staticmethod
     def get_parameters():
         parameters = list()
         parameters.append({'id': 'threshold', 'name': 'Threshold', 'type': float, 'default': 0.25, 'min': 0.0,
-                           'max': 1.0, 'description': 'The threshold used to decide which parts of the CAM'
+                           'max': 1.0, 'description': 'The threshold used to decide which parts of the saliency map'
                                                       ' are interpreted as part of the substructure. Default: 0.25'})
         parameters.append({'id': 'partition', 'name': 'Partition', 'type': str, 'default': 'both',
                            'options': ['train', 'test', 'both'],
@@ -34,60 +34,61 @@ class ExtractCamSubstructures2D:
     def check_prerequisites(global_parameters, local_parameters):
         data_validation.validate_data_set(global_parameters)
         data_validation.validate_preprocessed_specs(global_parameters)
-        data_validation.validate_cam(global_parameters)
+        data_validation.validate_saliency_map(global_parameters)
         if local_parameters['partition'] != 'both':
             data_validation.validate_partition(global_parameters)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        cam_substructures_path = file_util.resolve_subpath(
-            file_structure.get_interpretation_folder(global_parameters), 'cam_substructures.h5')
-        global_parameters[constants.GlobalParameters.cam_substructures_data] = cam_substructures_path
-        if file_util.file_exists(cam_substructures_path):
-            logger.log('Skipping step: ' + cam_substructures_path + ' already exists')
+        saliency_map_substructures_path = file_util.resolve_subpath(
+            file_structure.get_interpretation_folder(global_parameters), 'saliency_map_substructures.h5')
+        global_parameters[constants.GlobalParameters.saliency_map_substructures_data] = saliency_map_substructures_path
+        if file_util.file_exists(saliency_map_substructures_path):
+            logger.log('Skipping step: ' + saliency_map_substructures_path + ' already exists')
         else:
-            cam_h5 = h5py.File(file_structure.get_cam_file(global_parameters), 'r')
+            saliency_map_h5 = h5py.File(file_structure.get_saliency_map_file(global_parameters), 'r')
             array = tensor_2d_array.load_array(global_parameters)
-            temp_cam_substructures_path = file_util.get_temporary_file_path(
-                'cam_substructures')
-            cam_substructures_h5 = h5py.File(temp_cam_substructures_path, 'w')
-            if file_structure.Cam.cam_active in cam_h5.keys():
-                ExtractCamSubstructures2D.extract_cam_substructures(
-                    cam_h5, array, global_parameters, local_parameters, cam_substructures_h5, True)
-            if file_structure.Cam.cam_inactive in cam_h5.keys():
-                ExtractCamSubstructures2D.extract_cam_substructures(
-                    cam_h5, array, global_parameters, local_parameters, cam_substructures_h5, False)
-            cam_substructures_h5.close()
-            file_util.move_file(temp_cam_substructures_path, cam_substructures_path)
-            cam_h5.close()
+            temp_saliency_map_substructures_path = file_util.get_temporary_file_path(
+                'saliency_map_substructures')
+            saliency_map_substructures_h5 = h5py.File(temp_saliency_map_substructures_path, 'w')
+            if file_structure.SaliencyMap.saliency_map_active in saliency_map_h5.keys():
+                ExtractSaliencyMapSubstructures2D.extract_saliency_map_substructures(
+                    saliency_map_h5, array, global_parameters, local_parameters, saliency_map_substructures_h5, True)
+            if file_structure.SaliencyMap.saliency_map_inactive in saliency_map_h5.keys():
+                ExtractSaliencyMapSubstructures2D.extract_saliency_map_substructures(
+                    saliency_map_h5, array, global_parameters, local_parameters, saliency_map_substructures_h5, False)
+            saliency_map_substructures_h5.close()
+            file_util.move_file(temp_saliency_map_substructures_path, saliency_map_substructures_path)
+            saliency_map_h5.close()
 
     @staticmethod
-    def extract_cam_substructures(cam_h5, array, global_parameters, local_parameters, cam_substructures_h5, active):
+    def extract_saliency_map_substructures(saliency_map_h5, array, global_parameters, local_parameters,
+                                           saliency_map_substructures_h5, active):
         if active:
-            log_message = 'Extracting active CAM substructures'
-            cam_dataset_name = file_structure.Cam.cam_active
-            cam_indices_dataset_name = file_structure.Cam.cam_active_indices
-            substructures_dataset_name = file_structure.CamSubstructures.active_substructures
-            substructures_occurrences_dataset_name = file_structure.CamSubstructures.active_substructures_occurrences
-            substructures_value_dataset_name = file_structure.CamSubstructures.active_substructures_value
+            log_message = 'Extracting active saliency map substructures'
+            saliency_map_dataset_name = file_structure.SaliencyMap.saliency_map_active
+            saliency_map_indices_dataset_name = file_structure.SaliencyMap.saliency_map_active_indices
+            substructures_dataset_name = file_structure.SaliencyMapSubstructures.active_substructures
+            substructures_occurrences_dataset_name = file_structure.SaliencyMapSubstructures.active_substructures_occurrences
+            substructures_value_dataset_name = file_structure.SaliencyMapSubstructures.active_substructures_value
             substructures_number_heavy_atoms_dataset_name =\
-                file_structure.CamSubstructures.active_substructures_number_heavy_atoms
-            substructures_score_dataset_name = file_structure.CamSubstructures.active_substructures_score
+                file_structure.SaliencyMapSubstructures.active_substructures_number_heavy_atoms
+            substructures_score_dataset_name = file_structure.SaliencyMapSubstructures.active_substructures_score
         else:
-            log_message = 'Extracting inactive CAM substructures'
-            cam_dataset_name = file_structure.Cam.cam_inactive
-            cam_indices_dataset_name = file_structure.Cam.cam_inactive_indices
-            substructures_dataset_name = file_structure.CamSubstructures.inactive_substructures
-            substructures_occurrences_dataset_name = file_structure.CamSubstructures.inactive_substructures_occurrences
-            substructures_value_dataset_name = file_structure.CamSubstructures.inactive_substructures_value
+            log_message = 'Extracting inactive saliency map substructures'
+            saliency_map_dataset_name = file_structure.SaliencyMap.saliency_map_inactive
+            saliency_map_indices_dataset_name = file_structure.SaliencyMap.saliency_map_inactive_indices
+            substructures_dataset_name = file_structure.SaliencyMapSubstructures.inactive_substructures
+            substructures_occurrences_dataset_name = file_structure.SaliencyMapSubstructures.inactive_substructures_occurrences
+            substructures_value_dataset_name = file_structure.SaliencyMapSubstructures.inactive_substructures_value
             substructures_number_heavy_atoms_dataset_name =\
-                file_structure.CamSubstructures.inactive_substructures_number_heavy_atoms
-            substructures_score_dataset_name = file_structure.CamSubstructures.inactive_substructures_score
-        cam = cam_h5[cam_dataset_name]
-        if cam_indices_dataset_name in cam_h5.keys():
-            indices = cam_h5[cam_indices_dataset_name]
+                file_structure.SaliencyMapSubstructures.inactive_substructures_number_heavy_atoms
+            substructures_score_dataset_name = file_structure.SaliencyMapSubstructures.inactive_substructures_score
+        saliency_map = saliency_map_h5[saliency_map_dataset_name]
+        if saliency_map_indices_dataset_name in saliency_map_h5.keys():
+            indices = saliency_map_h5[saliency_map_indices_dataset_name]
         else:
-            indices = range(len(cam))
+            indices = range(len(saliency_map))
         if local_parameters['partition'] != 'both':
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
@@ -100,25 +101,25 @@ class ExtractCamSubstructures2D:
         logger.log(log_message, logger.LogLevel.INFO)
         substructures = substructure_set.SubstructureSet()
         with progressbar.ProgressBar(len(indices)) as progress:
-            ExtractCamSubstructures2D.extract(cam, indices, array, substructures, local_parameters['threshold'],
-                                              progress)
+            ExtractSaliencyMapSubstructures2D.extract(saliency_map, indices, array, substructures, local_parameters['threshold'],
+                                                      progress)
         substructures_dict = substructures.get_dict()
         substructures = list(substructures_dict.keys())
         max_length = 0
         for smiles_string in substructures:
             max_length = max(max_length, len(smiles_string))
         dtype = 'S' + str(max(max_length, 1))
-        substructures_dataset = hdf5_util.create_dataset(cam_substructures_h5, substructures_dataset_name,
+        substructures_dataset = hdf5_util.create_dataset(saliency_map_substructures_h5, substructures_dataset_name,
                                                          (len(substructures),), dtype=dtype)
-        substructures_occurrences_dataset = hdf5_util.create_dataset(cam_substructures_h5,
+        substructures_occurrences_dataset = hdf5_util.create_dataset(saliency_map_substructures_h5,
                                                                      substructures_occurrences_dataset_name,
                                                                      (len(substructures),), dtype='I')
-        substructures_value_dataset = hdf5_util.create_dataset(cam_substructures_h5,
+        substructures_value_dataset = hdf5_util.create_dataset(saliency_map_substructures_h5,
                                                                substructures_value_dataset_name, (len(substructures),))
-        substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(cam_substructures_h5,
+        substructures_number_heavy_atoms_dataset = hdf5_util.create_dataset(saliency_map_substructures_h5,
                                                                             substructures_number_heavy_atoms_dataset_name,
                                                                             (len(substructures),), dtype='I')
-        substructures_score_dataset = hdf5_util.create_dataset(cam_substructures_h5,
+        substructures_score_dataset = hdf5_util.create_dataset(saliency_map_substructures_h5,
                                                                substructures_score_dataset_name, (len(substructures),))
         occurences = numpy.zeros(len(substructures))
         values = numpy.zeros(len(substructures))
@@ -147,28 +148,28 @@ class ExtractCamSubstructures2D:
             i += 1
 
     @staticmethod
-    def extract(cam, indices, array, substructures, threshold, progress):
+    def extract(saliency_map, indices, array, substructures, threshold, progress):
         location_queue = buffered_queue.BufferedQueue(1, 10000)
         array.calc_atom_locations(0, len(array), location_queue)
         for i in range(len(array)):
             index, locations = location_queue.get()
             if index in indices:
                 smiles_string = array.smiles(index).decode('utf-8')
-                atom_indices, values = ExtractCamSubstructures2D.pick_atoms(cam[index], threshold, locations)
+                atom_indices, values = ExtractSaliencyMapSubstructures2D.pick_atoms(saliency_map[index], threshold, locations)
                 if len(atom_indices) > 0:
                     molecule = Chem.MolFromSmiles(smiles_string)
-                    ExtractCamSubstructures2D.add_substructures(molecule, atom_indices, values, substructures)
+                    ExtractSaliencyMapSubstructures2D.add_substructures(molecule, atom_indices, values, substructures)
                 progress.increment()
 
     @staticmethod
-    def pick_atoms(cam, threshold, atom_locations):
+    def pick_atoms(saliency_map, threshold, atom_locations):
         picked_indices = list()
         values = list()
         for i in range(len(atom_locations)):
             if atom_locations[i][0] < 0:
                 break
             location = tuple(atom_locations[i])
-            value = cam[location]
+            value = saliency_map[location]
             if value >= threshold:
                 picked_indices.append(i)
                 values.append(value)

@@ -7,15 +7,15 @@ from util import data_validation, misc, file_structure, file_util, logger, proce
     hdf5_util, multi_process_progressbar
 
 
-class CamSubstructureFeatureGeneration:
+class SaliencyMapSubstructureFeatureGeneration:
 
     @staticmethod
     def get_id():
-        return 'cam_substructure_feature_generation'
+        return 'saliency_map_substructure_feature_generation'
 
     @staticmethod
     def get_name():
-        return 'CAM Substructure Feature Generation'
+        return 'Saliency Map Substructure Feature Generation'
 
     @staticmethod
     def get_parameters():
@@ -38,30 +38,30 @@ class CamSubstructureFeatureGeneration:
 
     @staticmethod
     def get_result_file(global_parameters, local_parameters):
-        file_name = 'cam_features.h5'
+        file_name = 'saliency_map_features.h5'
         return file_util.resolve_subpath(file_structure.get_result_folder(global_parameters), file_name)
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        global_parameters[constants.GlobalParameters.feature_id] = 'cam_substructures'
-        features_path = CamSubstructureFeatureGeneration.get_result_file(global_parameters, local_parameters)
+        global_parameters[constants.GlobalParameters.feature_id] = 'saliency_map_substructures'
+        features_path = SaliencyMapSubstructureFeatureGeneration.get_result_file(global_parameters, local_parameters)
         if file_util.file_exists(features_path):
             logger.log('Skipping step: ' + features_path + ' already exists')
             features_h5 = h5py.File(features_path, 'r')
             feature_dimensions = features_h5[file_structure.Preprocessed.preprocessed].shape[1]
             features_h5.close()
         else:
-            cam_substructures_path = global_parameters[constants.GlobalParameters.cam_substructures_data]
-            substructures = load_substructures(cam_substructures_path, local_parameters['top_n'],
+            saliency_map_substructures_path = global_parameters[constants.GlobalParameters.saliency_map_substructures_data]
+            substructures = load_substructures(saliency_map_substructures_path, local_parameters['top_n'],
                                                local_parameters['min_score'], local_parameters['active'])
             feature_dimensions = len(substructures)
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles_data = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
-            temp_features_path = file_util.get_temporary_file_path('cam_features')
+            temp_features_path = file_util.get_temporary_file_path('saliency_map_features')
             chunks = misc.chunk(len(smiles_data), process_pool.default_number_processes)
             global_parameters[constants.GlobalParameters.input_dimensions] = (len(substructures),)
-            logger.log('Calculating cam features')
+            logger.log('Calculating saliency map features')
             with process_pool.ProcessPool(len(chunks)) as pool:
                 with multi_process_progressbar.MultiProcessProgressbar(len(smiles_data), value_buffer=100) as progress:
                     for chunk in chunks:
@@ -90,22 +90,22 @@ class CamSubstructureFeatureGeneration:
         global_parameters[constants.GlobalParameters.preprocessed_data] = features_path
 
 
-def load_substructures(cam_substructures_path, top_n, min_score, active):
+def load_substructures(saliency_map_substructures_path, top_n, min_score, active):
     if active:
-        score_data_set = file_structure.CamSubstructures.active_substructures_score
-        smiles_data_set = file_structure.CamSubstructures.active_substructures
+        score_data_set = file_structure.SaliencyMapSubstructures.active_substructures_score
+        smiles_data_set = file_structure.SaliencyMapSubstructures.active_substructures
     else:
-        score_data_set = file_structure.CamSubstructures.inactive_substructures_score
-        smiles_data_set = file_structure.CamSubstructures.inactive_substructures
-    cam_substructures_h5 = h5py.File(cam_substructures_path, 'r')
-    number_substructures = len(cam_substructures_h5[smiles_data_set])
+        score_data_set = file_structure.SaliencyMapSubstructures.inactive_substructures_score
+        smiles_data_set = file_structure.SaliencyMapSubstructures.inactive_substructures
+    saliency_map_substructures_h5 = h5py.File(saliency_map_substructures_path, 'r')
+    number_substructures = len(saliency_map_substructures_h5[smiles_data_set])
     if top_n is not None:
         number_substructures = min(number_substructures, top_n)
     if min_score is not None:
-        score = cam_substructures_h5[score_data_set][:]
+        score = saliency_map_substructures_h5[score_data_set][:]
         number_substructures = min(number_substructures, numpy.sum(score >= min_score))
-    smiles = cam_substructures_h5[smiles_data_set][:number_substructures]
-    cam_substructures_h5.close()
+    smiles = saliency_map_substructures_h5[smiles_data_set][:number_substructures]
+    saliency_map_substructures_h5.close()
     substructures = list()
     for i in range(len(smiles)):
         substructures.append(Chem.MolFromSmiles(smiles[i].decode('UTF-8'), sanitize=False))

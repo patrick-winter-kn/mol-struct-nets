@@ -33,22 +33,22 @@ class Calculate2DSubstructureLocations:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
-        attention_map_path = file_structure.get_cam_file(global_parameters)
+        attention_map_path = file_structure.get_saliency_map_file(global_parameters)
         file_existed = file_util.file_exists(attention_map_path)
         file_util.make_folders(attention_map_path)
-        cam_h5 = h5py.File(attention_map_path, 'a')
-        if file_structure.Cam.substructure_atoms in cam_h5.keys():
-            logger.log('Skipping step: ' + file_structure.Cam.substructure_atoms + ' in ' + attention_map_path
+        saliency_map_h5 = h5py.File(attention_map_path, 'a')
+        if file_structure.SaliencyMap.substructure_atoms in saliency_map_h5.keys():
+            logger.log('Skipping step: ' + file_structure.SaliencyMap.substructure_atoms + ' in ' + attention_map_path
                        + ' already exists')
-            cam_h5.close()
+            saliency_map_h5.close()
         else:
-            cam_h5.close()
-            temp_cam_path = file_util.get_temporary_file_path('cam')
+            saliency_map_h5.close()
+            temp_saliency_map_path = file_util.get_temporary_file_path('saliency_map')
             if file_existed:
-                file_util.copy_file(attention_map_path, temp_cam_path)
+                file_util.copy_file(attention_map_path, temp_saliency_map_path)
             else:
                 file_util.remove_file(attention_map_path)
-            cam_h5 = h5py.File(temp_cam_path, 'a')
+            saliency_map_h5 = h5py.File(temp_saliency_map_path, 'a')
             data_h5 = h5py.File(file_structure.get_data_set_file(global_parameters), 'r')
             smiles = data_h5[file_structure.DataSet.smiles][:]
             data_h5.close()
@@ -59,8 +59,8 @@ class Calculate2DSubstructureLocations:
                                                        'substructures')
             substructures = substructures.split(';')
             preprocessed = tensor_2d_array.load_array(global_parameters)
-            substructure_locations = hdf5_util.create_dataset(cam_h5,
-                                                              file_structure.Cam.substructure_atoms,
+            substructure_locations = hdf5_util.create_dataset(saliency_map_h5,
+                                                              file_structure.SaliencyMap.substructure_atoms,
                                                               (len(smiles), preprocessed.shape[1],
                                                                preprocessed.shape[2]),
                                                               dtype='uint8',
@@ -70,8 +70,8 @@ class Calculate2DSubstructureLocations:
             with progressbar.ProgressBar(len(smiles)) as progress:
                 write_substructure_locations(preprocessed, substructures, substructure_locations, progress)
             preprocessed.close()
-            cam_h5.close()
-            file_util.move_file(temp_cam_path, attention_map_path)
+            saliency_map_h5.close()
+            file_util.move_file(temp_saliency_map_path, attention_map_path)
 
 
 def write_substructure_locations(preprocessed, substructures, substructure_atoms, progress):

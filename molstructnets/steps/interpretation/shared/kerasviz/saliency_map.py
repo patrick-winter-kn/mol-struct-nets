@@ -8,7 +8,7 @@ from vis.utils import utils
 from vis.visualization import saliency
 
 
-class CAM():
+class SaliencyMap():
     # This class does the same as viz.visualization.saliency.visualize_saliency() but it returns the original values
     # instead of the heatmap
 

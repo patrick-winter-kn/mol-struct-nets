@@ -9,7 +9,7 @@ class GlobalParameters:
     preprocessed_training_data = 'preprocessed_training_data'
     input_dimensions = 'input_dimensions'
     n = 'n'
-    cam_substructures_data = 'cam_substructures_data'
+    saliency_map_substructures_data = 'saliency_map_substructures_data'
     feature_id = 'feature_id'
     shared_network = 'shared_network'
     transfer_data_sets = 'transfer_data_sets'

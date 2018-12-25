@@ -32,12 +32,12 @@ class Predictions:
     prediction = 'prediction'
 
 
-class Cam:
+class SaliencyMap:
     substructure_atoms = 'substructure_atoms'
-    cam_active = 'cam_active'
-    cam_inactive = 'cam_inactive'
-    cam_active_indices = 'cam_active_indices'
-    cam_inactive_indices = 'cam_inactive_indices'
+    saliency_map_active = 'saliency_map_active'
+    saliency_map_inactive = 'saliency_map_inactive'
+    saliency_map_active_indices = 'saliency_map_active_indices'
+    saliency_map_inactive_indices = 'saliency_map_inactive_indices'
 
 
 class PreprocessedTensor2D:
@@ -59,7 +59,7 @@ class PreprocessedTensor2D:
     normalization_std = 'normalization_std'
 
 
-class CamSubstructures:
+class SaliencyMapSubstructures:
     active_substructures = 'active_substructures'
     active_substructures_occurrences = 'active_substructures_occurrences'
     active_substructures_value = 'active_substructures_value'
@@ -181,8 +181,8 @@ def get_interpretation_folder(global_parameters):
                                      feature_prefix(global_parameters) + 'interpretation')
 
 
-def get_cam_file(global_parameters):
-    return file_util.resolve_subpath(get_interpretation_folder(global_parameters), 'cam.h5')
+def get_saliency_map_file(global_parameters):
+    return file_util.resolve_subpath(get_interpretation_folder(global_parameters), 'saliency_map.h5')
 
 
 def get_commit_hash_file(global_parameters):

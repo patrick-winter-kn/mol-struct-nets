@@ -34,8 +34,8 @@ def validate_prediction(global_parameters):
     validate_hdf5_file(path, file_structure.Predictions.prediction)
 
 
-def validate_cam(global_parameters, *data_set_names):
-    path = file_structure.get_cam_file(global_parameters)
+def validate_saliency_map(global_parameters, *data_set_names):
+    path = file_structure.get_saliency_map_file(global_parameters)
     validate_hdf5_file(path, *data_set_names)
 
 
