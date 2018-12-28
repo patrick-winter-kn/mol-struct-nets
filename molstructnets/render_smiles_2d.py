@@ -18,9 +18,11 @@ def get_arguments():
     parser.add_argument('--scale', type=float, default=2.0, help='Scaling factor')
     parser.add_argument('--not_square', default=False, action='store_true',
                         help='If enabled height will not equal width')
-    parser.add_argument('--padding', type=int, default=molecule_2d_tensor.padding, help='Padding around the edges')
+    parser.add_argument('--padding', type=float, default=molecule_2d_tensor.padding, help='Padding around the edges')
     parser.add_argument('--rotation', type=int, default=0, help='Angle for rotation')
     parser.add_argument('--flip', default=False, action='store_true', help='If the layout should be flipped')
+    parser.add_argument('--shift_x', type=float, default=0, help='Shift of x positions')
+    parser.add_argument('--shift_y', type=float, default=0, help='Shift of y positions')
     return parser.parse_args()
 
 
@@ -50,6 +52,7 @@ preprocessed_shape = (1, rasterizer_.size_x, rasterizer_.size_y, len(index_looku
 preprocessed_row = \
     molecule_2d_tensor.molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape,
                                              atom_locations_shape=None, transformer_=transformer_, random_=None,
-                                             flip=args.flip, rotation=args.rotation)[0]
+                                             flip=args.flip, rotation=args.rotation, shift_x=args.shift_x,
+                                             shift_y=args.shift_y)[0]
 tensor_2d_renderer.render(args.path, preprocessed_row, symbol_index, render_factor=50, show_grid=True, heatmap=None,
                           background_heatmap=True)

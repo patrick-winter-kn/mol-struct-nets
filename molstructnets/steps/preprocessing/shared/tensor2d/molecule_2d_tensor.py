@@ -10,7 +10,7 @@ padding = 2
 
 def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shape, atom_locations_shape=None,
                           transformer_=None, random_=None, flip=False, rotation=0, chemical_properties_=[],
-                          data_type='float32'):
+                          data_type='float32', shift_x=0, shift_y=0):
     # We redo this if the transformation size does not fit
     while True:
         try:
@@ -30,7 +30,7 @@ def molecule_to_2d_tensor(molecule, index_lookup, rasterizer_, preprocessed_shap
                 x = position.x
                 y = position.y
                 if transformer_ is not None:
-                    x, y = transformer_.apply(x, y, flip, rotation)
+                    x, y = transformer_.apply(x, y, flip, rotation, shift_x, shift_y)
                 x, y = rasterizer_.apply(x, y)
                 # Check if coordinates fit into the shape
                 if (not 0 <= x < preprocessed_row.shape[0]) or (not 0 <= y < preprocessed_row.shape[1]):
