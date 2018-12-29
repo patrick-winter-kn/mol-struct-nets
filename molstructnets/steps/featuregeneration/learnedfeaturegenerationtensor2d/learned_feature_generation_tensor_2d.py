@@ -39,9 +39,9 @@ class LearnedFeatureGenerationTensor2D:
 
     @staticmethod
     def execute(global_parameters, local_parameters):
+        model_path = file_structure.get_network_file(global_parameters)
         global_parameters[constants.GlobalParameters.feature_id] = 'learned_features'
         learned_features_path = LearnedFeatureGenerationTensor2D.get_result_file(global_parameters, local_parameters)
-        model_path = file_structure.get_network_file(global_parameters)
         model = models.load_model(model_path)
         feature_layer = model.get_layer('features')
         feature_dimensions = (int(numpy.prod(list(feature_layer.input.shape)[1:])),)
