@@ -78,6 +78,7 @@ global_parameters = dict()
 global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
+global_parameters[constants.GlobalParameters.feature_files] = list()
 transfer_data_sets = args.data_sets
 transfer_data_sets = transfer_data_sets[transfer_data_sets.rfind('/') + 1 : transfer_data_sets.rfind('.')]
 global_parameters[constants.GlobalParameters.transfer_data_sets] = transfer_data_sets

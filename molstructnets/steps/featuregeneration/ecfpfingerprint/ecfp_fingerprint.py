@@ -43,6 +43,7 @@ class EcfpFingerprint:
         global_parameters[constants.GlobalParameters.feature_id] = 'ecfp'
         preprocessed_path = EcfpFingerprint.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
+        global_parameters[constants.GlobalParameters.feature_files].append(preprocessed_path)
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
             preprocessed_h5 = h5py.File(preprocessed_path, 'r')

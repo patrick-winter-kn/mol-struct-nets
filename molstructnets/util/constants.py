@@ -13,3 +13,4 @@ class GlobalParameters:
     feature_id = 'feature_id'
     shared_network = 'shared_network'
     transfer_data_sets = 'transfer_data_sets'
+    feature_files = 'feature_files'

@@ -69,6 +69,7 @@ class LearnedFeatureGenerationTensor2D:
             file_util.move_file(temp_learned_features_path, learned_features_path)
         global_parameters[constants.GlobalParameters.input_dimensions] = feature_dimensions
         global_parameters[constants.GlobalParameters.preprocessed_data] = learned_features_path
+        global_parameters[constants.GlobalParameters.feature_files].append(learned_features_path)
 
 
 def generate_data(array, chunks, data_queue):

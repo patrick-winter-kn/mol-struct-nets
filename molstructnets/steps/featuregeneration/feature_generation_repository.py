@@ -4,6 +4,7 @@ from steps.featuregeneration.learnedfeaturegenerationtensor2d import learned_fea
 from steps.featuregeneration.maccsfingerprint import maccs_fingerprint
 from steps.featuregeneration.saliencymapsubstructurefeaturegeneration import saliency_map_substructure_feature_generation
 from steps.featuregeneration.mossfeaturegeneration import moss_feature_generation
+from steps.featuregeneration.combinedfeatures import combined_features
 
 
 class FeatureGenerationRepository(repository.Repository):
@@ -23,3 +24,4 @@ instance.add_implementation(ecfp_fingerprint.EcfpFingerprint)
 instance.add_implementation(maccs_fingerprint.MaccsFingerprint)
 instance.add_implementation(saliency_map_substructure_feature_generation.SaliencyMapSubstructureFeatureGeneration)
 instance.add_implementation(moss_feature_generation.MossFeatureGeneration)
+instance.add_implementation(combined_features.CombinedFeatures)

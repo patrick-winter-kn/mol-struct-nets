@@ -104,3 +104,4 @@ class MossFeatureGeneration:
             file_util.move_file(temp_features_path, features_path)
         global_parameters[constants.GlobalParameters.input_dimensions] = feature_dimensions
         global_parameters[constants.GlobalParameters.preprocessed_data] = features_path
+        global_parameters[constants.GlobalParameters.feature_files].append(features_path)

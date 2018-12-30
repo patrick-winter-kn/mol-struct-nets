@@ -66,6 +66,7 @@ global_parameters = dict()
 global_parameters[constants.GlobalParameters.seed] = initialization.seed
 global_parameters[constants.GlobalParameters.root] = file_structure.get_root_from_experiment_file(args.experiment)
 global_parameters[constants.GlobalParameters.experiment] = experiment_.get_name()
+global_parameters[constants.GlobalParameters.feature_files] = list()
 if args.data_set is not None:
     global_parameters[constants.GlobalParameters.data_set] = file_structure.find_data_set(global_parameters,
                                                                                           args.data_set)

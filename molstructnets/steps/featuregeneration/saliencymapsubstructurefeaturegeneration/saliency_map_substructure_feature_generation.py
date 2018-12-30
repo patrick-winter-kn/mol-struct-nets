@@ -88,6 +88,7 @@ class SaliencyMapSubstructureFeatureGeneration:
             file_util.move_file(temp_features_path, features_path)
         global_parameters[constants.GlobalParameters.input_dimensions] = feature_dimensions
         global_parameters[constants.GlobalParameters.preprocessed_data] = features_path
+        global_parameters[constants.GlobalParameters.feature_files].append(features_path)
 
 
 def load_substructures(saliency_map_substructures_path, top_n, min_score, active):

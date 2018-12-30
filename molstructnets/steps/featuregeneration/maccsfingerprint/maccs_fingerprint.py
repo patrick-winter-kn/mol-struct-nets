@@ -35,6 +35,7 @@ class MaccsFingerprint:
         global_parameters[constants.GlobalParameters.feature_id] = 'maccs'
         preprocessed_path = MaccsFingerprint.get_result_file(global_parameters, local_parameters)
         global_parameters[constants.GlobalParameters.preprocessed_data] = preprocessed_path
+        global_parameters[constants.GlobalParameters.feature_files].append(preprocessed_path)
         if file_util.file_exists(preprocessed_path):
             logger.log('Skipping step: ' + preprocessed_path + ' already exists')
             global_parameters[constants.GlobalParameters.input_dimensions] = (166,)
