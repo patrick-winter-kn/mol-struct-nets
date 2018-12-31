@@ -51,7 +51,7 @@ class CombinedFeatures:
             temp_preprocessed_path = file_util.get_temporary_file_path('combined_features')
             preprocessed_h5 = h5py.File(temp_preprocessed_path, 'w')
             preprocessed = hdf5_util.create_dataset(preprocessed_h5, file_structure.Preprocessed.preprocessed,
-                                                    (number_data_points, number_features),
+                                                    (number_data_points, number_features), dtype='float16',
                                                     chunks=(1, number_features))
             offset = 0
             logger.log('Combining features from ' + str(len(feature_files)) + ' sources')

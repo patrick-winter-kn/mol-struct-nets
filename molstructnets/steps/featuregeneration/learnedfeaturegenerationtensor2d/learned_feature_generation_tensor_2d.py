@@ -54,7 +54,7 @@ class LearnedFeatureGenerationTensor2D:
             temp_learned_features_path = file_util.get_temporary_file_path('learned_features')
             learned_features_h5 = h5py.File(temp_learned_features_path, 'w')
             learned_features = hdf5_util.create_dataset(learned_features_h5, file_structure.Preprocessed.preprocessed,
-                                                        (len(array),) + feature_dimensions,
+                                                        (len(array),) + feature_dimensions, dtype='float16',
                                                         chunks=(1,) + feature_dimensions)
             logger.log('Generating features')
             chunks = misc.chunk_by_size(len(array), local_parameters['batch_size'])
