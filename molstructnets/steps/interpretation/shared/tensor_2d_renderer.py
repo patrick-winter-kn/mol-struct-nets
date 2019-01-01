@@ -36,7 +36,7 @@ def render(path, preprocessed, symbols, render_factor=50, show_grid=True, heatma
     text = '<text x="0" y="0" fill="black" font-family="monospace" font-size="' + str(render_factor) + '">\n'
     for x in range(preprocessed.shape[0]):
         for y in range(preprocessed.shape[1]):
-            symbol_index = preprocessed[x, y].argmax()
+            symbol_index = preprocessed[x, y, :len(symbols)].argmax()
             if preprocessed[x, y, symbol_index] > 0:
                 render_x = x * render_factor + correction_x
                 render_y = y * render_factor + correction_y
