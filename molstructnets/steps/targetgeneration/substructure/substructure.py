@@ -29,7 +29,7 @@ class Substructure:
         parameters.append({'id': 'name', 'name': 'Target Name', 'type': str, 'default': None,
                            'description': 'Prefix to the filename of the generated target data set. Default: same as'
                                           ' substructures'})
-        parameters.append({'id': 'error', 'name': 'Error probability', 'type': int, 'default': 0,
+        parameters.append({'id': 'error', 'name': 'Error Probability', 'type': int, 'default': 0,
                            'description': 'Probability in percent that a molecule is assigned to the wrong class.'
                                           ' Default: 0%'})
         return parameters

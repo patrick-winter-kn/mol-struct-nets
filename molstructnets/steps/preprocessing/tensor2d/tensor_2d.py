@@ -49,7 +49,7 @@ class Tensor2D:
                                        normalization.NormalizationTypes.min_max_1,
                                        normalization.NormalizationTypes.min_max_2,
                                        normalization.NormalizationTypes.z_score],
-                           'description': 'Normalization type. Default: None'})
+                           'description': 'Normalization type (only applied to chemical properties). Default: None'})
         return parameters
 
     @staticmethod
