@@ -2,7 +2,7 @@ from keras import models
 
 from steps.trainingmultitarget.tensor2d import multitarget_training_array
 from steps.training.shared.tensor2d import weight_transfer
-from util import file_structure, logger, callbacks, file_util, constants, progressbar
+from util import file_structure, logger, callbacks, file_util, constants, progressbar, process_pool
 
 
 class Tensor2D:
@@ -48,8 +48,9 @@ class Tensor2D:
             epochs = local_parameters['epochs']
             batch_size = local_parameters['batch_size']
             frozen_runs = local_parameters['frozen_runs']
+            process_pool_ = process_pool.ProcessPool()
             arrays = multitarget_training_array.MultitargetTrainingArrays(global_parameters, epochs - epoch, epoch,
-                                                                          batch_size, frozen_runs)
+                                                                          batch_size, frozen_runs, process_pool_)
             shared_model = models.load_model(model_path)
             model_list = list()
             for i in range(len(data_sets)):
@@ -79,3 +80,4 @@ class Tensor2D:
                         weight_transfer.transfer_weights(prev_model, shared_model, weight_start_index, weight_end_index)
                     callbacks.save_model(shared_model, model_path, i)
             arrays.close()
+            process_pool_.close()
