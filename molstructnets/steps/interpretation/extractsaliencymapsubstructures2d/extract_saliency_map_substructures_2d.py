@@ -16,7 +16,7 @@ class ExtractSaliencyMapSubstructures2D:
 
     @staticmethod
     def get_name():
-        return 'Extract Saliency Map Substructures 2D'
+        return 'Extract Saliency Map Substructures'
 
     @staticmethod
     def get_parameters():

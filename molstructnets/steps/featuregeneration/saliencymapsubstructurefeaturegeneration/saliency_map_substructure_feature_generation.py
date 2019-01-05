@@ -15,7 +15,7 @@ class SaliencyMapSubstructureFeatureGeneration:
 
     @staticmethod
     def get_name():
-        return 'Saliency Map Substructure Feature Generation'
+        return 'Saliency Map Substructures'
 
     @staticmethod
     def get_parameters():

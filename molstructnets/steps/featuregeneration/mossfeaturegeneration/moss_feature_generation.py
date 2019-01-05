@@ -16,7 +16,7 @@ class MossFeatureGeneration:
 
     @staticmethod
     def get_name():
-        return 'MoSS Feature Generation'
+        return 'MoSS'
 
     @staticmethod
     def get_parameters():

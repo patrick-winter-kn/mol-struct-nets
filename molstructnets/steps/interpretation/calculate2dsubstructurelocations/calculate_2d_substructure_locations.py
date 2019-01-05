@@ -14,7 +14,7 @@ class Calculate2DSubstructureLocations:
 
     @staticmethod
     def get_name():
-        return 'Calculate 2D Substructure Locations'
+        return 'Calculate Substructure Locations'
 
     @staticmethod
     def get_parameters():

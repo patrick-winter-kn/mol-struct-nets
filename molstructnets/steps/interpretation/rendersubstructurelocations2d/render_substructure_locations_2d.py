@@ -15,7 +15,7 @@ class RenderSubstructureLocations2D:
 
     @staticmethod
     def get_name():
-        return 'Render Substructure Locations 2D'
+        return 'Render Substructure Locations'
 
     @staticmethod
     def get_parameters():

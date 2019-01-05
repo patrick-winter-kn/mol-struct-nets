@@ -13,7 +13,7 @@ class Tensor2D:
 
     @staticmethod
     def get_name():
-        return 'Tensor 2D'
+        return 'Network (Grid)'
 
     @staticmethod
     def get_parameters():

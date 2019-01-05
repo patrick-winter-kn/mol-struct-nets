@@ -17,7 +17,7 @@ class LearnedFeatureGenerationTensor2D:
 
     @staticmethod
     def get_name():
-        return 'Learned Feature Generation Tensor 2D'
+        return 'Learned Features (Grid)'
 
     @staticmethod
     def get_parameters():

@@ -16,7 +16,7 @@ class CalculateSaliencyMaps2D:
 
     @staticmethod
     def get_name():
-        return 'Calculate Saliency Maps 2D'
+        return 'Calculate Saliency Maps'
 
     @staticmethod
     def get_parameters():
