@@ -72,7 +72,7 @@ class CalculateSaliencyMaps2D:
             preprocessed = tensor_2d_array.load_array(global_parameters)
             partition_h5 = h5py.File(file_structure.get_partition_file(global_parameters), 'r')
             if local_parameters['partition'] == 'train':
-                references = partition_h5[file_structure.Partitions.train][:]
+                references = numpy.unique(partition_h5[file_structure.Partitions.train][:])
             elif local_parameters['partition'] == 'test':
                 references = partition_h5[file_structure.Partitions.test][:]
             else:
